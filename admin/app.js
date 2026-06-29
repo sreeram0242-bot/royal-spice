@@ -747,7 +747,7 @@ function loadQRCodes() {
     card.appendChild(qrContainer);
     
     // Generate QR
-    const qrText = `${BASE_URL}/customer/index.html?r=${restaurantId}&t=${i}`;
+    const qrText = `${window.location.origin}/customer/index.html?r=${restaurantId}&t=${i}`;
     setTimeout(() => {
       new QRCode(qrContainer, {
         text: qrText,
