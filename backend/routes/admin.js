@@ -1,0 +1,330 @@
+const express = require('express');
+const router = express.Router();
+const { authAdmin } = require('../middleware/auth');
+const prisma = require('../db');
+
+// --- Dashboard & Restaurant Settings ---
+router.get('/settings', authAdmin, async (req, res) => {
+  try {
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: req.user.restaurantId },
+      select: {
+        id: true, name: true, logo: true, address: true, gstPercent: true,
+        totalTables: true, plan: true, trialDays: true, trialStartDate: true,
+        subscriptionExpiry: true, paymentStatus: true, isActive: true, createdAt: true
+      }
+    });
+    res.json(restaurant);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/settings', authAdmin, async (req, res) => {
+  try {
+    const { name, address, gstPercent, totalTables } = req.body;
+    
+    const dataToUpdate = {};
+    if (name !== undefined) dataToUpdate.name = name;
+    if (address !== undefined) dataToUpdate.address = address;
+    if (gstPercent !== undefined) dataToUpdate.gstPercent = parseFloat(gstPercent);
+    if (totalTables !== undefined) dataToUpdate.totalTables = parseInt(totalTables);
+
+    const restaurant = await prisma.restaurant.update({
+      where: { id: req.user.restaurantId },
+      data: dataToUpdate,
+      select: {
+        id: true, name: true, logo: true, address: true, gstPercent: true,
+        totalTables: true, plan: true, trialDays: true, trialStartDate: true,
+        subscriptionExpiry: true, paymentStatus: true, isActive: true, createdAt: true
+      }
+    });
+    res.json(restaurant);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Menu Management ---
+router.get('/menu', authAdmin, async (req, res) => {
+  try {
+    const menu = await prisma.menuItem.findMany({
+      where: { restaurantId: req.user.restaurantId }
+    });
+    res.json(menu);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/menu', authAdmin, async (req, res) => {
+  try {
+    const { name, description, price, image, category, isVeg, isBestSeller, isAvailable } = req.body;
+    const newItem = await prisma.menuItem.create({
+      data: {
+        restaurantId: req.user.restaurantId,
+        name,
+        description,
+        price: parseFloat(price),
+        image,
+        category,
+        isVeg: isVeg === undefined ? undefined : Boolean(isVeg),
+        isBestSeller: isBestSeller === undefined ? undefined : Boolean(isBestSeller),
+        isAvailable: isAvailable === undefined ? undefined : Boolean(isAvailable)
+      }
+    });
+    res.status(201).json(newItem);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/menu/:id', authAdmin, async (req, res) => {
+  try {
+    const { name, description, price, image, category, isVeg, isBestSeller, isAvailable } = req.body;
+    const updatedItem = await prisma.menuItem.update({
+      where: { id: req.params.id },
+      data: {
+        name,
+        description,
+        price: price !== undefined ? parseFloat(price) : undefined,
+        image,
+        category,
+        isVeg: isVeg !== undefined ? Boolean(isVeg) : undefined,
+        isBestSeller: isBestSeller !== undefined ? Boolean(isBestSeller) : undefined,
+        isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : undefined
+      }
+    });
+    res.json(updatedItem);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/menu/:id', authAdmin, async (req, res) => {
+  try {
+    await prisma.menuItem.delete({
+      where: { id: req.params.id }
+    });
+    res.json({ message: 'Item deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Orders Management ---
+router.get('/orders', authAdmin, async (req, res) => {
+  try {
+    const where = { restaurantId: req.user.restaurantId };
+    
+    // Optional filters e.g. ?date=today
+    if (req.query.date === 'today') {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      where.createdAt = { gte: start };
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: { items: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/orders/:id/status', authAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: { status }
+    });
+    
+    // Notify customer
+    const io = req.app.get('io');
+    io.to(req.user.restaurantId).emit('order_status_update', { orderId: order.id, status: order.status, tableNumber: order.tableNumber });
+    
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Waiter Calls ---
+router.get('/waiter-calls', authAdmin, async (req, res) => {
+  try {
+    const calls = await prisma.waiterCall.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(calls);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/waiter-calls/:id', authAdmin, async (req, res) => {
+  try {
+    const call = await prisma.waiterCall.update({
+      where: { id: req.params.id },
+      data: { status: 'attended' }
+    });
+    res.json(call);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Notifications ---
+router.get('/notifications', authAdmin, async (req, res) => {
+  try {
+    const notifs = await prisma.masterNotification.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(notifs);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/notifications/:id/read', authAdmin, async (req, res) => {
+  try {
+    await prisma.masterNotification.update({
+      where: { id: req.params.id },
+      data: { isRead: true }
+    });
+    res.json({ message: 'Marked as read' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Complaints ---
+router.get('/complaints', authAdmin, async (req, res) => {
+  try {
+    const complaints = await prisma.complaint.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/complaints', authAdmin, async (req, res) => {
+  try {
+    const { message } = req.body;
+    const complaint = await prisma.complaint.create({
+      data: {
+        restaurantId: req.user.restaurantId,
+        message
+      }
+    });
+    res.status(201).json(complaint);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Categories Management ---
+router.get('/categories', authAdmin, async (req, res) => {
+  try {
+    const menuItems = await prisma.menuItem.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      select: { category: true }
+    });
+    
+    const settings = await prisma.categorySetting.findMany({
+      where: { restaurantId: req.user.restaurantId }
+    });
+    
+    const categories = [...new Set(menuItems.map(item => item.category))];
+    if (!categories.includes('All')) categories.unshift('All');
+    
+    const result = categories.map(cat => {
+      const setting = settings.find(s => s.categoryName === cat);
+      return {
+        name: cat,
+        image: setting?.image || ''
+      };
+    });
+    
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/categories', authAdmin, async (req, res) => {
+  try {
+    const { categoryName, image } = req.body;
+    
+    const setting = await prisma.categorySetting.upsert({
+      where: {
+        restaurantId_categoryName: {
+          restaurantId: req.user.restaurantId,
+          categoryName
+        }
+      },
+      update: { image },
+      create: {
+        restaurantId: req.user.restaurantId,
+        categoryName,
+        image
+      }
+    });
+    
+    res.json({ message: 'Category image updated', setting });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// CATEGORY SETTINGS
+router.get('/categories', authAdmin, async (req, res) => {
+  try {
+    const settings = await prisma.categorySetting.findMany({
+      where: { restaurantId: req.user.restaurantId }
+    });
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/categories', authAdmin, async (req, res) => {
+  try {
+    const { categoryName, image } = req.body;
+    const existing = await prisma.categorySetting.findFirst({
+      where: { restaurantId: req.user.restaurantId, categoryName }
+    });
+    
+    let result;
+    if (existing) {
+      result = await prisma.categorySetting.update({
+        where: { id: existing.id },
+        data: { image }
+      });
+    } else {
+      result = await prisma.categorySetting.create({
+        data: {
+          restaurantId: req.user.restaurantId,
+          categoryName,
+          image
+        }
+      });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+module.exports = router;

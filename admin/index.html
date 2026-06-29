@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login - Royal Spice</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h2 class="brand" style="color: var(--gold); margin-bottom: 24px; font-family: 'Playfair Display', serif;">Royal Spice</h2>
+      <form id="loginForm">
+        <input type="text" id="username" class="login-input" placeholder="Admin Username" required>
+        <input type="password" id="password" class="login-input" placeholder="Password" required>
+        <button type="submit" class="btn-gold">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminRestaurantId', data.restaurantId);
+          window.location.href = 'dashboard.html';
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        alert('Server error');
+      }
+    });
+  </script>
+</body>
+</html>

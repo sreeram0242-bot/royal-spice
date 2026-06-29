@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Dashboard - Royal Spice</title>
+  <link rel="stylesheet" href="style.css?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="brand">
+      <h2>👑 Master Panel</h2>
+    </div>
+    <a class="nav-link active" onclick="showView('dashboard')">🏠 Dashboard</a>
+    <a class="nav-link" onclick="showView('restaurants')">🏢 Restaurants</a>
+    <a class="nav-link" onclick="showView('complaints')">📨 Complaints</a>
+    <a class="nav-link" onclick="showView('revenue')">💰 Platform Revenue</a>
+    <a class="nav-link" style="margin-top: auto;" onclick="logout()">🚪 Logout</a>
+  </div>
+
+  <div class="main-content">
+    <div class="header">
+      <div style="font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
+        <span id="currentViewTitle">Dashboard</span>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="globalSearch" placeholder="🔍 Search restaurants..." onkeyup="handleGlobalSearch()">
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; background: var(--red); border: none; color: white;" onclick="openGlobalBroadcastModal()">📢 Global Broadcast</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="https://via.placeholder.com/32" style="border-radius: 50%; width: 32px; height: 32px;" alt="Admin">
+          <span>Master Admin ▾</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-body">
+      <!-- Dashboard -->
+      <div id="view-dashboard" class="view">
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <div class="title">Total Platform Orders</div>
+            <div class="value" id="statOrders">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Total Platform Revenue</div>
+            <div class="value" id="statRev">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Active Restaurants</div>
+            <div class="value" id="statActive">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Pending Complaints</div>
+            <div class="value" id="statSuspended">0</div>
+          </div>
+        </div>
+
+        <div class="panels-grid">
+          <div class="panel">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3>Revenue Growth (Last 7 Days)</h3>
+            </div>
+            <div style="height: 300px; width: 100%;">
+              <canvas id="platformRevenueChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="panel">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3>Recently Added Restaurants</h3>
+              <a href="#" onclick="showView('restaurants')" style="color: var(--gold); text-decoration: none; font-size: 14px;">View All</a>
+            </div>
+            <table id="recentRestaurantsTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restaurants -->
+      <div id="view-restaurants" class="view hidden">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <h3>All Restaurants</h3>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn-outline" style="border-color: var(--green); color: var(--green);" onclick="exportRestaurantsCSV()">⬇ Export CSV</button>
+            <button class="btn-gold" onclick="openAddRestaurantModal()">+ Create Restaurant</button>
+          </div>
+        </div>
+        <div class="panel">
+          <table id="restTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Added On</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Complaints -->
+      <div id="view-complaints" class="view hidden">
+        <div class="panel">
+          <h3>Complaints Inbox</h3>
+          <table id="compTable" style="margin-top: 16px;">
+            <thead>
+              <tr>
+                <th>Restaurant</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Revenue -->
+      <div id="view-revenue" class="view hidden">
+        <div class="panel">
+          <h3>Platform Revenue</h3>
+          <p style="color: var(--text-muted); margin-top: 16px;">SaaS subscription revenue tracking will appear here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Restaurant Modal -->
+  <div id="addRestModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Create New Restaurant</h3>
+      <input type="text" id="newRestName" class="login-input" placeholder="Restaurant Name" required>
+      <input type="text" id="newRestAddress" class="login-input" placeholder="Address" required>
+      
+      <div style="margin-bottom: 16px; display: flex; gap: 16px; align-items: center;">
+        <label style="color: var(--text-muted);">Plan:</label>
+        <select id="newRestPlan" class="login-input" style="margin-bottom: 0;">
+          <option value="trial">Free Trial</option>
+          <option value="monthly">Monthly Paid</option>
+        </select>
+      </div>
+      
+      <input type="number" id="newRestTrial" class="login-input" placeholder="Trial Days (default 14)">
+      
+      <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--gold);">Admin Credentials</h4>
+      <input type="text" id="newRestUsername" class="login-input" placeholder="Admin Username" required>
+      <input type="password" id="newRestPassword" class="login-input" placeholder="Admin Password" required>
+      
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <button class="btn-gold" onclick="createRestaurant()">Create</button>
+        <button class="btn-outline" onclick="closeModal('addRestModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reply Complaint Modal -->
+  <div id="replyModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Reply to Complaint</h3>
+      <p id="replyCompMsg" style="margin-bottom: 16px; font-style: italic; color: var(--text-muted);"></p>
+      <textarea id="replyText" class="login-input" rows="4" placeholder="Type reply here..."></textarea>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="sendReply()">Send Reply</button>
+        <button class="btn-outline" onclick="closeModal('replyModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Notification Modal -->
+  <div id="notifyModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Send Push Notification</h3>
+      <p style="margin-bottom: 16px; color: var(--text-muted);">This will popup on the admin panel of the selected restaurant.</p>
+      <input type="hidden" id="notifyRestId">
+      <textarea id="notifyText" class="login-input" rows="4" placeholder="Notification message..."></textarea>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="sendNotification()">Send Push</button>
+        <button class="btn-outline" onclick="closeModal('notifyModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Broadcast Modal -->
+  <div id="globalBroadcastModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">📢 Global Broadcast Alert</h3>
+      <p style="margin-bottom: 16px; color: var(--text-muted);">This message will instantly appear as a popup on EVERY connected restaurant's admin panel.</p>
+      <textarea id="globalBroadcastText" class="login-input" rows="4" placeholder="Enter important announcement here..."></textarea>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" style="background: var(--red); border: none; color: white;" onclick="sendGlobalBroadcast()">Broadcast Now</button>
+        <button class="btn-outline" onclick="closeModal('globalBroadcastModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Restaurant Modal -->
+  <div id="manageModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width: 500px;">
+      <h3 style="margin-bottom: 16px;">Restaurant Overview</h3>
+      <input type="hidden" id="manageRestId">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="stat-card" style="padding: 12px;">
+          <div class="title">Total Orders</div>
+          <div class="value" id="manageStatOrders">0</div>
+        </div>
+        <div class="stat-card" style="padding: 12px;">
+          <div class="title">Total Revenue</div>
+          <div class="value" id="manageStatRev">₹0</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label>Name</label>
+        <input type="text" id="manageName" class="login-input">
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+        <div style="flex: 1;">
+          <label>Plan</label>
+          <select id="managePlan" class="login-input">
+            <option value="trial">Trial</option>
+            <option value="basic">Basic</option>
+            <option value="premium">Premium</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label>Trial Days</label>
+          <input type="number" id="manageTrialDays" class="login-input">
+        </div>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label>Subscription Expiry</label>
+        <input type="date" id="manageExpiry" class="login-input">
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="saveRestaurantDetails()">Save Changes</button>
+        <button class="btn-outline" onclick="closeModal('manageModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=2"></script>
+</body>
+</html>

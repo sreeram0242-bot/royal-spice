@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Menu - Royal Spice</title>
+  <link rel="stylesheet" href="style.css?v=15">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <button class="theme-toggle-btn" onclick="toggleTheme()">🌓</button>
+
+  <!-- Header -->
+  <header class="top-header">
+    <div class="hamburger">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+      </svg>
+    </div>
+    <div class="logo-center">
+      <h1 id="restaurantName">Royal Spice</h1>
+      <span>Family Restaurant</span>
+    </div>
+    <div class="bell">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+      </svg>
+      <div class="bell-badge"></div>
+    </div>
+  </header>
+
+  <!-- Table Indicator -->
+  <div class="table-pill-wrapper">
+    <div class="table-pill" id="tableBadge">TABLE --</div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-input-wrapper">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search food...">
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="categories-wrapper">
+    <div class="categories-scroll" id="categoriesContainer">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <!-- Menu List -->
+  <div class="menu-section" id="menuContainer">
+    <!-- Injected by JS -->
+  </div>
+
+  <!-- Floating Cart -->
+  <div class="floating-cart" id="floatingCart">
+    <div style="display:flex; align-items:center; gap: 12px;">
+      <div style="position:relative;">
+        <svg viewBox="0 0 24 24" style="fill:var(--gold-primary); width:24px; height:24px;">
+          <path
+            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-1.45-5c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2h7.45zM6.16 6h12.15l-2.76 5h-7l-2.39-5z" />
+        </svg>
+        <div class="cart-badge" id="cartBadge">1</div>
+      </div>
+      <div>
+        <div style="color:var(--text-secondary); font-size:10px; font-weight:bold; letter-spacing:1px;"
+          id="cartItemsCount">1 Item</div>
+        <div style="color:var(--gold-primary); font-size:16px; font-weight:bold;">₹<span id="cartTotal">0</span></div>
+      </div>
+    </div>
+    <button class="view-cart-btn" onclick="window.location.href='cart.html'">
+      View Cart
+      <svg viewBox="0 0 24 24">
+        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Active Orders Floating Button -->
+  <div class="floating-orders" id="floatingOrdersBtn" onclick="window.location.href='order-status.html'"
+    style="display: none;">
+    <svg viewBox="0 0 24 24">
+      <path
+        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+    </svg>
+    My Orders
+  </div>
+
+  <!-- Call Waiter Floating Button -->
+  <div class="floating-waiter" onclick="callWaiter(event)">
+    <svg viewBox="0 0 24 24">
+      <path
+        d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+    </svg>
+    Call Waiter
+  </div>
+
+  <!-- Call Waiter Confirmation Popup -->
+  <div class="popup-overlay" id="waiterPopup">
+    <div class="popup-box">
+      <h3 style="color:var(--text-primary); margin-bottom: 12px; font-family:'Playfair Display', serif;">Call Waiter?
+      </h3>
+      <p style="color:var(--text-secondary); font-size: 14px; margin-bottom: 24px;">Do you want to notify a waiter to
+        come to your table?</p>
+      <div style="display:flex; gap:12px;">
+        <button
+          style="flex:1; padding: 12px; background:transparent; border:1px solid #444; color:white; border-radius:8px; cursor:pointer;"
+          onclick="closeWaiterPopup()">Cancel</button>
+        <button
+          style="flex:1; padding: 12px; background:var(--gold-primary); border:none; color:black; font-weight:bold; border-radius:8px; cursor:pointer;"
+          onclick="confirmCallWaiter()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js?v=22"></script>
+</body>
+
+</html>

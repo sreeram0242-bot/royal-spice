@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id                 String        @id @default(cuid())
+  name               String
+  logo               String?
+  address            String?
+  gstPercent         Float         @default(5)
+  totalTables        Int           @default(20)
+  adminUsername      String        @unique
+  adminPasswordHash  String
+  plan               String        @default("trial")
+  trialDays          Int           @default(14)
+  trialStartDate     DateTime      @default(now())
+  subscriptionExpiry DateTime?
+  paymentStatus      String        @default("trial")
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+
+  menuItems          MenuItem[]
+  orders             Order[]
+  waiterCalls        WaiterCall[]
+  payments           Payment[]
+  notifications      MasterNotification[]
+  complaints         Complaint[]
+  categorySettings   CategorySetting[]
+}
+
+model MenuItem {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  description  String?
+  price        Float
+  image        String?
+  category     String
+  isVeg        Boolean    @default(true)
+  isBestSeller Boolean    @default(false)
+  isAvailable  Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  restaurantId String
+  tableNumber  Int
+  orderNumber  Int
+  subtotal     Float
+  gst          Float
+  total        Float
+  status       String      @default("new")
+  sessionId    String
+  createdAt    DateTime    @default(now())
+
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  name       String
+  price      Float
+  qty        Int
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model WaiterCall {
+  id           String     @id @default(cuid())
+  restaurantId String
+  tableNumber  Int
+  status       String     @default("pending")
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id           String     @id @default(cuid())
+  restaurantId String
+  month        String
+  amount       Float
+  status       String     @default("unpaid")
+  paidAt       DateTime?
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model MasterNotification {
+  id           String     @id @default(cuid())
+  restaurantId String
+  message      String
+  isRead       Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model Complaint {
+  id           String     @id @default(cuid())
+  restaurantId String
+  message      String
+  reply        String?
+  status       String     @default("pending")
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model CategorySetting {
+  id           String     @id @default(cuid())
+  restaurantId String
+  categoryName String
+  image        String?
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  @@unique([restaurantId, categoryName])
+}

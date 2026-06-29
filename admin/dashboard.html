@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Royal Spice</title>
+  <link rel="stylesheet" href="style.css?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+  <!-- Chart.js for revenue chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- QRCode.js for generating QR codes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <script>
+    window.addEventListener('error', function(e) {
+      alert('JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      alert('Promise Error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+    });
+  </script>
+
+  <button class="theme-toggle-btn" onclick="toggleTheme()">🌓</button>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">
+      <h2 id="sidebarRestaurantName">Royal Spice</h2>
+      <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Restaurant</p>
+    </div>
+    <a class="nav-link active" onclick="showView('dashboard')">🏠 Dashboard</a>
+    <a class="nav-link" onclick="showView('orders')">📋 Orders <span class="badge" id="ordersBadge" style="display:none;">0</span></a>
+    <a class="nav-link" onclick="showView('tables')">🪑 Tables</a>
+    <a class="nav-link" onclick="showView('menu')">🍽️ Menu Items</a>
+    <a class="nav-link" onclick="showView('categories')">📁 Categories</a>
+    <a class="nav-link" onclick="showView('qr')">📱 QR Codes</a>
+    <a class="nav-link" onclick="showView('waiter')">🔔 Waiter Calls <span class="badge" id="waiterBadge" style="display:none;">0</span></a>
+    <a class="nav-link" onclick="showView('revenue')">💰 Revenue</a>
+    <a class="nav-link" onclick="showView('settings')">⚙️ Settings</a>
+    <a class="nav-link" style="margin-top: auto;" onclick="logout()">🚪 Logout</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <div style="font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 24px; cursor: pointer;">≡</span>
+        <span id="currentViewTitle">Dashboard</span>
+      </div>
+      <div class="search-bar">
+        <input type="text" placeholder="🔍 Search here...">
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <span style="cursor: pointer; position: relative;">
+          🔔
+          <span style="position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; background: var(--red); border-radius: 50%;"></span>
+        </span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="https://via.placeholder.com/32" style="border-radius: 50%; width: 32px; height: 32px;" alt="Admin">
+          <span>Admin ▾</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-body" id="viewsContainer">
+      <!-- DASHBOARD VIEW -->
+      <div id="view-dashboard" class="view">
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <div class="title">Today's Revenue</div>
+            <div class="value" id="dashRev">₹0</div>
+            <div class="trend">▲ 0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Today's Orders</div>
+            <div class="value" id="dashOrders">0</div>
+            <div class="trend">▲ 0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Pending Orders</div>
+            <div class="value" id="dashPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Waiter Calls</div>
+            <div class="value" id="dashCalls">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Active Tables</div>
+            <div class="value" id="dashTables">0/0</div>
+          </div>
+        </div>
+
+        <div class="panels-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Live Orders</h3>
+              <a href="#" onclick="showView('orders')" style="color: var(--gold); text-decoration: none; font-size: 14px;">View All</a>
+            </div>
+            <table id="liveOrdersTable">
+              <!-- populated via js -->
+            </table>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Today's Revenue</h3>
+            </div>
+            <div style="position: relative; height: 200px; width: 100%;">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel" style="margin-top: 24px;">
+          <div class="panel-header">
+            <h3>Active Tables</h3>
+            <div style="display: flex; gap: 12px; font-size: 12px;">
+              <span style="color: var(--green)">■ Available</span>
+              <span style="color: var(--purple)">■ Ordered</span>
+              <span style="color: var(--orange)">■ Preparing</span>
+              <span style="color: var(--red)">■ Served</span>
+            </div>
+          </div>
+          <div class="table-grid" id="dashTableGrid">
+            <!-- Populated via js -->
+          </div>
+        </div>
+      </div>
+
+    <!-- Categories Section -->
+      <div id="view-categories" class="view hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2>Category Images</h2>
+        </div>
+        <div class="panel">
+          <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+            <!-- Categories loaded via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS VIEW -->
+      <div id="view-orders" class="view hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>All Orders</h3>
+          <div style="display: flex; gap: 8px;">
+            <select id="orderFilterStatus" class="login-input" style="width: auto; margin-bottom: 0; padding: 6px 12px;" onchange="loadOrders()">
+              <option value="all">All Status</option>
+              <option value="new">New</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+            </select>
+          </div>
+        </div>
+        <div id="ordersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; align-items: start;">
+          <!-- Order cards injected here -->
+        </div>
+      </div>
+
+      <!-- TABLES VIEW -->
+      <div id="view-tables" class="view hidden">
+        <div class="panel" style="margin-bottom: 24px;">
+          <h3>Table Settings</h3>
+          <div style="display: flex; gap: 16px; margin-top: 16px; align-items: center;">
+            <label>Total Number of Tables:</label>
+            <input type="number" id="settingsTotalTables" class="login-input" style="width: 100px; margin-bottom: 0;">
+            <button class="btn-gold" style="width: auto; padding: 10px 24px;" onclick="updateTablesCount()">Update</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Table Overview</h3>
+          <div class="table-grid" id="fullTableGrid" style="margin-top: 16px;"></div>
+        </div>
+      </div>
+
+      <!-- MENU VIEW -->
+      <div id="view-menu" class="view hidden">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <h3>Menu Items</h3>
+          <button class="btn-gold" style="width: auto;" onclick="openAddMenuModal()">+ Add Item</button>
+        </div>
+        
+        <div id="menuContainer" style="display: flex; flex-direction: column; gap: 24px;">
+          <!-- Categories and their tables injected here -->
+        </div>
+      </div>
+
+      <!-- QR CODES VIEW -->
+      <div id="view-qr" class="view hidden">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <h3>Table QR Codes</h3>
+        </div>
+        <div class="panel" id="qrGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+          <!-- QR cards injected here -->
+        </div>
+      </div>
+
+      <!-- WAITER CALLS VIEW -->
+      <div id="view-waiter" class="view hidden">
+        <div class="panel">
+          <h3>Waiter Calls</h3>
+          <table id="waiterTable" style="margin-top: 16px;">
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- REVENUE VIEW -->
+      <div id="view-revenue" class="view hidden">
+        <div class="panel">
+          <h3>Revenue Reports</h3>
+          <p style="color: var(--text-muted); margin-top: 16px;">Revenue metrics and charts will appear here.</p>
+        </div>
+      </div>
+
+      <!-- SETTINGS VIEW -->
+      <div id="view-settings" class="view hidden">
+        <div class="panel" style="max-width: 500px;">
+          <h3>Restaurant Settings</h3>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <label>Restaurant Name</label>
+              <input type="text" id="setRestName" class="login-input">
+            </div>
+            <div>
+              <label>Address</label>
+              <input type="text" id="setRestAddress" class="login-input">
+            </div>
+            <div>
+              <label>GST %</label>
+              <input type="number" id="setRestGst" class="login-input">
+            </div>
+            <button class="btn-gold" onclick="saveSettings()">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Menu Modal -->
+  <div id="addMenuModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Add Menu Item</h3>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <input type="file" id="newMenuFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'newMenuPreview')">
+        <input type="hidden" id="newMenuImageBase64">
+        <div style="width: 100px; height: 100px; border-radius: 8px; border: 2px dashed #555; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; background: var(--bg-dark); margin: 0 auto;" onclick="document.getElementById('newMenuFileInput').click()">
+          <img id="newMenuPreview" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+          <span id="newMenuPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to add<br>Photo</span>
+        </div>
+      </div>
+
+      <input type="text" id="newMenuName" class="login-input" placeholder="Item Name">
+      <input type="number" id="newMenuPrice" class="login-input" placeholder="Price">
+      <input type="text" id="newMenuCat" class="login-input" placeholder="Category (e.g. Starters)" list="categoryOptions">
+      <div style="margin-bottom: 16px; display: flex; gap: 16px;">
+        <label><input type="radio" name="newMenuVeg" value="true" checked> Veg</label>
+        <label><input type="radio" name="newMenuVeg" value="false"> Non-Veg</label>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="saveMenuItem()">Save</button>
+        <button class="btn-gold" style="background: transparent; border: 1px solid #555; color: white;" onclick="closeModal('addMenuModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Menu Modal -->
+  <div id="editMenuModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Edit Menu Item</h3>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <input type="file" id="editMenuFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'editMenuPreview')">
+        <input type="hidden" id="editMenuImageBase64">
+        <div style="width: 100px; height: 100px; border-radius: 8px; border: 2px dashed #555; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; background: var(--bg-dark); margin: 0 auto;" onclick="document.getElementById('editMenuFileInput').click()">
+          <img id="editMenuPreview" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+          <span id="editMenuPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to change<br>Photo</span>
+        </div>
+      </div>
+
+      <input type="hidden" id="editMenuId">
+      <input type="text" id="editMenuName" class="login-input" placeholder="Item Name">
+      <input type="number" id="editMenuPrice" class="login-input" placeholder="Price">
+      <input type="text" id="editMenuCat" class="login-input" placeholder="Category (e.g. Starters)" list="categoryOptions">
+      <div style="margin-bottom: 16px; display: flex; gap: 16px;">
+        <label><input type="radio" name="editMenuVeg" value="true"> Veg</label>
+        <label><input type="radio" name="editMenuVeg" value="false"> Non-Veg</label>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="saveEditMenuItem()">Update</button>
+        <button class="btn-gold" style="background: transparent; border: 1px solid #555; color: white;" onclick="closeModal('editMenuModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Datalist for Categories -->
+  <datalist id="categoryOptions"></datalist>
+
+  <!-- Order Popup Notification -->
+  <div id="orderPopup" class="hidden">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: bold; color: var(--gold);">
+      <span>🛍️</span> NEW ORDER RECEIVED!
+    </div>
+    <div id="popupOrderDetails" style="font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">
+      Table 12 — Order #1035<br>
+      Total: ₹756
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('orderPopup').classList.add('hidden'); showView('orders');">View Order</button>
+      <button style="padding: 6px 12px; font-size: 12px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('orderPopup').classList.add('hidden')">Dismiss</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js?v=14"></script>
+</body>
+</html>
