@@ -648,7 +648,17 @@ async function loadCategories() {
     imgWrapper.style.position = 'relative';
     
     const img = document.createElement('img');
-    img.src = setting?.image || `https://via.placeholder.com/120?text=${encodeURIComponent(cat)}`;
+    let defaultImg = `https://via.placeholder.com/120?text=${encodeURIComponent(cat)}`;
+    if (cat.toLowerCase() === 'all') defaultImg = '/customer/images/cat_all.png';
+    else if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
+    else if (cat.toLowerCase().includes('meal')) defaultImg = '/customer/images/cat_meals.png';
+    else if (cat.toLowerCase().includes('starter')) defaultImg = '/customer/images/cat_starters.png';
+    else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = '/customer/images/cat_breads.png';
+    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('curry')) defaultImg = '/customer/images/cat_gravies.png';
+    else if (cat.toLowerCase().includes('bev') || cat.toLowerCase().includes('drink')) defaultImg = '/customer/images/cat_beverages.png';
+    else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = '/customer/images/cat_desserts.png';
+
+    img.src = setting?.image || defaultImg;
     img.style.width = '100%';
     img.style.height = '100%';
     img.style.objectFit = 'cover';
@@ -682,21 +692,15 @@ async function loadCategories() {
       reader.readAsDataURL(file);
     };
     
-    imgWrapper.onclick = () => fileInput.click();
-    
-    const overlayText = document.createElement('div');
-    overlayText.innerText = 'Upload';
-    overlayText.style.position = 'absolute';
-    overlayText.style.bottom = '0';
-    overlayText.style.left = '0';
-    overlayText.style.width = '100%';
-    overlayText.style.background = 'rgba(0,0,0,0.7)';
-    overlayText.style.color = 'white';
-    overlayText.style.fontSize = '12px';
-    overlayText.style.padding = '4px 0';
+    const changeBtn = document.createElement('button');
+    changeBtn.className = 'btn-primary';
+    changeBtn.style.marginTop = '12px';
+    changeBtn.style.fontSize = '12px';
+    changeBtn.style.padding = '8px 16px';
+    changeBtn.innerText = 'Change Category Image';
+    changeBtn.onclick = () => fileInput.click();
     
     imgWrapper.appendChild(img);
-    imgWrapper.appendChild(overlayText);
     imgWrapper.appendChild(fileInput);
     
     const title = document.createElement('h3');
@@ -705,6 +709,7 @@ async function loadCategories() {
     
     card.appendChild(imgWrapper);
     card.appendChild(title);
+    card.appendChild(changeBtn);
     grid.appendChild(card);
   });
 }
