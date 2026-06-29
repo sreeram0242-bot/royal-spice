@@ -383,6 +383,8 @@ async function placeOrder() {
   } catch (err) {
     console.error(err);
     alert('Failed to place order');
+  } finally {
+    hideLoader();
   }
 }
 
