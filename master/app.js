@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = '';
 const token = localStorage.getItem('masterToken');
 
 if (!token && !window.location.pathname.includes('index.html')) {

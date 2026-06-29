@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000'; // Change in prod
+const BASE_URL = ''; // Change in prod
 
 let restaurantId = localStorage.getItem('restaurantId');
 let tableNumber = localStorage.getItem('tableNumber');
