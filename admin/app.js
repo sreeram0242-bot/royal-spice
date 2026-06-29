@@ -801,6 +801,9 @@ async function loadRevenue() {
     document.getElementById('revToday').innerText = `₹${data.todayRevenue}`;
     document.getElementById('revOrders').innerText = data.totalOrders;
 
+    // Load history when revenue tab is opened
+    loadHistory();
+
     const ctx = document.getElementById('revenueChart').getContext('2d');
     
     if (revenueChartInstance) {
@@ -837,6 +840,103 @@ async function loadRevenue() {
   } catch (err) {
     console.error('Failed to load revenue', err);
   }
+}
+
+// ORDER HISTORY
+let allHistoryOrders = [];
+
+async function loadHistory() {
+  const startDate = document.getElementById('historyStartDate').value;
+  const endDate = document.getElementById('historyEndDate').value;
+  
+  let url = '/api/admin/history';
+  if (startDate && endDate) {
+    url += `?startDate=${startDate}&endDate=${endDate}`;
+  } else if (!startDate && !endDate) {
+    // Default to last 7 days if no dates selected
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    const start = d.toISOString().split('T')[0];
+    const end = new Date().toISOString().split('T')[0];
+    url += `?startDate=${start}&endDate=${end}`;
+    
+    document.getElementById('historyStartDate').value = start;
+    document.getElementById('historyEndDate').value = end;
+  }
+
+  try {
+    allHistoryOrders = await fetchAPI(url);
+    renderHistory();
+  } catch (err) {
+    console.error('Failed to load history', err);
+  }
+}
+
+function renderHistory() {
+  const tbody = document.getElementById('historyTableBody');
+  if (!tbody) return;
+
+  if (allHistoryOrders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-secondary);">No orders found for this date range.</td></tr>';
+    return;
+  }
+
+  let html = '';
+  allHistoryOrders.forEach((order, index) => {
+    const d = new Date(order.createdAt);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    html += `
+      <tr style="border-bottom: 1px solid var(--border-color);">
+        <td style="padding: 12px; color: var(--text-primary);">${dateStr}</td>
+        <td style="padding: 12px; color: var(--text-primary);">#${order.orderNumber}</td>
+        <td style="padding: 12px; color: var(--text-primary);">Table ${order.tableNumber}</td>
+        <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${order.total}</td>
+        <td style="padding: 12px;">
+          <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails(${index})">View Items</button>
+        </td>
+      </tr>
+    `;
+  });
+  
+  tbody.innerHTML = html;
+}
+
+function viewHistoryDetails(index) {
+  const order = allHistoryOrders[index];
+  if (!order) return;
+
+  document.getElementById('historyModalTitle').innerText = `Order #${order.orderNumber} - Table ${order.tableNumber}`;
+  
+  const container = document.getElementById('historyModalItems');
+  let html = '';
+  
+  order.items.forEach(item => {
+    html += `
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 12px 0;">
+        <div style="color: var(--text-primary);">${item.qty}x ${item.name}</div>
+        <div style="color: var(--gold-primary);">₹${item.price * item.qty}</div>
+      </div>
+    `;
+  });
+  
+  html += `
+    <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold;">
+      <div style="color: var(--text-primary);">Subtotal</div>
+      <div style="color: var(--text-primary);">₹${order.subtotal}</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+      <div style="color: var(--text-secondary);">GST</div>
+      <div style="color: var(--text-secondary);">₹${order.gst}</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold; font-size: 18px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
+      <div style="color: var(--gold-primary);">Total Paid</div>
+      <div style="color: var(--gold-primary);">₹${order.total}</div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+  document.getElementById('historyItemsModal').style.display = 'flex';
 }
 
 // Init if on dashboard

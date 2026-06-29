@@ -238,6 +238,51 @@
             <canvas id="revenueChart"></canvas>
           </div>
         </div>
+        <div class="panel" style="margin-top: 24px;">
+          <h3>Order History</h3>
+          
+          <div style="display: flex; gap: 16px; margin-top: 16px; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; color: var(--text-secondary);">Start Date</label>
+              <input type="date" id="historyStartDate" class="login-input" style="padding: 8px;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; color: var(--text-secondary);">End Date</label>
+              <input type="date" id="historyEndDate" class="login-input" style="padding: 8px;">
+            </div>
+            <button class="btn-primary" style="margin-top: 18px;" onclick="loadHistory()">Search Orders</button>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 24px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                  <th style="padding: 12px;">Date</th>
+                  <th style="padding: 12px;">Order #</th>
+                  <th style="padding: 12px;">Table</th>
+                  <th style="padding: 12px;">Total Amount</th>
+                  <th style="padding: 12px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items Modal -->
+      <div class="popup-overlay" id="historyItemsModal" style="display: none;">
+        <div class="popup-box" style="width: 90%; max-width: 500px; padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 id="historyModalTitle" style="color: var(--gold-primary);">Order Details</h3>
+            <button onclick="document.getElementById('historyItemsModal').style.display='none'" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+          </div>
+          <div id="historyModalItems" style="max-height: 400px; overflow-y: auto;">
+            <!-- Items injected via JS -->
+          </div>
+        </div>
       </div>
 
       <!-- SETTINGS VIEW -->

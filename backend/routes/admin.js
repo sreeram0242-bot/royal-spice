@@ -258,6 +258,46 @@ router.get('/revenue', authAdmin, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+// --- Order History ---
+router.get('/history', authAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    let dateFilter = {};
+    if (startDate && endDate) {
+      // Parse ISO dates or YYYY-MM-DD
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999); // Include entire end day
+      
+      dateFilter = {
+        createdAt: {
+          gte: start,
+          lte: end
+        }
+      };
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: req.user.restaurantId,
+        status: 'served',
+        ...dateFilter
+      },
+      include: {
+        items: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json(orders);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // --- Complaints ---
 router.get('/complaints', authAdmin, async (req, res) => {
