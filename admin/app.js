@@ -796,7 +796,7 @@ function loadQRCodes() {
 }
 
 // REVENUE
-let revenueChartInstance = null;
+let revenueTabChartInstance = null;
 
 async function loadRevenue() {
   try {
@@ -811,15 +811,15 @@ async function loadRevenue() {
 
     const ctx = document.getElementById('revenueChart').getContext('2d');
     
-    if (revenueChartInstance) {
-      revenueChartInstance.destroy();
+    if (revenueTabChartInstance) {
+      revenueTabChartInstance.destroy();
     }
 
     // data.revenueByDay is ordered from 6 days ago to today.
     const labels = data.revenueByDay.map(d => d.date);
     const chartData = data.revenueByDay.map(d => d.revenue);
 
-    revenueChartInstance = new Chart(ctx, {
+    revenueTabChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels,
