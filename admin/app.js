@@ -82,6 +82,7 @@ function showView(viewId) {
   if (viewId === 'categories') loadCategories();
   if (viewId === 'qr') loadQRCodes();
   if (viewId === 'waiter') loadWaiterCalls();
+  if (viewId === 'revenue') loadRevenue();
   if (viewId === 'settings') loadSettings();
 }
 
@@ -786,6 +787,55 @@ function loadQRCodes() {
     card.appendChild(btn);
 
     grid.appendChild(card);
+  }
+}
+
+// REVENUE
+let revenueChartInstance = null;
+
+async function loadRevenue() {
+  try {
+    const data = await fetchAPI('/api/admin/revenue');
+    
+    document.getElementById('revTotal').innerText = `₹${data.totalRevenue}`;
+    document.getElementById('revToday').innerText = `₹${data.todayRevenue}`;
+    document.getElementById('revOrders').innerText = data.totalOrders;
+
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    if (revenueChartInstance) {
+      revenueChartInstance.destroy();
+    }
+
+    // data.revenueByDay is ordered from 6 days ago to today.
+    const labels = data.revenueByDay.map(d => d.date);
+    const chartData = data.revenueByDay.map(d => d.revenue);
+
+    revenueChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: chartData,
+          backgroundColor: '#F4A017',
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Failed to load revenue', err);
   }
 }
 

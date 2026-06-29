@@ -10,6 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- QRCode.js for generating QR codes -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Chart.js for Revenue Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <script>
@@ -215,9 +217,26 @@
       
       <!-- REVENUE VIEW -->
       <div id="view-revenue" class="view hidden">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 24px;">
+          <div class="panel" style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="color: var(--text-secondary); font-size: 14px;">Total Revenue</div>
+            <div id="revTotal" style="font-size: 28px; font-weight: bold; color: var(--gold-primary);">₹0</div>
+          </div>
+          <div class="panel" style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="color: var(--text-secondary); font-size: 14px;">Today's Revenue</div>
+            <div id="revToday" style="font-size: 28px; font-weight: bold; color: var(--gold-primary);">₹0</div>
+          </div>
+          <div class="panel" style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="color: var(--text-secondary); font-size: 14px;">Total Orders (Completed)</div>
+            <div id="revOrders" style="font-size: 28px; font-weight: bold; color: var(--text-primary);">0</div>
+          </div>
+        </div>
+
         <div class="panel">
-          <h3>Revenue Reports</h3>
-          <p style="color: var(--text-muted); margin-top: 16px;">Revenue metrics and charts will appear here.</p>
+          <h3>Revenue - Last 7 Days</h3>
+          <div style="position: relative; height: 350px; width: 100%; margin-top: 24px;">
+            <canvas id="revenueChart"></canvas>
+          </div>
         </div>
       </div>
 

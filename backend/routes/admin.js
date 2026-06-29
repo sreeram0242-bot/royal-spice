@@ -203,6 +203,62 @@ router.put('/notifications/:id/read', authAdmin, async (req, res) => {
   }
 });
 
+// --- Revenue ---
+router.get('/revenue', authAdmin, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: req.user.restaurantId,
+        status: 'served'
+      }
+    });
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let totalRevenue = 0;
+    let todayRevenue = 0;
+    let totalOrders = orders.length;
+
+    // Last 7 days
+    const revenueByDay = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - i);
+      revenueByDay.push({
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        dateString: d.toISOString().split('T')[0],
+        revenue: 0
+      });
+    }
+
+    orders.forEach(o => {
+      totalRevenue += o.total;
+      
+      const orderDate = new Date(o.createdAt);
+      if (orderDate >= todayStart) {
+        todayRevenue += o.total;
+      }
+      
+      const orderDateString = orderDate.toISOString().split('T')[0];
+      const dayData = revenueByDay.find(d => d.dateString === orderDateString);
+      if (dayData) {
+        dayData.revenue += o.total;
+      }
+    });
+
+    res.json({
+      totalRevenue,
+      todayRevenue,
+      totalOrders,
+      revenueByDay
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // --- Complaints ---
 router.get('/complaints', authAdmin, async (req, res) => {
   try {
