@@ -19,14 +19,7 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-// Force clear cache and disable caching for development/fixes
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.setHeader('Clear-Site-Data', '"cache"');
-  next();
-});
+// Removed aggressive caching headers for faster loading
 
 // Serve Static Portals
 app.use('/customer', express.static(path.join(__dirname, '../customer')));
