@@ -23,6 +23,9 @@
       <button class="call-badge" id="callBadge" onclick="showTab('calls')" style="display:none; align-items: center; gap: 4px;">
         <i data-lucide="bell-ring" style="width:16px;height:16px;"></i> <span id="callCount">0</span>
       </button>
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme">
+        <i data-lucide="moon" style="width:18px;height:18px;"></i>
+      </button>
       <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </div>
@@ -137,9 +140,38 @@
     </div>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <!-- CONFIRM CLOSE MODAL -->
+  <div class="modal-overlay" id="confirmCloseModal" onclick="closeConfirmModal()">
+    <div class="modal-box" style="max-width:300px; text-align:center;" onclick="event.stopPropagation()">
+      <div style="margin-bottom:16px;">
+        <i data-lucide="alert-triangle" style="width:48px; height:48px; color:var(--orange);"></i>
+      </div>
+      <h3 style="margin-bottom:8px;">Close Table <span id="confirmTableNum"></span>?</h3>
+      <p style="color:var(--text-muted); font-size:14px; margin-bottom:16px;">Please select the payment method used before closing.</p>
+      
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 24px; text-align:left;">
+        <label style="display:flex; align-items:center; gap:8px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="cash" checked style="accent-color:var(--gold-primary); width:16px; height:16px;">
+          <span>Cash</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="gpay" style="accent-color:var(--gold-primary); width:16px; height:16px;">
+          <span>GPay / UPI</span>
+        </label>
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button class="btn-action" style="flex:1; background:transparent; border:1px solid #444;" onclick="closeConfirmModal()">Cancel</button>
+        <button class="btn-action btn-primary" style="flex:1;" id="confirmCloseBtn">Yes, Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js?v=6"></script>
   <script>
     lucide.createIcons();
+    if (typeof updateThemeIcon === 'function') updateThemeIcon();
   </script>
 </body>
 </html>

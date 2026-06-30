@@ -53,6 +53,11 @@ router.get('/tables', authWaiter, async (req, res) => {
       where: { restaurantId: req.user.restaurantId, status: 'pending' }
     });
 
+    // Get active passcodes
+    const passcodes = await prisma.tablePasscode.findMany({
+      where: { restaurantId: req.user.restaurantId }
+    });
+
     const tables = [];
     for (let i = 1; i <= restaurant.totalTables; i++) {
       const tableOrders = activeOrders.filter(o => o.tableNumber === i);
@@ -73,7 +78,8 @@ router.get('/tables', authWaiter, async (req, res) => {
         hasCall,
         orderCount: tableOrders.length,
         total,
-        sessionId: tableOrders.length > 0 ? tableOrders[0].sessionId : null
+        sessionId: tableOrders.length > 0 ? tableOrders[0].sessionId : null,
+        passcode: passcodes.find(p => p.tableNumber === i)?.passcode || null
       });
     }
 
@@ -111,6 +117,7 @@ router.get('/table/:num/bill', authWaiter, async (req, res) => {
 
     const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
     const gstAmount = orders.reduce((sum, o) => sum + o.gst, 0);
+    const totalTip = orders.reduce((sum, o) => sum + (o.tip || 0), 0);
     const grandTotal = orders.reduce((sum, o) => sum + o.total, 0);
 
     res.json({
@@ -121,6 +128,7 @@ router.get('/table/:num/bill', authWaiter, async (req, res) => {
       subtotal,
       gstAmount,
       gstPercent: restaurant.gstPercent,
+      totalTip,
       grandTotal,
       generatedAt: new Date().toISOString()
     });
@@ -130,24 +138,60 @@ router.get('/table/:num/bill', authWaiter, async (req, res) => {
   }
 });
 
+// POST /api/waiter/table/:num/generate-code — generate passcode for table
+router.post('/table/:num/generate-code', authWaiter, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurantId = req.user.restaurantId;
+    
+    const passcode = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    const record = await prisma.tablePasscode.upsert({
+      where: {
+        restaurantId_tableNumber: { restaurantId, tableNumber }
+      },
+      update: { passcode },
+      create: { restaurantId, tableNumber, passcode }
+    });
+    
+    // notify clients
+    const io = req.app.get('io');
+    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode });
+    
+    res.json({ message: 'Passcode generated', passcode });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // POST /api/waiter/order — place a new order for a table
 router.post('/order', authWaiter, async (req, res) => {
   try {
-    const { tableNumber, items, subtotal, gst, total, sessionId } = req.body;
+    const { tableNumber, items, subtotal, gst, tip = 0, total, sessionId } = req.body;
     const restaurantId = req.user.restaurantId;
 
     const count = await prisma.order.count({ where: { restaurantId } });
     const orderNumber = 1000 + count + 1;
     // Enforce single-session per table: always check for an active order first
     let currentSessionId = sessionId;
+    let currentSessionNumber = null;
+    
     const activeOrder = await prisma.order.findFirst({
       where: { restaurantId, tableNumber: parseInt(tableNumber), status: { not: 'completed' } },
       orderBy: { createdAt: 'desc' }
     });
+    
     if (activeOrder) {
       currentSessionId = activeOrder.sessionId;
-    } else if (!currentSessionId) {
-      currentSessionId = uuidv4();
+      currentSessionNumber = activeOrder.sessionNumber;
+    } else {
+      if (!currentSessionId) currentSessionId = uuidv4();
+      const restaurant = await prisma.restaurant.update({
+        where: { id: restaurantId },
+        data: { sessionCounter: { increment: 1 } }
+      });
+      currentSessionNumber = restaurant.sessionCounter;
     }
 
     const order = await prisma.order.create({
@@ -157,15 +201,18 @@ router.post('/order', authWaiter, async (req, res) => {
         orderNumber,
         subtotal: parseFloat(subtotal),
         gst: parseFloat(gst),
+        tip: parseFloat(tip),
         total: parseFloat(total),
         status: 'new',
         sessionId: currentSessionId,
+        sessionNumber: currentSessionNumber,
         items: {
           create: items.map(item => ({
             menuItemId: item.menuItemId,
             name: item.name,
             price: parseFloat(item.price),
-            qty: parseInt(item.qty)
+            qty: parseInt(item.qty),
+            specialNote: item.specialNote || null
           }))
         }
       },
@@ -188,6 +235,8 @@ router.post('/table/:num/close-session', authWaiter, async (req, res) => {
     const tableNumber = parseInt(req.params.num);
     const restaurantId = req.user.restaurantId;
 
+    const { paymentMethod } = req.body;
+
     // Find latest active session
     const latestOrder = await prisma.order.findFirst({
       where: { restaurantId, tableNumber, status: { not: 'completed' } },
@@ -200,7 +249,16 @@ router.post('/table/:num/close-session', authWaiter, async (req, res) => {
 
     await prisma.order.updateMany({
       where: { sessionId: latestOrder.sessionId },
-      data: { status: 'completed' }
+      data: { 
+        status: 'completed', 
+        paymentMethod: paymentMethod || 'cash',
+        closedByWaiter: req.user.name || 'Unknown' 
+      }
+    });
+
+    // Clear passcode
+    await prisma.tablePasscode.deleteMany({
+      where: { restaurantId, tableNumber }
     });
 
     const io = req.app.get('io');

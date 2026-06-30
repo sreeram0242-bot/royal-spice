@@ -203,6 +203,37 @@ router.put('/notifications/:id/read', authAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/tables
+router.get('/tables', authAdmin, async (req, res) => {
+  try {
+    const restaurantId = req.user.restaurantId;
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    
+    const activeOrders = await prisma.order.findMany({
+      where: { restaurantId, status: { not: 'completed' } }
+    });
+
+    const passcodes = await prisma.tablePasscode.findMany({
+      where: { restaurantId }
+    });
+
+    const tables = [];
+    for (let i = 1; i <= restaurant.totalTables; i++) {
+      const isOccupied = activeOrders.some(o => o.tableNumber === i);
+      const passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
+      tables.push({
+        tableNumber: i,
+        status: isOccupied ? 'occupied' : 'available',
+        passcode
+      });
+    }
+
+    res.json(tables);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // --- Revenue ---
 router.get('/revenue', authAdmin, async (req, res) => {
   try {

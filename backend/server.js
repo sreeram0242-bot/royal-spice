@@ -21,11 +21,19 @@ app.use(express.json());
 
 // Removed aggressive caching headers for faster loading
 
+const staticOptions = {
+  setHeaders: (res, path, stat) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+};
+
 // Serve Static Portals
-app.use('/customer', express.static(path.join(__dirname, '../customer')));
-app.use('/admin', express.static(path.join(__dirname, '../admin')));
-app.use('/master', express.static(path.join(__dirname, '../master')));
-app.use('/waiter', express.static(path.join(__dirname, '../waiter')));
+app.use('/customer', express.static(path.join(__dirname, '../customer'), staticOptions));
+app.use('/admin', express.static(path.join(__dirname, '../admin'), staticOptions));
+app.use('/master', express.static(path.join(__dirname, '../master'), staticOptions));
+app.use('/waiter', express.static(path.join(__dirname, '../waiter'), staticOptions));
 
 // Redirect root to customer menu (can be changed later)
 app.get('/', (req, res) => res.redirect('/customer'));

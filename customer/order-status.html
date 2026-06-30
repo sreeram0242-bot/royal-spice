@@ -9,14 +9,15 @@
 </head>
 <body>
 
-  <button class="theme-toggle-btn" onclick="toggleTheme()">🌓</button>
-
   <!-- Top Header -->
-  <header class="back-header">
+  <header class="back-header" style="justify-content: space-between;">
     <button class="back-btn" onclick="window.location.href='menu.html'">
       <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
     </button>
     <div class="header-title">ORDER STATUS</div>
+    <div style="display:flex; align-items:center; padding-right:16px;">
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌓</button>
+    </div>
   </header>
 
   <!-- Orders Container -->

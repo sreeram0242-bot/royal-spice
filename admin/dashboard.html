@@ -14,6 +14,25 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+  <style>
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-switch .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #555; transition: .4s; border-radius: 24px;
+    }
+    .toggle-switch .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white; transition: .4s; border-radius: 50%;
+    }
+    .toggle-switch input:checked + .slider { background-color: var(--gold-primary); }
+    .toggle-switch input:checked + .slider:before { transform: translateX(20px); }
+  </style>
   <script>
     window.addEventListener('error', function(e) {
       alert('JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
@@ -263,6 +282,7 @@
                   <th style="padding: 12px;">Order #</th>
                   <th style="padding: 12px;">Table</th>
                   <th style="padding: 12px;">Total Amount</th>
+                  <th style="padding: 12px;">Payment</th>
                   <th style="padding: 12px;">Action</th>
                 </tr>
               </thead>
@@ -293,12 +313,6 @@
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
         <h2 style="font-size:20px; font-weight:700;">Waiter Accounts</h2>
         <button class="btn-gold" onclick="openAddWaiterModal()" style="padding: 10px 18px;">+ Add Waiter</button>
-      </div>
-      <div style="background:var(--panel-bg); border-radius:12px; padding:4px; border:1px solid #2a2a2a; margin-bottom:16px;">
-        <p style="padding:12px 16px; font-size:13px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-          <i data-lucide="lightbulb" style="color:var(--gold); width:16px; height:16px;"></i> <strong>Restaurant ID:</strong> <span id="adminRestaurantIdDisplay" style="font-family:monospace; color:var(--gold); font-size:12px; cursor:pointer;" onclick="copyRestaurantId()" title="Click to copy">—</span>
-          &nbsp;— Share this with your waiters for their login.
-        </p>
       </div>
     <table style="width:100%; border-collapse:collapse;">
       <thead>
@@ -334,6 +348,16 @@
             <div>
               <label>GST %</label>
               <input type="number" id="setRestGst" class="login-input">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid var(--border-color);">
+              <div>
+                <div style="font-weight: 600;">🖨️ Auto-Print KOT</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Automatically open print dialog for new orders</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setAutoPrint">
+                <span class="slider"></span>
+              </label>
             </div>
             <button class="btn-gold" onclick="saveSettings()">Save Settings</button>
           </div>
@@ -463,9 +487,11 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=3"></script>
   <script>
     lucide.createIcons();
+    if (typeof updateThemeIcon === 'function') updateThemeIcon();
+    showView('dashboard');
   </script>
 </body>
 </html>

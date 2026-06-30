@@ -76,9 +76,11 @@ async function loadTables() {
 
     grid.innerHTML = '';
     tables.forEach(t => {
-      const card = document.createElement('div');
+      const card = document.createElement('button');
       card.className = `table-card status-${t.status} ${t.hasCall ? 'has-call' : ''}`;
-      card.onclick = () => openTableModal(t.tableNumber);
+      card.onclick = () => openTableModal(t.tableNumber, t.passcode);
+      card.style.display = 'block';
+      card.style.width = '100%';
 
       const pillClass = {
         available: 'pill-available',
@@ -99,6 +101,7 @@ async function loadTables() {
       card.innerHTML = `
         <div class="table-num">T${String(t.tableNumber).padStart(2,'0')}</div>
         <span class="table-status-pill ${pillClass}">${statusLabel}</span>
+        ${t.passcode ? `<div style="font-size:12px; color:var(--text-muted); margin-top:8px;">PIN: <strong style="color:var(--gold-primary); font-size:16px;">${t.passcode}</strong></div>` : ''}
         ${t.total > 0 ? `<div class="table-total">₹${t.total.toFixed(2)}</div>` : ''}
       `;
       grid.appendChild(card);
@@ -110,7 +113,7 @@ async function loadTables() {
 }
 
 // ── TABLE MODAL ──
-async function openTableModal(tableNumber) {
+async function openTableModal(tableNumber, passcode = null) {
   const modal = document.getElementById('tableModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
@@ -128,16 +131,25 @@ async function openTableModal(tableNumber) {
     if (!res.ok) {
       // No active orders — show empty
       sub.textContent = 'No active orders';
-      body.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="armchair" style="width:48px;height:48px;opacity:0.5;"></i></div><div>This table is free</div></div>';
-      actions.innerHTML = `
-        <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order for this Table</button>
-      `;
+      if (passcode) {
+        body.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="key" style="width:48px;height:48px;color:var(--gold-primary);"></i></div><div>Customer PIN for this table:</div><div style="font-size:32px; font-weight:bold; letter-spacing:4px; margin-top:10px; color:var(--gold-primary);">${passcode}</div></div>`;
+        actions.innerHTML = `
+          <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order for this Table</button>
+        `;
+      } else {
+        body.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="armchair" style="width:48px;height:48px;opacity:0.5;"></i></div><div>This table is free</div></div>';
+        actions.innerHTML = `
+          <button class="btn-action btn-secondary" onclick="generatePasscode(${tableNumber})"><i data-lucide="key" style="width:16px;height:16px;vertical-align:middle;"></i> Generate PIN</button>
+          <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order Without PIN</button>
+        `;
+      }
       setTimeout(() => lucide.createIcons(), 10);
       return;
     }
 
     const bill = await res.json();
-    sub.textContent = `${bill.orders.length} order batch(es) · Session active`;
+    const sessionNo = bill.orders[0]?.sessionNumber || bill.orders[0]?.orderNumber;
+    sub.textContent = `${bill.orders.length} order batch(es) · Session #${sessionNo}`;
 
     // Render each order batch
     let bodyHTML = '';
@@ -223,7 +235,7 @@ function renderBillContent(bill, container) {
     <div class="bill-meta"><span>Date:</span><span>${dateStr}</span></div>
     <div class="bill-meta"><span>Time:</span><span>${timeStr}</span></div>
     <div class="bill-meta"><span>Table:</span><span>No. ${bill.tableNumber}</span></div>
-    <div class="bill-meta"><span>Session:</span><span>#${bill.orders[0].orderNumber}</span></div>
+    <div class="bill-meta"><span>Session:</span><span>#${bill.orders[0].sessionNumber || bill.orders[0].orderNumber}</span></div>
     <div class="bill-meta"><span>Orders:</span><span>${bill.orders.map(o => '#' + o.orderNumber).join(', ')}</span></div>
     <div class="bill-dashed"></div>
     <div class="bill-items-header">
@@ -242,6 +254,7 @@ function renderBillContent(bill, container) {
       <div class="bill-dashed"></div>
       <div class="bill-total-row"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
       <div class="bill-total-row"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
+      ${bill.totalTip > 0 ? `<div class="bill-total-row"><span>Tip</span><span>₹${bill.totalTip.toFixed(2)}</span></div>` : ''}
       <div class="bill-total-row bill-grand"><span>GRAND TOTAL</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
     </div>
     <div class="bill-footer">
@@ -262,17 +275,39 @@ function markPaymentDone() {
 }
 
 // ── CLOSE SESSION ──
-async function closeSession(tableNumber) {
-  if (!confirm(`Close session for Table ${tableNumber}? This will mark the table as free.`)) return;
-  closeTableModal();
-  try {
-    const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST');
-    const data = await res.json();
-    alert(data.message || 'Session closed!');
-    loadTables();
-  } catch (e) {
-    alert('Error closing session');
-  }
+let tableToClose = null;
+
+function closeSession(tableNumber) {
+  tableToClose = tableNumber;
+  document.getElementById('confirmTableNum').innerText = tableNumber;
+  document.getElementById('confirmCloseModal').classList.add('open');
+  lucide.createIcons();
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmCloseModal').classList.remove('open');
+  tableToClose = null;
+}
+
+const confirmBtn = document.getElementById('confirmCloseBtn');
+if (confirmBtn) {
+  confirmBtn.addEventListener('click', async () => {
+    if (!tableToClose) return;
+    const tableNumber = tableToClose;
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    
+    closeConfirmModal();
+    closeTableModal();
+    
+    try {
+      const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { paymentMethod });
+      const data = await res.json();
+      alert(data.message || 'Session closed!');
+      loadTables();
+    } catch (e) {
+      alert('Error closing session');
+    }
+  });
 }
 
 // ── WAITER CALLS ──
@@ -528,6 +563,28 @@ async function loadLiveOrders() {
   }
 }
 
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-theme');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const icon = document.querySelector('#themeToggleBtn i[data-lucide]');
+  if (!icon) return;
+  const isLight = document.body.classList.contains('light-theme');
+  icon.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// Apply saved theme on page load
+(function() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+  }
+})();
+
 function logout() {
   localStorage.removeItem('waiterToken');
   localStorage.removeItem('waiterName');
@@ -544,3 +601,16 @@ setInterval(() => {
   if (activeTab === 'tabTables') loadTables();
   if (activeTab === 'tabCalls') loadCalls();
 }, 30000);
+
+async function generatePasscode(tableNumber) {
+  try {
+    const res = await api('/api/waiter/table/' + tableNumber + '/generate-code', 'POST');
+    if (res && res.ok) {
+      loadTables();
+      const data = await res.json();
+      openTableModal(tableNumber, data.passcode);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}

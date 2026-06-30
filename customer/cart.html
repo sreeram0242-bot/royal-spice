@@ -9,14 +9,15 @@
 </head>
 <body>
 
-  <button class="theme-toggle-btn" onclick="toggleTheme()">🌓</button>
-
   <header class="back-header" style="justify-content: space-between;">
     <button class="back-btn" onclick="window.location.href='menu.html'" style="display: flex; align-items: center;">
       <svg viewBox="0 0 24 24" style="width: 24px; height: 24px;"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
     </button>
     <div class="header-title" style="flex: 1; text-align: center;">YOUR CART</div>
-    <button onclick="clearCart()" style="background:transparent; border:none; color:var(--red); font-weight:bold; cursor:pointer; font-size: 14px;">CLEAR</button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌓</button>
+      <button onclick="clearCart()" style="background:transparent; border:none; color:var(--red); font-weight:bold; cursor:pointer; font-size: 14px;">CLEAR</button>
+    </div>
   </header>
 
   <div class="cart-list" id="cartContainer" style="padding-bottom: 0;"></div>
@@ -54,8 +55,24 @@
     </div>
   </div>
 
+  <!-- Passcode Prompt Modal -->
+  <div class="overlay" id="passcodePromptOverlay">
+    <div class="popup-box" style="text-align:center;">
+      <div style="background: rgba(235, 178, 91, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+        <i data-lucide="lock" style="width: 32px; height: 32px; color: var(--gold-primary);"></i>
+      </div>
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Waiter PIN Required</h2>
+      <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">Please ask your waiter for the 4-digit table PIN to confirm your order.</p>
+      <input type="number" id="orderPasscodeInput" placeholder="Enter 4-Digit PIN" style="width: 100%; padding: 14px; text-align: center; font-size: 20px; letter-spacing: 4px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--panel-color); color: var(--text-primary); margin-bottom: 20px; outline: none;">
+      <div style="display:flex; gap:12px;">
+        <button class="btn-secondary" style="flex:1;" onclick="document.getElementById('passcodePromptOverlay').style.display='none'">Cancel</button>
+        <button class="btn-primary" style="flex:1;" onclick="submitOrderWithPasscode()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=23"></script>
+  <script src="app.js?v=25"></script>
   <script>
     renderCart();
   </script>

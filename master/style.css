@@ -7,6 +7,16 @@
   --green: #22C55E;
   --red: #EF4444;
   --orange: #F4A017;
+  --border: rgba(255,255,255,0.08);
+}
+
+body.light-theme {
+  --bg-dark: #F3F4F6;
+  --panel-bg: #FFFFFF;
+  --gold: #D9A02A;
+  --text-primary: #111827;
+  --text-muted: #4B5563;
+  --border: #E5E7EB;
 }
 
 * {

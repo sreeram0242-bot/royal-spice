@@ -14,6 +14,7 @@ model Restaurant {
   address            String?
   gstPercent         Float         @default(5)
   totalTables        Int           @default(20)
+  sessionCounter     Int           @default(1)
   adminUsername      String        @unique
   adminPasswordHash  String
   plan               String        @default("trial")
@@ -58,13 +59,27 @@ model Order {
   orderNumber  Int
   subtotal     Float
   gst          Float
+  tip          Float       @default(0)
   total        Float
   status       String      @default("new")
   sessionId    String
+  sessionNumber Int?
+  paymentMethod String?
+  closedByWaiter String?
   createdAt    DateTime    @default(now())
 
   restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   items        OrderItem[]
+}
+
+model TablePasscode {
+  id           String     @id @default(cuid())
+  restaurantId String
+  tableNumber  Int
+  passcode     String
+  createdAt    DateTime   @default(now())
+
+  @@unique([restaurantId, tableNumber])
 }
 
 model OrderItem {
@@ -74,6 +89,7 @@ model OrderItem {
   name       String
   price      Float
   qty        Int
+  specialNote String?
 
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])

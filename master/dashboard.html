@@ -32,6 +32,9 @@
       </div>
       <div style="display: flex; gap: 16px; align-items: center;">
         <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; background: var(--red); border: none; color: white;" onclick="openGlobalBroadcastModal()">📢 Global Broadcast</button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <i data-lucide="moon" style="width:18px;height:18px;"></i>
+        </button>
         <div style="display: flex; align-items: center; gap: 8px;">
           <img src="https://via.placeholder.com/32" style="border-radius: 50%; width: 32px; height: 32px;" alt="Admin">
           <span>Master Admin ▾</span>
@@ -259,9 +262,11 @@
     </div>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js?v=6"></script>
   <script>
     lucide.createIcons();
+    if (typeof updateThemeIcon === 'function') updateThemeIcon();
   </script>
 </body>
 </html>

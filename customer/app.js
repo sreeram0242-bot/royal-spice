@@ -128,7 +128,7 @@ function renderCategories() {
 
     div.innerHTML = `
       <div class="cat-circle" style="overflow: hidden; padding: 0;">
-        <img src="${imageSrc}" alt="${cat}" style="width: 100%; height: 100%; object-fit: cover;">
+        <img src="${imageSrc}" alt="${cat}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
       </div>
       <div class="cat-text">${cat}</div>
     `;
@@ -182,7 +182,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
       htmlString += `
         <div class="menu-card" style="${!isAvail ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
           <div class="card-img-wrapper">
-            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" class="card-img" alt="${item.name}">
+            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" loading="lazy" class="card-img" alt="${item.name}">
             <div class="veg-dot ${item.isVeg ? '' : 'non-veg-dot'}"></div>
           </div>
           <div class="card-info">
@@ -322,20 +322,28 @@ function renderCart() {
   let htmlString = '';
   cart.forEach(item => {
     htmlString += `
-      <div class="menu-card" style="margin: 0 20px 12px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); padding: 0 0 12px 0; border-radius: 0; align-items: center; display: flex;">
-        <div class="card-img-wrapper" style="width: 60px; height: 60px; flex-shrink: 0; margin-right: 12px;">
-          <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" class="card-img" alt="${item.name}">
+      <div class="menu-card" style="margin: 0 20px 12px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); padding: 0 0 12px 0; border-radius: 0; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display:flex; align-items:center; width:100%;">
+          <div class="card-img-wrapper" style="width: 60px; height: 60px; flex-shrink: 0; margin-right: 12px;">
+            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" loading="lazy" class="card-img" alt="${item.name}">
+          </div>
+          <div class="card-info" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <div class="card-title" style="font-size:14px;">${item.name}</div>
+            <div class="card-price" style="font-size:14px; margin-top:4px;">₹${item.price}</div>
+          </div>
+          <div class="qty-control" style="height: 28px;">
+            <button class="qty-btn" onclick="updateQty('${item.id}', -1)">−</button>
+            <span class="qty-val">${item.qty}</span>
+            <button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button>
+          </div>
+          <div style="font-weight:bold; color:var(--text-primary); margin-left: 12px; width:40px; text-align:right;">₹${item.price * item.qty}</div>
         </div>
-        <div class="card-info" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-          <div class="card-title" style="font-size:14px;">${item.name}</div>
-          <div class="card-price" style="font-size:14px; margin-top:4px;">₹${item.price}</div>
+        <div style="width:100%;">
+          <input type="text" placeholder="Add special instructions (e.g. less spicy)..." 
+                 value="${item.specialNote || ''}"
+                 onchange="updateNote('${item.id}', this.value)"
+                 style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:white; font-size:12px;">
         </div>
-        <div class="qty-control" style="height: 28px;">
-          <button class="qty-btn" onclick="updateQty('${item.id}', -1)">−</button>
-          <span class="qty-val">${item.qty}</span>
-          <button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button>
-        </div>
-        <div style="font-weight:bold; color:var(--text-primary); margin-left: 12px; width:40px; text-align:right;">₹${item.price * item.qty}</div>
       </div>
     `;
   });
@@ -353,6 +361,14 @@ function renderCart() {
   document.getElementById('summaryTotal').innerText = '₹' + grandTotal;
 
   summary.style.display = 'block';
+}
+
+function updateNote(itemId, note) {
+  const item = cart.find(c => c.id === itemId);
+  if (item) {
+    item.specialNote = note;
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
 }
 
 let selectedTip = 0;
@@ -377,6 +393,18 @@ function setTip(amt) {
 
 async function placeOrder() {
   if (cart.length === 0) return;
+  document.getElementById('passcodePromptOverlay').style.display = 'flex';
+  document.getElementById('orderPasscodeInput').value = '';
+  document.getElementById('orderPasscodeInput').focus();
+}
+
+async function submitOrderWithPasscode() {
+  const passcode = document.getElementById('orderPasscodeInput').value.trim();
+  if (!passcode || passcode.length !== 4) {
+    alert('Please enter the 4-digit PIN provided by the waiter.');
+    return;
+  }
+  document.getElementById('passcodePromptOverlay').style.display = 'none';
 
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const gst = Math.round(subTotal * 0.05);
@@ -384,19 +412,18 @@ async function placeOrder() {
 
   let sessionId = localStorage.getItem('sessionId');
 
-  const orderItems = cart.map(i => ({ menuItemId: i.id, name: i.name, price: i.price, qty: i.qty }));
-  if (selectedTip > 0) {
-    orderItems.push({ menuItemId: 'tip', name: 'Tip', price: selectedTip, qty: 1 });
-  }
+  const orderItems = cart.map(i => ({ menuItemId: i.id, name: i.name, price: i.price, qty: i.qty, specialNote: i.specialNote || '' }));
 
   const payload = {
     restaurantId,
     tableNumber: parseInt(tableNumber),
     items: orderItems,
-    subtotal: subTotal + selectedTip,
+    subtotal: subTotal,
     gst,
+    tip: selectedTip,
     total,
-    sessionId
+    sessionId,
+    passcode
   };
 
   try {
@@ -407,6 +434,11 @@ async function placeOrder() {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || 'Failed to place order');
+      return;
+    }
 
     if (!sessionId) {
       localStorage.setItem('sessionId', data.order.sessionId);

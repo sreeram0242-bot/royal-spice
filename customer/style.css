@@ -25,22 +25,22 @@ body.light-theme {
 }
 
 .theme-toggle-btn {
-  position: fixed;
-  top: 20px;
-  right: 60px;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--panel-color);
-  border: 1px solid var(--gold-primary);
-  color: var(--gold-primary);
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 20px;
   cursor: pointer;
   z-index: 1000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
 }
 
 * {
@@ -129,8 +129,8 @@ body {
 }
 
 .table-pill {
-  border: 1px solid rgba(235, 178, 91, 0.3);
-  background-color: rgba(23, 23, 26, 0.8);
+  border: 1px solid var(--gold-primary);
+  background-color: var(--floating-bg);
   color: var(--gold-primary);
   padding: 6px 16px;
   border-radius: 20px;
@@ -438,7 +438,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--card-shadow);
   z-index: 90;
   cursor: pointer;
 }

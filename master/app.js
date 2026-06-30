@@ -10,6 +10,28 @@ function logout() {
   window.location.href = 'index.html';
 }
 
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-theme');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const icon = document.querySelector('#themeToggleBtn i[data-lucide]');
+  if (!icon) return;
+  const isLight = document.body.classList.contains('light-theme');
+  icon.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// Apply saved theme on page load
+(function() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+  }
+})();
+
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-' + viewId).classList.remove('hidden');

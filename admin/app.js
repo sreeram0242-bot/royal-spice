@@ -8,12 +8,28 @@ if (!token && !window.location.pathname.includes('index.html')) {
 
 const socket = typeof io !== 'undefined' ? io(BASE_URL) : null;
 
+// Audio Alerts
+const dingSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+const callSound = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg');
+
 if (socket && restaurantId) {
   socket.on('connect', () => {
     socket.emit('join_restaurant', restaurantId);
   });
 
   socket.on('new_order', (order) => {
+    // Play sound
+    dingSound.play().catch(e => console.log('Audio play prevented by browser', e));
+    
+    // Auto Print if enabled
+    if (localStorage.getItem('autoPrint') === 'true') {
+      setTimeout(() => {
+        const row = document.querySelector(`.order-card[data-order-id="${order.id}"] button[onclick*="printKOT"]`);
+        if (row) row.click();
+        else window.print(); // fallback
+      }, 500);
+    }
+
     // Show popup
     const popup = document.getElementById('orderPopup');
     if (popup) {
@@ -28,6 +44,7 @@ if (socket && restaurantId) {
   });
 
   socket.on('waiter_call', (call) => {
+    callSound.play().catch(e => console.log('Audio play prevented', e));
     loadDashboard();
     if (!document.getElementById('view-waiter').classList.contains('hidden')) {
       loadWaiterCalls();
@@ -48,6 +65,28 @@ function logout() {
   localStorage.removeItem('adminRestaurantId');
   window.location.href = 'index.html';
 }
+
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-theme');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.querySelector('.theme-toggle-btn i[data-lucide]');
+  if (!btn) return;
+  const isLight = document.body.classList.contains('light-theme');
+  btn.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// Apply saved theme on page load
+(function() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+  }
+})();
 
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
@@ -122,6 +161,9 @@ async function loadSettings(onlyTables = false) {
     document.getElementById('setRestName').value = restaurantSettings.name;
     document.getElementById('setRestAddress').value = restaurantSettings.address;
     document.getElementById('setRestGst').value = restaurantSettings.gstPercent;
+    
+    // Load Auto Print toggle from LocalStorage
+    document.getElementById('setAutoPrint').checked = localStorage.getItem('autoPrint') === 'true';
   }
 }
 
@@ -129,6 +171,10 @@ async function saveSettings() {
   const name = document.getElementById('setRestName').value;
   const address = document.getElementById('setRestAddress').value;
   const gstPercent = document.getElementById('setRestGst').value;
+  
+  // Save Auto Print toggle
+  localStorage.setItem('autoPrint', document.getElementById('setAutoPrint').checked);
+  
   await fetchAPI('/api/admin/settings', 'PUT', { name, address, gstPercent });
   alert('Settings saved');
   loadSettings();
@@ -287,7 +333,10 @@ async function loadOrders() {
 
     let itemsHtml = o.items.map(i => `
       <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
-        <div><span style="color: var(--gold); font-weight: bold; margin-right: 8px;">${i.qty}x</span>${i.name}</div>
+        <div>
+          <span style="color: var(--gold); font-weight: bold; margin-right: 8px;">${i.qty}x</span>${i.name}
+          ${i.specialNote ? `<div style="font-size: 11px; color: #ff9800; margin-top: 2px; margin-left: 24px; font-style: italic;">Note: ${i.specialNote}</div>` : ''}
+        </div>
         <div style="color: var(--text-muted);">₹${i.price * i.qty}</div>
       </div>
     `).join('');
@@ -297,12 +346,13 @@ async function loadOrders() {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #333; padding-bottom: 16px;">
           <div>
             <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Order Number</div>
-            <div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">#${o.orderNumber}</div>
+            <div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">#${o.orderNumber} <span style="font-size:12px; font-weight:normal; color:#888;">(Session #${o.sessionNumber || o.orderNumber})</span></div>
             <span class="status ${o.status}">${o.status.toUpperCase()}</span>
           </div>
           <div style="text-align: right;">
             <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Table</div>
-            <div style="font-size: 24px; font-weight: bold; color: var(--gold);">${o.tableNumber}</div>
+            <div style="font-size: 24px; font-weight: bold; color: var(--gold); margin-bottom: 6px;">${o.tableNumber}</div>
+            <button onclick="printKOT('${o.id}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;"><i data-lucide="printer" style="width:20px; height:20px;"></i></button>
           </div>
         </div>
         
@@ -320,6 +370,19 @@ async function loadOrders() {
             <div style="font-weight: bold; font-size: 14px;">${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
           </div>
         </div>
+        
+        ${o.status === 'completed' ? `
+        <div style="background: rgba(34,197,94,0.1); border: 1px solid var(--green); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-muted);">Payment Method:</span>
+            <strong style="color:var(--text-primary); text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Closed By Waiter:</span>
+            <strong style="color:var(--text-primary);">${o.closedByWaiter || 'Unknown'}</strong>
+          </div>
+        </div>
+        ` : ''}
         
         <div>
           ${actionBtn}
@@ -740,11 +803,25 @@ async function loadCategories() {
 }
 
 // TABLES Overview
-function renderFullTableGrid(total) {
+async function renderFullTableGrid(total) {
   const grid = document.getElementById('fullTableGrid');
-  grid.innerHTML = '';
-  for (let i = 1; i <= total; i++) {
-    grid.innerHTML += `<div class="table-pill available" style="height: 100px; display: flex; align-items: center; justify-content: center; font-size: 20px;">T${i.toString().padStart(2, '0')}</div>`;
+  grid.innerHTML = '<div style="color:var(--text-muted);">Loading tables...</div>';
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/admin/tables`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const tables = await res.json();
+    
+    grid.innerHTML = '';
+    tables.forEach(t => {
+      const isOccupied = t.status === 'occupied';
+      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'status-new' : 'available'}" style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; border: 1px solid ${isOccupied ? 'rgba(59,130,246,0.4)' : '#333'}; background: var(--panel-bg); color: var(--text-primary); border-radius: 8px;">
+        <div>T${t.tableNumber.toString().padStart(2, '0')}</div>
+        <div style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">${isOccupied ? 'Occupied' : 'Free'}</div>
+        ${t.passcode ? `<div style="font-size: 14px; margin-top: 4px; color: var(--gold); font-weight: bold;">PIN: ${t.passcode}</div>` : ''}
+      </div>`;
+    });
+  } catch (err) {
+    grid.innerHTML = '<div style="color:var(--red);">Failed to load tables</div>';
   }
 }
 
@@ -922,6 +999,7 @@ function renderHistory() {
         <td style="padding: 12px; color: var(--text-primary);">#${order.orderNumber}</td>
         <td style="padding: 12px; color: var(--text-primary);">Table ${order.tableNumber}</td>
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${order.total}</td>
+        <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${order.paymentMethod || 'cash'}</td>
         <td style="padding: 12px;">
           <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails(${index})">View Items</button>
         </td>
@@ -987,9 +1065,6 @@ async function loadWaiters() {
       }
     } catch (e) {}
   }
-  const ridDisplay = document.getElementById('adminRestaurantIdDisplay');
-  if (ridDisplay && rid) ridDisplay.textContent = rid;
-
   const tbody = document.getElementById('waitersTableBody');
   tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr>';
   try {
@@ -1117,3 +1192,36 @@ async function adminPrintBill(tableNumber) {
     content.innerHTML = '<p style="color:#c00;padding:20px;">Error generating bill.</p>';
   }
 }
+
+// PRINT KOT
+function printKOT(orderId) {
+  const printWindow = window.open('', '_blank', 'width=300,height=600');
+  printWindow.document.write('<html><body><div style="font-family:monospace; padding:20px;">Fetching order details to print...</div></body></html>');
+  
+  fetchAPI('/api/admin/orders').then(orders => {
+    const o = orders.find(or => or.id === orderId);
+    if (!o) return;
+    
+    let itemsHtml = o.items.map(i => `
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:14px;">
+        <div><b>${i.qty}x</b> ${i.name}</div>
+      </div>
+      ${i.specialNote ? `<div style="font-size:12px; font-style:italic; margin-left:20px; margin-bottom:8px;">Note: ${i.specialNote}</div>` : ''}
+    `).join('');
+    
+    printWindow.document.body.innerHTML = `
+        <h2 style="text-align:center; margin:0 0 10px 0;">KITCHEN TICKET</h2>
+        <div style="border-bottom:1px dashed #000; margin-bottom:10px; padding-bottom:10px; font-family:monospace;">
+          <div><b>Table: ${o.tableNumber}</b></div>
+          <div>Order: #${o.orderNumber}</div>
+          <div>Time: ${new Date(o.createdAt).toLocaleTimeString()}</div>
+        </div>
+        <div style="font-family:monospace;">${itemsHtml}</div>
+        <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; text-align:center; font-family:monospace;">
+          *** END OF KOT ***
+        </div>
+    `;
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+  });
+}
+

@@ -50,7 +50,16 @@ router.get('/categories/:restaurantId', async (req, res) => {
 // Place an order
 router.post('/order', async (req, res) => {
   try {
-    const { restaurantId, tableNumber, items, subtotal, gst, total, sessionId } = req.body;
+    const { restaurantId, tableNumber, items, subtotal, gst, tip = 0, total, sessionId, passcode } = req.body;
+    
+    // Validate Passcode
+    const validPasscode = await prisma.tablePasscode.findUnique({
+      where: { restaurantId_tableNumber: { restaurantId, tableNumber: parseInt(tableNumber) } }
+    });
+    
+    if (!validPasscode || validPasscode.passcode !== passcode) {
+      return res.status(401).json({ message: 'Invalid or missing 4-digit passcode. Please ask the waiter.' });
+    }
 
     // Generate simple order number
     const count = await prisma.order.count({ where: { restaurantId } });
@@ -58,14 +67,24 @@ router.post('/order', async (req, res) => {
 
     // Enforce single-session per table: always check for an active order first
     let currentSessionId = sessionId;
+    let currentSessionNumber = null;
+    
     const activeOrder = await prisma.order.findFirst({
       where: { restaurantId, tableNumber: parseInt(tableNumber), status: { not: 'completed' } },
       orderBy: { createdAt: 'desc' }
     });
+    
     if (activeOrder) {
       currentSessionId = activeOrder.sessionId;
-    } else if (!currentSessionId) {
-      currentSessionId = uuidv4();
+      currentSessionNumber = activeOrder.sessionNumber;
+    } else {
+      if (!currentSessionId) currentSessionId = uuidv4();
+      // Increment and assign new session number
+      const restaurant = await prisma.restaurant.update({
+        where: { id: restaurantId },
+        data: { sessionCounter: { increment: 1 } }
+      });
+      currentSessionNumber = restaurant.sessionCounter;
     }
 
     const order = await prisma.order.create({
@@ -75,15 +94,18 @@ router.post('/order', async (req, res) => {
         orderNumber,
         subtotal,
         gst,
+        tip,
         total,
         status: 'new',
         sessionId: currentSessionId,
+        sessionNumber: currentSessionNumber,
         items: {
           create: items.map(item => ({
             menuItemId: item.menuItemId,
             name: item.name,
             price: item.price,
-            qty: item.qty
+            qty: item.qty,
+            specialNote: item.specialNote || null
           }))
         }
       },
