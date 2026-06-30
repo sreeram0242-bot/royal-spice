@@ -151,13 +151,27 @@
       
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 24px; text-align:left;">
         <label style="display:flex; align-items:center; gap:8px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="cash" checked style="accent-color:var(--gold-primary); width:16px; height:16px;">
-          <span>Cash</span>
+          <input type="radio" name="paymentMethod" value="cash" checked style="accent-color:var(--gold-primary); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'">
+          <span>Full Cash</span>
         </label>
         <label style="display:flex; align-items:center; gap:8px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="gpay" style="accent-color:var(--gold-primary); width:16px; height:16px;">
-          <span>GPay / UPI</span>
+          <input type="radio" name="paymentMethod" value="upi" style="accent-color:var(--gold-primary); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'">
+          <span>Full UPI (GPay/PhonePe)</span>
         </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="card" style="accent-color:var(--gold-primary); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'">
+          <span>Full Card</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="split" style="accent-color:var(--gold-primary); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='flex'">
+          <span>Split Payment</span>
+        </label>
+        
+        <div id="splitInputs" style="display:none; flex-direction:column; gap:8px; margin-top:8px;">
+          <input type="number" id="splitCash" placeholder="Cash Amount (₹)" style="padding:10px; border-radius:8px; border:1px solid #444; background:rgba(255,255,255,0.1); color:#fff; width:100%;">
+          <input type="number" id="splitUpi" placeholder="UPI Amount (₹)" style="padding:10px; border-radius:8px; border:1px solid #444; background:rgba(255,255,255,0.1); color:#fff; width:100%;">
+          <input type="number" id="splitCard" placeholder="Card Amount (₹)" style="padding:10px; border-radius:8px; border:1px solid #444; background:rgba(255,255,255,0.1); color:#fff; width:100%;">
+        </div>
       </div>
 
       <div style="display:flex; gap:12px; justify-content:center;">

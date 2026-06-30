@@ -289,7 +289,24 @@ if (confirmBtn) {
   confirmBtn.addEventListener('click', async () => {
     if (!tableToClose) return;
     const tableNumber = tableToClose;
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    let paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    
+    if (paymentMethod === 'split') {
+      const cash = parseFloat(document.getElementById('splitCash').value) || 0;
+      const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
+      const card = parseFloat(document.getElementById('splitCard').value) || 0;
+      
+      let parts = [];
+      if (cash > 0) parts.push(`Cash(₹${cash})`);
+      if (upi > 0) parts.push(`UPI(₹${upi})`);
+      if (card > 0) parts.push(`Card(₹${card})`);
+      
+      if (parts.length === 0) {
+        alert("Please enter at least one split amount!");
+        return;
+      }
+      paymentMethod = `Split: ${parts.join(', ')}`;
+    }
     
     closeConfirmModal();
     closeTableModal();
