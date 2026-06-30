@@ -547,10 +547,11 @@ router.get('/table/:num/bill', authAdmin, async (req, res) => {
     });
 
     const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
-    const gstAmount = orders.reduce((sum, o) => sum + o.gst, 0);
-    const grandTotal = orders.reduce((sum, o) => sum + o.total, 0);
+    const gstAmount = subtotal * (restaurant.gstPercent / 100);
+    const totalTip = orders.reduce((sum, o) => sum + (o.tip || 0), 0);
+    const grandTotal = subtotal + gstAmount + totalTip;
 
-    res.json({ restaurant, tableNumber, sessionId: latestOrder.sessionId, orders, subtotal, gstAmount, gstPercent: restaurant.gstPercent, grandTotal, generatedAt: new Date().toISOString() });
+    res.json({ restaurant, tableNumber, sessionId: latestOrder.sessionId, orders, subtotal, gstAmount, gstPercent: restaurant.gstPercent, totalTip, grandTotal, generatedAt: new Date().toISOString() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

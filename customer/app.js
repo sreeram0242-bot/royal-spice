@@ -128,7 +128,7 @@ function renderCategories() {
 
     div.innerHTML = `
       <div class="cat-circle" style="overflow: hidden; padding: 0;">
-        <img src="${imageSrc}" alt="${cat}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+        <img src="${imageSrc}" alt="${cat}" style="width: 100%; height: 100%; object-fit: cover;">
       </div>
       <div class="cat-text">${cat}</div>
     `;
@@ -182,7 +182,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
       htmlString += `
         <div class="menu-card" style="${!isAvail ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
           <div class="card-img-wrapper">
-            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" loading="lazy" class="card-img" alt="${item.name}">
+            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'" loading="lazy" class="card-img" alt="${item.name}">
             <div class="veg-dot ${item.isVeg ? '' : 'non-veg-dot'}"></div>
           </div>
           <div class="card-info">
@@ -325,7 +325,7 @@ function renderCart() {
       <div class="menu-card" style="margin: 0 20px 12px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); padding: 0 0 12px 0; border-radius: 0; display: flex; flex-direction: column; gap: 8px;">
         <div style="display:flex; align-items:center; width:100%;">
           <div class="card-img-wrapper" style="width: 60px; height: 60px; flex-shrink: 0; margin-right: 12px;">
-            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" loading="lazy" class="card-img" alt="${item.name}">
+            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'" loading="lazy" class="card-img" alt="${item.name}">
           </div>
           <div class="card-info" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
             <div class="card-title" style="font-size:14px;">${item.name}</div>

@@ -34,6 +34,7 @@ app.use('/customer', express.static(path.join(__dirname, '../customer'), staticO
 app.use('/admin', express.static(path.join(__dirname, '../admin'), staticOptions));
 app.use('/master', express.static(path.join(__dirname, '../master'), staticOptions));
 app.use('/waiter', express.static(path.join(__dirname, '../waiter'), staticOptions));
+app.use('/logo', express.static(path.join(__dirname, '../logo asset'), staticOptions));
 
 // Redirect root to customer menu (can be changed later)
 app.get('/', (req, res) => res.redirect('/customer'));

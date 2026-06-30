@@ -13,9 +13,9 @@
 body.light-theme {
   --bg-dark: #F7F6F3;
   --panel-bg: #FFFFFF;
-  --gold: #92400E;
-  --text-primary: #1C1917;
-  --text-muted: #78716C;
+  --gold: #EAB308;
+  --text-primary: #000000;
+  --text-muted: #333333;
   --green: #059669;
   --red: #DC2626;
   --orange: #D97706;
@@ -205,8 +205,8 @@ body.light-theme .nav-link {
 body.light-theme .nav-link:hover,
 body.light-theme .nav-link.active {
   background-color: rgba(146,64,14,0.07);
-  color: #92400E;
-  border-left-color: #92400E;
+  color: #EAB308;
+  border-left-color: #EAB308;
 }
 body.light-theme .header {
   background: #FFFFFF;
@@ -240,12 +240,12 @@ body.light-theme .login-input {
   color: #1C1917;
 }
 body.light-theme .btn-gold {
-  background: #92400E;
+  background: #EAB308;
   color: #FFFFFF;
 }
 body.light-theme .btn-outline {
-  color: #92400E;
-  border-color: #92400E;
+  color: #EAB308;
+  border-color: #EAB308;
 }
 body.light-theme .modal-overlay {
   background: rgba(28,25,23,0.45);

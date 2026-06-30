@@ -326,9 +326,9 @@ async function loadOrders() {
     } else if (o.status === 'preparing') {
       actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready')">Mark Ready</button>`;
     } else if (o.status === 'ready') {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: #555; color: white;" onclick="updateOrderStatus('${o.id}', 'served')">Mark Served</button>`;
-    } else {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid #555; color: white;" disabled>Completed</button>`;
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served')">Mark Served</button>`;
+    } else if (o.status === 'served') {
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" disabled>Completed</button>`;
     }
 
     let itemsHtml = o.items.map(i => `
@@ -372,7 +372,7 @@ async function loadOrders() {
         </div>
         
         ${o.status === 'completed' ? `
-        <div style="background: rgba(34,197,94,0.1); border: 1px solid var(--green); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+        <div style="background: var(--bg-alpha-green); border: 1px solid var(--green); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
           <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
             <span style="color:var(--text-muted);">Payment Method:</span>
             <strong style="color:var(--text-primary); text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</strong>
@@ -457,7 +457,7 @@ async function loadMenu() {
     
     const headerDiv = document.createElement('div');
     headerDiv.style.padding = '16px 20px';
-    headerDiv.style.background = 'rgba(255, 255, 255, 0.05)';
+    headerDiv.style.background = 'transparent';
     headerDiv.style.borderBottom = '1px solid var(--border-color)';
     headerDiv.style.display = 'flex';
     headerDiv.style.justifyContent = 'space-between';
@@ -468,7 +468,7 @@ async function loadMenu() {
     titleSection.style.alignItems = 'center';
     titleSection.style.gap = '12px';
     
-    let defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(cat)}&background=random`;
+    let defaultImg = `https://via.placeholder.com/100?text=${encodeURIComponent(cat)}`;
     if (cat.toLowerCase() === 'all') defaultImg = 'images/cat_all.png';
     else if (cat.toLowerCase().includes('breakfast')) defaultImg = 'images/cat_breakfast.png';
     else if (cat.toLowerCase().includes('meal')) defaultImg = 'images/cat_meals.png';
@@ -476,7 +476,8 @@ async function loadMenu() {
 
     const img = document.createElement('img');
     img.src = (setting && setting.image) ? setting.image : defaultImg;
-    img.onerror = function() { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'; };
+    img.onerror = function() { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
+    img.loading = 'lazy';
     img.style.width = '40px';
     img.style.height = '40px';
     img.style.borderRadius = '50%';
@@ -521,12 +522,12 @@ async function loadMenu() {
         </thead>
         <tbody>
           ${items.map(m => `
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <td style="padding: 12px 8px;"><img src="${m.image || 'https://via.placeholder.com/40'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td>
-              <td style="padding: 12px 8px; color: white;">${m.name}</td>
-              <td style="padding: 12px 8px; color: white;">₹${m.price}</td>
-              <td style="padding: 12px 8px; color: white;">${m.isVeg ? 'Veg' : 'Non-Veg'}</td>
-              <td style="padding: 12px 8px; color: white;">${m.isAvailable ? '<span style="color:var(--green);font-size:12px;">Available</span>' : '<span style="color:var(--red);font-size:12px;">Out of Stock</span>'}</td>
+            <tr style="border-bottom: 1px solid var(--table-border);">
+              <td style="padding: 12px 8px;"><img src="${m.image || 'https://via.placeholder.com/40'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'" loading="lazy" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td>
+              <td style="padding: 12px 8px; color: var(--text-primary);">${m.name}</td>
+              <td style="padding: 12px 8px; color: var(--text-primary);">₹${m.price}</td>
+              <td style="padding: 12px 8px; color: var(--text-primary);">${m.isVeg ? 'Veg' : 'Non-Veg'}</td>
+              <td style="padding: 12px 8px; color: var(--text-primary);">${m.isAvailable ? '<span style="color:var(--green);font-size:12px;">Available</span>' : '<span style="color:var(--red);font-size:12px;">Out of Stock</span>'}</td>
               <td style="padding: 12px 8px; text-align: right;">
                 <button style="color: var(--gold); background: transparent; border: none; cursor: pointer; margin-right: 12px;" onclick="toggleItemAvailability('${m.id}', ${!m.isAvailable})">${m.isAvailable ? 'Mark Out of Stock' : 'Mark Available'}</button>
                 <button style="color: var(--blue); background: transparent; border: none; cursor: pointer; margin-right: 12px;" onclick="openEditMenuModal('${m.id}')">Edit</button>
@@ -719,11 +720,11 @@ async function loadCategories() {
     const setting = catSettings.find(s => s.categoryName === cat);
     
     const card = document.createElement('div');
-    card.style.background = 'rgba(255, 255, 255, 0.05)';
-    card.style.padding = '20px';
+    card.style.background = 'var(--panel-bg)';
     card.style.borderRadius = '12px';
     card.style.textAlign = 'center';
     card.style.border = '1px solid var(--border-color)';
+    card.style.padding = '20px';
     
     const imgWrapper = document.createElement('div');
     imgWrapper.style.width = '120px';
@@ -747,6 +748,8 @@ async function loadCategories() {
     else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = '/customer/images/cat_desserts.png';
 
     img.src = setting?.image || defaultImg;
+    img.onerror = function() { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
+    img.loading = 'lazy';
     img.style.width = '100%';
     img.style.height = '100%';
     img.style.objectFit = 'cover';

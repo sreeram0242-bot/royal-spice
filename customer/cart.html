@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cart - Royal Spice</title>
+  <title>Cart - Cloud Dine</title>
   <link rel="stylesheet" href="style.css?v=15">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -42,6 +42,14 @@
     <button class="btn-primary-large" style="width:100%; margin:8px 0 0;" onclick="placeOrder()">Place Order</button>
   </div>
 
+  <div style="margin: 32px 0 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85;">
+      <img src="logo.png" style="height: 48px; width: auto; object-fit: contain; margin-bottom: 8px;" alt="Cloud Dine Logo">
+    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
+      Created with <br/>
+      <span style="color: var(--text-primary); font-weight: 700; font-size: 13px;">Cloud</span> <span style="color: var(--gold-primary); font-weight: 700; font-size: 13px;">Dine</span>
+    </div>
+  </div>
+
   <!-- Success Popup -->
   <div id="orderSuccessPopup" class="popup-overlay">
     <div class="popup-box" style="padding: 32px 24px; width: 85%; max-width: 320px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
@@ -68,8 +76,8 @@
       <h2 style="font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">Waiter PIN Required</h2>
       <p style="color:var(--text-secondary); font-size:13px; margin-bottom:22px; line-height:1.6;">Please ask your waiter for the 4-digit table PIN to confirm your order.</p>
       
-      <input type="number" id="orderPasscodeInput" placeholder="Enter 4-Digit PIN"
-        style="width:100%; padding:16px; text-align:center; font-size:22px; letter-spacing:6px; font-weight:700;
+      <input type="number" id="orderPasscodeInput" placeholder="****"
+        style="width:100%; padding:16px; text-align:center; font-size:24px; letter-spacing:12px; font-weight:700;
                border-radius:14px; border:2px solid rgba(235,178,91,0.4); background:rgba(235,178,91,0.06);
                color:var(--text-primary); margin-bottom:22px; outline:none;
                font-family:'Inter',sans-serif;"
