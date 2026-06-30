@@ -393,7 +393,16 @@ function setTip(amt) {
 
 async function placeOrder() {
   if (cart.length === 0) return;
-  // Always show PIN popup — customer must verify every time
+  
+  const savedPasscode = localStorage.getItem('tablePasscode');
+  const savedSessionId = localStorage.getItem('sessionId');
+  
+  if (savedPasscode && savedSessionId) {
+    await submitOrder(savedPasscode);
+    return;
+  }
+  
+  // Show PIN popup if no session/passcode exists
   const overlay = document.getElementById('passcodePromptOverlay');
   const input = document.getElementById('orderPasscodeInput');
   overlay.style.display = 'flex';
@@ -576,6 +585,19 @@ socket.on('order_status_update', (data) => {
       else if (data.status === 'served') statusHtml = '<div class="status-badge-outlined" style="border-color:#555; color:#555;"><svg style="fill:#555;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> SERVED</div>';
       statusDiv.innerHTML = statusHtml;
     }
+  }
+});
+
+socket.on('session_closed', (data) => {
+  const currentSession = localStorage.getItem('sessionId');
+  if (currentSession && data.sessionId === currentSession) {
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('tablePasscode');
+    localStorage.removeItem('cart');
+    localStorage.removeItem('restaurantId');
+    localStorage.removeItem('tableNumber');
+    alert('Your session has been closed by the waiter. Thank you for dining with us!');
+    window.location.href = 'index.html';
   }
 });
 

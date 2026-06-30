@@ -953,7 +953,7 @@ async function loadRevenue() {
 }
 
 // ORDER HISTORY
-let allHistoryOrders = [];
+let allHistorySessions = [];
 
 async function loadHistory() {
   const startDate = document.getElementById('historyStartDate').value;
@@ -975,7 +975,40 @@ async function loadHistory() {
   }
 
   try {
-    allHistoryOrders = await fetchAPI(url);
+    const orders = await fetchAPI(url);
+    
+    // Group by Session ID
+    const grouped = {};
+    orders.forEach(o => {
+      const sid = o.sessionId || o.id; // fallback to order id if no session
+      if (!grouped[sid]) {
+        grouped[sid] = {
+          sessionId: sid,
+          sessionNumber: o.sessionNumber || o.orderNumber,
+          tableNumber: o.tableNumber,
+          createdAt: o.createdAt,
+          paymentMethod: o.paymentMethod || 'cash',
+          total: 0,
+          subtotal: 0,
+          gst: 0,
+          items: []
+        };
+      }
+      grouped[sid].total += o.total;
+      grouped[sid].subtotal += o.subtotal;
+      grouped[sid].gst += (o.total - o.subtotal);
+      
+      o.items.forEach(i => {
+        const existing = grouped[sid].items.find(xi => xi.name === i.name && xi.price === i.price);
+        if (existing) {
+          existing.qty += i.qty;
+        } else {
+          grouped[sid].items.push({...i});
+        }
+      });
+    });
+    
+    allHistorySessions = Object.values(grouped).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderHistory();
   } catch (err) {
     console.error('Failed to load history', err);
@@ -986,23 +1019,23 @@ function renderHistory() {
   const tbody = document.getElementById('historyTableBody');
   if (!tbody) return;
 
-  if (allHistoryOrders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-secondary);">No orders found for this date range.</td></tr>';
+  if (allHistorySessions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding: 16px; text-align: center; color: var(--text-secondary);">No orders found for this date range.</td></tr>';
     return;
   }
 
   let html = '';
-  allHistoryOrders.forEach((order, index) => {
-    const d = new Date(order.createdAt);
+  allHistorySessions.forEach((session, index) => {
+    const d = new Date(session.createdAt);
     const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     html += `
       <tr style="border-bottom: 1px solid var(--border-color);">
         <td style="padding: 12px; color: var(--text-primary);">${dateStr}</td>
-        <td style="padding: 12px; color: var(--text-primary);">#${order.orderNumber}</td>
-        <td style="padding: 12px; color: var(--text-primary);">Table ${order.tableNumber}</td>
-        <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${order.total}</td>
-        <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${order.paymentMethod || 'cash'}</td>
+        <td style="padding: 12px; color: var(--text-primary);">#${session.sessionNumber}</td>
+        <td style="padding: 12px; color: var(--text-primary);">Table ${session.tableNumber}</td>
+        <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
+        <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
         <td style="padding: 12px;">
           <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails(${index})">View Items</button>
         </td>
@@ -1014,19 +1047,19 @@ function renderHistory() {
 }
 
 function viewHistoryDetails(index) {
-  const order = allHistoryOrders[index];
-  if (!order) return;
+  const session = allHistorySessions[index];
+  if (!session) return;
 
-  document.getElementById('historyModalTitle').innerText = `Order #${order.orderNumber} - Table ${order.tableNumber}`;
+  document.getElementById('historyModalTitle').innerText = `Session #${session.sessionNumber} - Table ${session.tableNumber}`;
   
   const container = document.getElementById('historyModalItems');
   let html = '';
   
-  order.items.forEach(item => {
+  session.items.forEach(item => {
     html += `
       <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 12px 0;">
         <div style="color: var(--text-primary);">${item.qty}x ${item.name}</div>
-        <div style="color: var(--gold-primary);">₹${item.price * item.qty}</div>
+        <div style="color: var(--gold-primary);">₹${(item.price * item.qty).toFixed(2)}</div>
       </div>
     `;
   });
@@ -1034,20 +1067,66 @@ function viewHistoryDetails(index) {
   html += `
     <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold;">
       <div style="color: var(--text-primary);">Subtotal</div>
-      <div style="color: var(--text-primary);">₹${order.subtotal}</div>
+      <div style="color: var(--text-primary);">₹${session.subtotal.toFixed(2)}</div>
     </div>
     <div style="display: flex; justify-content: space-between; margin-top: 8px;">
       <div style="color: var(--text-secondary);">GST</div>
-      <div style="color: var(--text-secondary);">₹${order.gst}</div>
+      <div style="color: var(--text-secondary);">₹${session.gst.toFixed(2)}</div>
     </div>
     <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold; font-size: 18px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
       <div style="color: var(--gold-primary);">Total Paid</div>
-      <div style="color: var(--gold-primary);">₹${order.total}</div>
+      <div style="color: var(--gold-primary);">₹${session.total.toFixed(2)}</div>
     </div>
   `;
   
   container.innerHTML = html;
   document.getElementById('historyItemsModal').style.display = 'flex';
+}
+
+function downloadHistoryPDF() {
+  if (!window.jspdf) {
+    alert("PDF library not loaded yet.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFontSize(18);
+  doc.text("Revenue & Order History", 14, 22);
+  
+  doc.setFontSize(11);
+  const startDate = document.getElementById('historyStartDate').value;
+  const endDate = document.getElementById('historyEndDate').value;
+  doc.text(\`Date Range: \${startDate} to \${endDate}\`, 14, 30);
+  
+  const totalRev = allHistorySessions.reduce((sum, s) => sum + s.total, 0);
+  doc.text(\`Total Sessions: \${allHistorySessions.length} | Total Revenue: Rs. \${totalRev.toFixed(2)}\`, 14, 36);
+
+  const tableColumn = ["Date", "Session #", "Table", "Payment", "Amount (Rs.)"];
+  const tableRows = [];
+
+  allHistorySessions.forEach(session => {
+    const d = new Date(session.createdAt);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const rowData = [
+      dateStr,
+      session.sessionNumber,
+      session.tableNumber,
+      session.paymentMethod,
+      session.total.toFixed(2)
+    ];
+    tableRows.push(rowData);
+  });
+
+  doc.autoTable({
+    startY: 42,
+    head: [tableColumn],
+    body: tableRows,
+    theme: 'grid',
+    headStyles: { fillColor: [201, 168, 76] }
+  });
+
+  doc.save(\`Revenue_Report_\${startDate}_to_\${endDate}.pdf\`);
 }
 
 // Init if on dashboard

@@ -251,7 +251,7 @@ router.get('/revenue', authAdmin, async (req, res) => {
     const orders = await prisma.order.findMany({
       where: {
         restaurantId: req.user.restaurantId,
-        status: 'served'
+        status: { in: ['served', 'completed'] }
       }
     });
 
@@ -323,7 +323,7 @@ router.get('/history', authAdmin, async (req, res) => {
     const orders = await prisma.order.findMany({
       where: {
         restaurantId: req.user.restaurantId,
-        status: 'served',
+        status: { in: ['served', 'completed'] },
         ...dateFilter
       },
       include: {
