@@ -132,6 +132,7 @@
       <div class="modal-header no-print">
         <span class="modal-title">Bill Preview</span>
         <div style="display:flex;gap:8px;">
+          <button class="btn-print" style="display:flex; align-items:center; gap:6px; background:#3B82F6; color:white; border:none;" onclick="showWaiterQr()"><i data-lucide="qr-code" style="width:14px;height:14px;"></i> Show QR</button>
           <button class="btn-print" style="display:flex; align-items:center; gap:6px; background:var(--green); color:#000; border-color:var(--green);" id="paymentDoneBtn" onclick="markPaymentDone()"><i data-lucide="check-circle" style="width:14px;height:14px;"></i> Payment Done</button>
           <button class="btn-print" style="display:flex; align-items:center; gap:6px;" onclick="window.print()"><i data-lucide="printer" style="width:14px;height:14px;"></i> Print</button>
           <button class="modal-close" onclick="closeBillModal()">✕</button>
@@ -188,5 +189,18 @@
     lucide.createIcons();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
   </script>
+  <!-- QR Display Modal -->
+  <div id="qrDisplayModal" class="modal-overlay hidden" style="display:none;" onclick="document.getElementById('qrDisplayModal').style.display='none'">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:350px; text-align:center; padding:32px 24px;">
+      <h3 style="margin-bottom:20px; color:var(--gold-primary);">Scan to Pay</h3>
+      <div style="background:white; padding:16px; border-radius:12px; display:inline-block; margin-bottom:24px;">
+        <img id="qrDisplayImage" src="" style="max-width:250px; max-height:250px; display:block; margin:0 auto;">
+      </div>
+      <div>
+        <button class="btn-primary" style="width:100%; padding: 12px; border-radius: 8px; font-weight: bold;" onclick="document.getElementById('qrDisplayModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

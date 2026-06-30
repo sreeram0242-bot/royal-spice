@@ -10,7 +10,7 @@ router.get('/settings', authWaiter, async (req, res) => {
   try {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: req.user.restaurantId },
-      select: { name: true, logo: true, address: true, gstPercent: true, totalTables: true }
+      select: { name: true, logo: true, address: true, gstPercent: true, totalTables: true, paymentQrCode: true }
     });
     res.json(restaurant);
   } catch (err) {

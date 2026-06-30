@@ -52,6 +52,7 @@ async function loadSettings() {
     document.getElementById('restaurantNameTop').textContent = data.name;
     window._gstPercent = data.gstPercent;
     window._totalTables = data.totalTables;
+    window._paymentQrCode = data.paymentQrCode;
   } catch (e) { console.error(e); }
 }
 
@@ -190,6 +191,20 @@ function closeTableModal() {
 let currentBillTableNum = null;
 
 // ── PRINT BILL ──
+async function cancelWaiterOrder() {
+  closeModal('waiterAddOrderModal');
+}
+
+// ── QR DISPLAY LOGIC ──
+function showWaiterQr() {
+  if (window._paymentQrCode) {
+    document.getElementById('qrDisplayImage').src = window._paymentQrCode;
+    document.getElementById('qrDisplayModal').style.display = 'flex';
+  } else {
+    alert("No Payment QR Code set by Admin!");
+  }
+}
+
 async function printBill(tableNumber) {
   closeTableModal();
   currentBillTableNum = tableNumber;

@@ -11,7 +11,7 @@ router.get('/settings', authAdmin, async (req, res) => {
       select: {
         id: true, name: true, logo: true, address: true, gstPercent: true,
         totalTables: true, plan: true, trialDays: true, trialStartDate: true,
-        subscriptionExpiry: true, paymentStatus: true, isActive: true, createdAt: true
+        subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true, isActive: true, createdAt: true
       }
     });
     res.json(restaurant);
@@ -22,13 +22,14 @@ router.get('/settings', authAdmin, async (req, res) => {
 
 router.put('/settings', authAdmin, async (req, res) => {
   try {
-    const { name, address, gstPercent, totalTables } = req.body;
+    const { name, address, gstPercent, totalTables, paymentQrCode } = req.body;
     
     const dataToUpdate = {};
     if (name !== undefined) dataToUpdate.name = name;
     if (address !== undefined) dataToUpdate.address = address;
     if (gstPercent !== undefined) dataToUpdate.gstPercent = parseFloat(gstPercent);
     if (totalTables !== undefined) dataToUpdate.totalTables = parseInt(totalTables);
+    if (paymentQrCode !== undefined) dataToUpdate.paymentQrCode = paymentQrCode;
 
     const restaurant = await prisma.restaurant.update({
       where: { id: req.user.restaurantId },
@@ -36,7 +37,7 @@ router.put('/settings', authAdmin, async (req, res) => {
       select: {
         id: true, name: true, logo: true, address: true, gstPercent: true,
         totalTables: true, plan: true, trialDays: true, trialStartDate: true,
-        subscriptionExpiry: true, paymentStatus: true, isActive: true, createdAt: true
+        subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true, isActive: true, createdAt: true
       }
     });
     res.json(restaurant);

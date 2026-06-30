@@ -164,6 +164,19 @@ async function loadSettings(onlyTables = false) {
     
     // Load Auto Print toggle from LocalStorage
     document.getElementById('setAutoPrint').checked = localStorage.getItem('autoPrint') === 'true';
+    
+    // Load QR Code
+    if (restaurantSettings.paymentQrCode) {
+      document.getElementById('setQrImageBase64').value = restaurantSettings.paymentQrCode;
+      document.getElementById('setQrPreview').src = restaurantSettings.paymentQrCode;
+      document.getElementById('setQrPreview').style.display = 'block';
+      document.getElementById('setQrPreviewText').style.display = 'none';
+    } else {
+      document.getElementById('setQrImageBase64').value = '';
+      document.getElementById('setQrPreview').src = '';
+      document.getElementById('setQrPreview').style.display = 'none';
+      document.getElementById('setQrPreviewText').style.display = 'block';
+    }
   }
 }
 
@@ -171,13 +184,21 @@ async function saveSettings() {
   const name = document.getElementById('setRestName').value;
   const address = document.getElementById('setRestAddress').value;
   const gstPercent = document.getElementById('setRestGst').value;
+  const paymentQrCode = document.getElementById('setQrImageBase64').value || null;
   
   // Save Auto Print toggle
   localStorage.setItem('autoPrint', document.getElementById('setAutoPrint').checked);
   
-  await fetchAPI('/api/admin/settings', 'PUT', { name, address, gstPercent });
+  await fetchAPI('/api/admin/settings', 'PUT', { name, address, gstPercent, paymentQrCode });
   alert('Settings saved');
   loadSettings();
+}
+
+function removeSettingsQr() {
+  document.getElementById('setQrImageBase64').value = '';
+  document.getElementById('setQrPreview').src = '';
+  document.getElementById('setQrPreview').style.display = 'none';
+  document.getElementById('setQrPreviewText').style.display = 'block';
 }
 
 async function updateTablesCount() {
@@ -1362,3 +1383,12 @@ function printKOT(orderId) {
   });
 }
 
+// ── QR DISPLAY LOGIC ──
+function showAdminQr() {
+  if (restaurantSettings && restaurantSettings.paymentQrCode) {
+    document.getElementById('qrDisplayImage').src = restaurantSettings.paymentQrCode;
+    document.getElementById('qrDisplayModal').classList.remove('hidden');
+  } else {
+    alert("No Payment QR Code set! You can upload it in the Settings tab.");
+  }
+}

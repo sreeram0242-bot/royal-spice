@@ -401,6 +401,24 @@
                 <span class="slider"></span>
               </label>
             </div>
+            
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
+              <label style="display: block; margin-bottom: 12px; font-weight: 600;">Payment QR Code</label>
+              <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <input type="file" id="setQrFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'setQrPreview')">
+                <input type="hidden" id="setQrImageBase64">
+                <div style="width: 120px; height: 120px; border-radius: 8px; border: 2px dashed #555; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; background: var(--bg-dark);" onclick="document.getElementById('setQrFileInput').click()">
+                  <img id="setQrPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                  <span id="setQrPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to add<br>QR Code</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <button class="btn-primary" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="document.getElementById('setQrFileInput').click()">Change QR</button>
+                  <button style="padding: 6px 12px; font-size: 12px; background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; cursor: pointer;" onclick="removeSettingsQr()">Remove QR</button>
+                  <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Upload your UPI or bank QR code for customers to scan when paying.</span>
+                </div>
+              </div>
+            </div>
+
             <button class="btn-gold" onclick="saveSettings()">Save Settings</button>
           </div>
         </div>
@@ -505,6 +523,7 @@
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
         <h3>Bill Preview</h3>
         <div style="display:flex;gap:8px;">
+          <button class="btn-gold" style="padding:8px 14px; font-size:13px; display:flex; align-items:center; gap:6px; background:#3B82F6; color:white; border:none;" onclick="showAdminQr()"><i data-lucide="qr-code" style="width:14px;height:14px;"></i> Show QR</button>
           <button class="btn-gold" style="padding:8px 14px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="window.print()"><i data-lucide="printer" style="width:14px;height:14px;"></i> Print</button>
           <button class="btn-gold" style="background:transparent; border:1px solid #555; color:white; padding:8px 14px; font-size:13px;" onclick="closeModal('adminBillModal')">Close</button>
         </div>
@@ -535,5 +554,18 @@
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
     showView('dashboard');
   </script>
+  <!-- QR Display Modal -->
+  <div id="qrDisplayModal" class="modal-overlay hidden" onclick="closeModal('qrDisplayModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:350px; text-align:center; padding:32px 24px;">
+      <h3 style="margin-bottom:20px; color:var(--gold-primary);">Scan to Pay</h3>
+      <div style="background:white; padding:16px; border-radius:12px; display:inline-block; margin-bottom:24px;">
+        <img id="qrDisplayImage" src="" style="max-width:250px; max-height:250px; display:block; margin:0 auto;">
+      </div>
+      <div>
+        <button class="btn-gold" style="width:100%;" onclick="closeModal('qrDisplayModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
