@@ -953,8 +953,17 @@ if (window.location.pathname.includes('dashboard.html')) {
 
 // ── WAITER MANAGEMENT ──
 async function loadWaiters() {
-  // Show restaurant ID
-  const rid = localStorage.getItem('adminRestaurantId');
+  // Show restaurant ID (fetch from settings if missing from localStorage)
+  let rid = localStorage.getItem('adminRestaurantId');
+  if (!rid) {
+    try {
+      const setRes = await fetchAPI('/api/admin/settings');
+      if (setRes && setRes.id) {
+        rid = setRes.id;
+        localStorage.setItem('adminRestaurantId', rid);
+      }
+    } catch (e) {}
+  }
   const ridDisplay = document.getElementById('adminRestaurantIdDisplay');
   if (ridDisplay && rid) ridDisplay.textContent = rid;
 

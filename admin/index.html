@@ -10,7 +10,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       background: #06060A;
       color: #fff;
@@ -20,12 +20,13 @@
     /* ── LEFT PANEL ── */
     .left-panel {
       flex: 1;
+      height: 100vh;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      padding: 60px 56px;
+      justify-content: center;
+      padding: 60px 64px;
       background: linear-gradient(160deg, #0A0700 0%, #1C1100 50%, #0D0A00 100%);
     }
 
@@ -97,8 +98,12 @@
       letter-spacing: -20px;
     }
 
-    /* Text content at bottom */
-    .panel-content { position: relative; z-index: 2; }
+    /* Text content - centered vertically */
+    .panel-content {
+      position: relative;
+      z-index: 2;
+      max-width: 520px;
+    }
 
     .panel-tag {
       display: inline-flex;
@@ -141,13 +146,13 @@
       color: rgba(255,255,255,0.35);
       font-weight: 400;
       line-height: 1.7;
-      max-width: 380px;
-      margin-bottom: 40px;
+      max-width: 440px;
+      margin-bottom: 44px;
     }
 
     .panel-stats {
       display: flex;
-      gap: 32px;
+      gap: 36px;
     }
     .stat {
       display: flex;
@@ -170,14 +175,15 @@
 
     /* ── RIGHT PANEL ── */
     .right-panel {
-      width: 480px;
+      width: 520px;
+      height: 100vh;
       flex-shrink: 0;
       background: #0C0C0F;
       border-left: 1px solid rgba(255,255,255,0.05);
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 64px 52px;
+      padding: 64px 56px;
       position: relative;
       overflow: hidden;
     }
