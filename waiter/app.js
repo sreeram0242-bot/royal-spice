@@ -367,9 +367,8 @@ async function initNewOrder() {
       const tables = await res.json();
       
       grid.innerHTML = tables.map(t => {
-        let color = '#22C55E';
-        if (t.status === 'new' || t.status === 'preparing' || t.status === 'ready') color = '#F4A017';
-        if (t.status === 'occupied') color = '#8B5CF6';
+        let color = '#4B5563'; // grey (unoccupied)
+        if (t.status !== 'available') color = '#3B82F6'; // blue (occupied)
         return `<button class="table-pill" style="background:${color};" onclick="startOrderForTable(${t.tableNumber}, '${t.sessionId || ''}')">Table ${t.tableNumber}</button>`;
       }).join('');
     } catch (e) {
