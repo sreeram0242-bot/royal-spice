@@ -107,8 +107,9 @@
         <div class="cart-totals" id="cartTotals"></div>
         <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">Place Order</button>
       </div>
-    </div>
-  </div>
+      </div><!-- /orderMenuSection -->
+    </div><!-- /order-form -->
+  </div><!-- /orderOverlay -->
 
   <!-- TABLE DETAIL MODAL -->
   <div class="modal-overlay" id="tableModal" onclick="closeTableModal()">
@@ -182,7 +183,7 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
   <script>
     lucide.createIcons();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();

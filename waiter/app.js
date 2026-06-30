@@ -113,6 +113,7 @@ async function loadTables() {
 
 // ── TABLE MODAL ──
 async function openTableModal(tableNumber, passcode = null) {
+  console.log("openTableModal called for table:", tableNumber);
   const modal = document.getElementById('tableModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
@@ -127,6 +128,7 @@ async function openTableModal(tableNumber, passcode = null) {
 
   try {
     const res = await api(`/api/waiter/table/${tableNumber}/bill`);
+    if (!res) return; // api() returned undefined due to auth redirect
     if (!res.ok) {
       // No active orders — show empty
       sub.textContent = 'No active orders';
