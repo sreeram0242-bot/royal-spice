@@ -1070,7 +1070,7 @@ function viewHistoryDetails(index) {
       <div style="color: var(--text-primary);">₹${session.subtotal.toFixed(2)}</div>
     </div>
     <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-      <div style="color: var(--text-secondary);">GST</div>
+      <div style="color: var(--text-secondary);">Tip / Other Charges</div>
       <div style="color: var(--text-secondary);">₹${session.gst.toFixed(2)}</div>
     </div>
     <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold; font-size: 18px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
@@ -1083,50 +1083,105 @@ function viewHistoryDetails(index) {
   document.getElementById('historyItemsModal').style.display = 'flex';
 }
 
-function downloadHistoryPDF() {
-  if (!window.jspdf) {
-    alert("PDF library not loaded yet.");
-    return;
+function openPdfModal() {
+  document.getElementById('pdfModal').style.display = 'flex';
+}
+
+async function generatePDF(range) {
+  let startDate = '';
+  let endDate = '';
+  const d = new Date();
+  
+  if (range === '1day') {
+    d.setDate(d.getDate() - 1);
+    startDate = d.toISOString().split('T')[0];
+    endDate = new Date().toISOString().split('T')[0];
+  } else if (range === '1week') {
+    d.setDate(d.getDate() - 7);
+    startDate = d.toISOString().split('T')[0];
+    endDate = new Date().toISOString().split('T')[0];
+  } else if (range === '1month') {
+    d.setMonth(d.getMonth() - 1);
+    startDate = d.toISOString().split('T')[0];
+    endDate = new Date().toISOString().split('T')[0];
+  } else if (range === 'custom') {
+    startDate = document.getElementById('pdfCustomStart').value;
+    endDate = document.getElementById('pdfCustomEnd').value;
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return;
+    }
   }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
   
-  doc.setFontSize(18);
-  doc.text("Revenue & Order History", 14, 22);
-  
-  doc.setFontSize(11);
-  const startDate = document.getElementById('historyStartDate').value;
-  const endDate = document.getElementById('historyEndDate').value;
-  doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 30);
-  
-  const totalRev = allHistorySessions.reduce((sum, s) => sum + s.total, 0);
-  doc.text(`Total Sessions: ${allHistorySessions.length} | Total Revenue: Rs. ${totalRev.toFixed(2)}`, 14, 36);
+  try {
+    document.getElementById('pdfModal').style.display = 'none';
+    const url = `/api/admin/history?startDate=${startDate}&endDate=${endDate}`;
+    const orders = await fetchAPI(url);
+    
+    // Group by Session ID
+    const grouped = {};
+    orders.forEach(o => {
+      const sid = o.sessionId || o.id;
+      if (!grouped[sid]) {
+        grouped[sid] = {
+          sessionId: sid,
+          sessionNumber: o.sessionNumber || o.orderNumber,
+          tableNumber: o.tableNumber,
+          createdAt: o.createdAt,
+          paymentMethod: o.paymentMethod || 'cash',
+          total: 0
+        };
+      }
+      grouped[sid].total += o.total;
+    });
+    
+    const sessions = Object.values(grouped).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    if (!window.jspdf) {
+      alert("PDF library not loaded yet.");
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("Revenue & Order History", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 30);
+    
+    const totalRev = sessions.reduce((sum, s) => sum + s.total, 0);
+    doc.text(`Total Sessions: ${sessions.length} | Total Revenue: Rs. ${totalRev.toFixed(2)}`, 14, 36);
 
-  const tableColumn = ["Date", "Session #", "Table", "Payment", "Amount (Rs.)"];
-  const tableRows = [];
+    const tableColumn = ["Date", "Session #", "Table", "Payment", "Amount (Rs.)"];
+    const tableRows = [];
 
-  allHistorySessions.forEach(session => {
-    const d = new Date(session.createdAt);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const rowData = [
-      dateStr,
-      session.sessionNumber,
-      session.tableNumber,
-      session.paymentMethod,
-      session.total.toFixed(2)
-    ];
-    tableRows.push(rowData);
-  });
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.createdAt);
+      const dateStr = sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const rowData = [
+        dateStr,
+        session.sessionNumber,
+        session.tableNumber,
+        session.paymentMethod,
+        session.total.toFixed(2)
+      ];
+      tableRows.push(rowData);
+    });
 
-  doc.autoTable({
-    startY: 42,
-    head: [tableColumn],
-    body: tableRows,
-    theme: 'grid',
-    headStyles: { fillColor: [201, 168, 76] }
-  });
+    doc.autoTable({
+      startY: 42,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: [201, 168, 76] }
+    });
 
-  doc.save(`Revenue_Report_${startDate}_to_${endDate}.pdf`);
+    doc.save(`Revenue_Report_${startDate}_to_${endDate}.pdf`);
+  } catch(e) {
+    console.error(e);
+    alert("Failed to generate PDF.");
+  }
 }
 
 // Init if on dashboard
