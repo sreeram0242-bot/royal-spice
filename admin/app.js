@@ -70,6 +70,7 @@ function showView(viewId) {
     'categories': 'Categories',
     'qr': 'QR Codes',
     'waiter': 'Waiter Calls',
+    'waiters': 'Waiters',
     'revenue': 'Revenue',
     'settings': 'Settings'
   };
@@ -82,6 +83,7 @@ function showView(viewId) {
   if (viewId === 'categories') loadCategories();
   if (viewId === 'qr') loadQRCodes();
   if (viewId === 'waiter') loadWaiterCalls();
+  if (viewId === 'waiters') loadWaiters();
   if (viewId === 'revenue') loadRevenue();
   if (viewId === 'settings') loadSettings();
 }
@@ -947,4 +949,139 @@ function viewHistoryDetails(index) {
 // Init if on dashboard
 if (window.location.pathname.includes('dashboard.html')) {
   loadDashboard();
+}
+
+// ── WAITER MANAGEMENT ──
+async function loadWaiters() {
+  // Show restaurant ID
+  const rid = localStorage.getItem('adminRestaurantId');
+  const ridDisplay = document.getElementById('adminRestaurantIdDisplay');
+  if (ridDisplay && rid) ridDisplay.textContent = rid;
+
+  const tbody = document.getElementById('waitersTableBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr>';
+  try {
+    const waiters = await fetchAPI('/api/admin/waiters');
+    if (!waiters || !Array.isArray(waiters) || waiters.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No waiters yet. Click "+ Add Waiter" to create one.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = waiters.map(w => `
+      <tr style="border-bottom:1px solid #1f1f1f;">
+        <td style="padding:12px 12px; font-weight:600;">${w.name}</td>
+        <td style="padding:12px 12px; font-family:monospace; color:var(--gold); font-size:13px;">@${w.username}</td>
+        <td style="padding:12px 12px;"><span style="font-size:11px; padding:3px 9px; border-radius:100px; background:${w.isActive ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}; color:${w.isActive ? '#22C55E' : '#EF4444'};">${w.isActive ? 'Active' : 'Disabled'}</span></td>
+        <td style="padding:12px 12px; color:var(--text-muted); font-size:13px;">${new Date(w.createdAt).toLocaleDateString()}</td>
+        <td style="padding:12px 12px; text-align:right;">
+          <button onclick="deleteWaiter('${w.id}', '${w.name}')" style="background:rgba(239,68,68,0.12); color:#EF4444; border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:6px 12px; font-size:12px; cursor:pointer;">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#EF4444;">Error loading waiters.</td></tr>';
+  }
+}
+
+function openAddWaiterModal() {
+  document.getElementById('newWaiterName').value = '';
+  document.getElementById('newWaiterUsername').value = '';
+  document.getElementById('newWaiterPassword').value = '';
+  document.getElementById('addWaiterModal').classList.remove('hidden');
+}
+
+async function addWaiter() {
+  const name = document.getElementById('newWaiterName').value.trim();
+  const username = document.getElementById('newWaiterUsername').value.trim();
+  const password = document.getElementById('newWaiterPassword').value;
+  if (!name || !username || !password) { alert('All fields are required.'); return; }
+  try {
+    const res = await fetchAPI('/api/admin/waiters', 'POST', { name, username, password });
+    if (res && res.id) {
+      closeModal('addWaiterModal');
+      alert(`Waiter "${name}" created! Username: ${username}`);
+      loadWaiters();
+    } else {
+      alert(res?.message || 'Failed to create waiter');
+    }
+  } catch (e) {
+    alert('Error creating waiter');
+  }
+}
+
+async function deleteWaiter(id, name) {
+  if (!confirm(`Delete waiter "${name}"? They will no longer be able to log in.`)) return;
+  try {
+    await fetchAPI(`/api/admin/waiters/${id}`, 'DELETE');
+    loadWaiters();
+  } catch (e) {
+    alert('Error deleting waiter');
+  }
+}
+
+function copyRestaurantId() {
+  const rid = localStorage.getItem('adminRestaurantId');
+  if (!rid) return;
+  navigator.clipboard.writeText(rid).then(() => alert('Restaurant ID copied to clipboard!\n\n' + rid));
+}
+
+// ── ADMIN PRINT BILL ──
+async function adminPrintBill(tableNumber) {
+  const modal = document.getElementById('adminBillModal');
+  const content = document.getElementById('adminBillContent');
+  content.innerHTML = '<p style="text-align:center;padding:20px;color:#555;">Generating bill...</p>';
+  modal.classList.remove('hidden');
+
+  try {
+    const bill = await fetchAPI(`/api/admin/table/${tableNumber}/bill`);
+    if (!bill || bill.message) {
+      content.innerHTML = `<p style="color:#c00;padding:20px;">${bill?.message || 'No active orders for this table.'}</p>`;
+      return;
+    }
+
+    const now = new Date(bill.generatedAt);
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    // Flatten items
+    const allItems = [];
+    bill.orders.forEach(o => {
+      o.items.forEach(item => {
+        const ex = allItems.find(i => i.name === item.name && i.price === item.price);
+        if (ex) { ex.qty += item.qty; ex.total += item.price * item.qty; }
+        else allItems.push({ name: item.name, price: item.price, qty: item.qty, total: item.price * item.qty });
+      });
+    });
+
+    content.innerHTML = `
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:bold;">${bill.restaurant.name}</div>
+        ${bill.restaurant.address ? `<div style="font-size:11px;color:#555;">${bill.restaurant.address}</div>` : ''}
+      </div>
+      <hr style="border-top:1px dashed #aaa;margin:10px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Date:</span><span>${dateStr}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Time:</span><span>${timeStr}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Table:</span><span>No. ${bill.tableNumber}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Orders:</span><span>${bill.orders.map(o => '#' + o.orderNumber).join(', ')}</span></div>
+      <hr style="border-top:1px dashed #aaa;margin:10px 0;">
+      <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:4px 0;margin:8px 0;">
+        <span style="flex:1;">Item</span><span style="width:30px;text-align:center;">Qty</span><span style="width:70px;text-align:right;">Amount</span>
+      </div>
+      ${allItems.map(item => `
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
+          <span style="flex:1;">${item.name}</span>
+          <span style="width:30px;text-align:center;">${item.qty}</span>
+          <span style="width:70px;text-align:right;">₹${item.total.toFixed(2)}</span>
+        </div>
+      `).join('')}
+      <hr style="border-top:1px dashed #aaa;margin:10px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:bold;border-top:2px solid #111;border-bottom:2px solid #111;padding:6px 0;margin-top:4px;"><span>GRAND TOTAL</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
+      <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">
+        Thank you for dining with us!<br>Please visit again — ${bill.restaurant.name}
+      </div>
+    `;
+  } catch (e) {
+    content.innerHTML = '<p style="color:#c00;padding:20px;">Error generating bill.</p>';
+  }
 }

@@ -46,4 +46,37 @@ router.post('/admin/login', async (req, res) => {
   }
 });
 
+// Waiter Login
+router.post('/waiter/login', async (req, res) => {
+  const { restaurantId, username, password } = req.body;
+
+  try {
+    if (!restaurantId || !username || !password) {
+      return res.status(400).json({ message: 'Restaurant ID, username and password are required' });
+    }
+
+    const waiter = await prisma.waiter.findUnique({
+      where: { restaurantId_username: { restaurantId, username } }
+    });
+
+    if (!waiter) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!waiter.isActive) return res.status(403).json({ message: 'Account disabled. Contact admin.' });
+
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(password, waiter.passwordHash);
+    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+
+    const token = jwt.sign(
+      { role: 'waiter', restaurantId: waiter.restaurantId, waiterId: waiter.id, waiterName: waiter.name },
+      process.env.JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    res.json({ token, restaurantId: waiter.restaurantId, waiterName: waiter.name, message: 'Login successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

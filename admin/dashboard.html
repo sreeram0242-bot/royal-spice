@@ -38,6 +38,7 @@
     <a class="nav-link" onclick="showView('categories')">📁 Categories</a>
     <a class="nav-link" onclick="showView('qr')">📱 QR Codes</a>
     <a class="nav-link" onclick="showView('waiter')">🔔 Waiter Calls <span class="badge" id="waiterBadge" style="display:none;">0</span></a>
+    <a class="nav-link" onclick="showView('waiters')">👨‍🍳 Waiters</a>
     <a class="nav-link" onclick="showView('revenue')">💰 Revenue</a>
     <a class="nav-link" onclick="showView('settings')">⚙️ Settings</a>
     <a class="nav-link" style="margin-top: auto;" onclick="logout()">🚪 Logout</a>
@@ -369,6 +370,62 @@
   <!-- Datalist for Categories -->
   <datalist id="categoryOptions"></datalist>
 
+  <!-- WAITERS VIEW -->
+  <div id="view-waiters" class="view" style="display:none; padding: 24px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+      <h2 style="font-size:20px; font-weight:700;">Waiter Accounts</h2>
+      <button class="btn-gold" onclick="openAddWaiterModal()" style="padding: 10px 18px;">+ Add Waiter</button>
+    </div>
+    <div style="background:var(--panel-bg); border-radius:12px; padding:4px; border:1px solid #2a2a2a; margin-bottom:16px;">
+      <p style="padding:12px 16px; font-size:13px; color:var(--text-muted);">
+        💡 <strong>Restaurant ID:</strong> <span id="adminRestaurantIdDisplay" style="font-family:monospace; color:var(--gold); font-size:12px; cursor:pointer;" onclick="copyRestaurantId()" title="Click to copy">—</span>
+        &nbsp;— Share this with your waiters for their login.
+      </p>
+    </div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="border-bottom:1px solid #2a2a2a; font-size:13px; color:var(--text-muted);">
+          <th style="padding:10px 12px; text-align:left;">Name</th>
+          <th style="padding:10px 12px; text-align:left;">Username</th>
+          <th style="padding:10px 12px; text-align:left;">Status</th>
+          <th style="padding:10px 12px; text-align:left;">Created</th>
+          <th style="padding:10px 12px; text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="waitersTableBody">
+        <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ADD WAITER MODAL -->
+  <div id="addWaiterModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom:20px;">Add New Waiter</h3>
+      <input type="text" id="newWaiterName" class="login-input" placeholder="Full Name (e.g. Ravi Kumar)">
+      <input type="text" id="newWaiterUsername" class="login-input" placeholder="Username (e.g. ravi_waiter)">
+      <input type="password" id="newWaiterPassword" class="login-input" placeholder="Password">
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button class="btn-gold" onclick="addWaiter()">Create Waiter</button>
+        <button class="btn-gold" style="background:transparent; border:1px solid #555; color:white;" onclick="closeModal('addWaiterModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILL PRINT MODAL (Admin) -->
+  <div id="adminBillModal" class="modal-overlay hidden" onclick="closeModal('adminBillModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:500px; max-height:85vh; overflow-y:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+        <h3>Bill Preview</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-gold" style="padding:8px 14px; font-size:13px;" onclick="window.print()">🖨️ Print</button>
+          <button class="btn-gold" style="background:transparent; border:1px solid #555; color:white; padding:8px 14px; font-size:13px;" onclick="closeModal('adminBillModal')">Close</button>
+        </div>
+      </div>
+      <div id="adminBillContent" style="font-family:'Courier New',monospace; background:#fff; color:#111; border-radius:8px; padding:24px 20px; font-size:13px; line-height:1.6;"></div>
+    </div>
+  </div>
+
   <!-- Order Popup Notification -->
   <div id="orderPopup" class="hidden">
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: bold; color: var(--gold);">
@@ -385,6 +442,6 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>

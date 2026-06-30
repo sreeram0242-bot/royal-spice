@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 app.use('/customer', express.static(path.join(__dirname, '../customer')));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 app.use('/master', express.static(path.join(__dirname, '../master')));
+app.use('/waiter', express.static(path.join(__dirname, '../waiter')));
 
 // Redirect root to customer menu (can be changed later)
 app.get('/', (req, res) => res.redirect('/customer'));
@@ -96,6 +97,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/master', require('./routes/master'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/customer', require('./routes/customer'));
+app.use('/api/waiter', require('./routes/waiter'));
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

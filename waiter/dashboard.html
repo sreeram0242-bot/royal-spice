@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Waiter Dashboard — Royal Spice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-icon">🧑‍🍳</span>
+      <div>
+        <div class="topbar-name" id="waiterName">Waiter</div>
+        <div class="topbar-restaurant" id="restaurantNameTop">Loading...</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="call-badge" id="callBadge" onclick="showTab('calls')" style="display:none;">
+        🔔 <span id="callCount">0</span>
+      </button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Tab Nav -->
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab-tables" onclick="showTab('tables')">
+      <span>🪑</span> Tables
+    </button>
+    <button class="tab-btn" id="tab-calls" onclick="showTab('calls')">
+      <span>🔔</span> Calls
+    </button>
+    <button class="tab-btn" id="tab-neworder" onclick="showTab('neworder')">
+      <span>➕</span> New Order
+    </button>
+  </div>
+
+  <!-- TABLES TAB -->
+  <div class="tab-content active" id="tabTables">
+    <div class="section-header">
+      <span>All Tables</span>
+      <button class="btn-refresh" onclick="loadTables()">↻ Refresh</button>
+    </div>
+    <div class="table-grid" id="tableGrid">
+      <div class="loading-text">Loading tables...</div>
+    </div>
+  </div>
+
+  <!-- CALLS TAB -->
+  <div class="tab-content" id="tabCalls">
+    <div class="section-header">
+      <span>Waiter Calls</span>
+      <button class="btn-refresh" onclick="loadCalls()">↻ Refresh</button>
+    </div>
+    <div id="callsList">
+      <div class="loading-text">Loading calls...</div>
+    </div>
+  </div>
+
+  <!-- NEW ORDER TAB -->
+  <div class="tab-content" id="tabNeworder">
+    <div class="section-header"><span>Place New Order</span></div>
+
+    <div class="order-form">
+      <div class="form-row">
+        <label class="form-label">Table Number</label>
+        <input type="number" id="orderTable" class="form-input" placeholder="e.g. 3" min="1">
+      </div>
+
+      <!-- Category Filter -->
+      <div class="cat-filter" id="catFilter"></div>
+
+      <!-- Menu Items -->
+      <div class="menu-grid" id="menuGrid">
+        <div class="loading-text">Loading menu...</div>
+      </div>
+
+      <!-- Cart -->
+      <div class="cart-section" id="cartSection" style="display:none;">
+        <div class="cart-title">🛒 Order Summary</div>
+        <div id="cartItems"></div>
+        <div class="cart-totals" id="cartTotals"></div>
+        <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE DETAIL MODAL -->
+  <div class="modal-overlay" id="tableModal" onclick="closeTableModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle">Table 1</div>
+          <div class="modal-sub" id="modalSub">Session Details</div>
+        </div>
+        <button class="modal-close" onclick="closeTableModal()">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- BILL PRINT MODAL -->
+  <div class="modal-overlay" id="billModal" onclick="closeBillModal()">
+    <div class="modal-box bill-box" onclick="event.stopPropagation()">
+      <div class="modal-header no-print">
+        <span class="modal-title">Bill Preview</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+          <button class="modal-close" onclick="closeBillModal()">✕</button>
+        </div>
+      </div>
+      <div id="billContent" class="bill-content"></div>
+    </div>
+  </div>
+
+  <script src="app.js?v=1"></script>
+</body>
+</html>

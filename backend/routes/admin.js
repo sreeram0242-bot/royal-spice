@@ -424,3 +424,93 @@ router.post('/categories', authAdmin, async (req, res) => {
 });
 
 module.exports = router;
+
+// --- Waiter Management ---
+const bcrypt = require('bcryptjs');
+
+router.get('/waiters', authAdmin, async (req, res) => {
+  try {
+    const waiters = await prisma.waiter.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      select: { id: true, name: true, username: true, isActive: true, createdAt: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(waiters);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/waiters', authAdmin, async (req, res) => {
+  try {
+    const { name, username, password } = req.body;
+    if (!name || !username || !password) {
+      return res.status(400).json({ message: 'Name, username and password are required' });
+    }
+
+    // Check username uniqueness within restaurant
+    const existing = await prisma.waiter.findUnique({
+      where: { restaurantId_username: { restaurantId: req.user.restaurantId, username } }
+    });
+    if (existing) return res.status(409).json({ message: 'Username already exists for this restaurant' });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const waiter = await prisma.waiter.create({
+      data: {
+        restaurantId: req.user.restaurantId,
+        name,
+        username,
+        passwordHash
+      },
+      select: { id: true, name: true, username: true, isActive: true, createdAt: true }
+    });
+    res.status(201).json(waiter);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/waiters/:id', authAdmin, async (req, res) => {
+  try {
+    await prisma.waiter.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Waiter deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Table Bill (for admin print) ---
+router.get('/table/:num/bill', authAdmin, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: req.user.restaurantId },
+      select: { name: true, address: true, gstPercent: true }
+    });
+
+    const latestOrder = await prisma.order.findFirst({
+      where: { restaurantId: req.user.restaurantId, tableNumber, status: { not: 'completed' } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (!latestOrder) {
+      return res.status(404).json({ message: 'No active orders for this table' });
+    }
+
+    const orders = await prisma.order.findMany({
+      where: { sessionId: latestOrder.sessionId, status: { not: 'completed' } },
+      include: { items: true },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
+    const gstAmount = orders.reduce((sum, o) => sum + o.gst, 0);
+    const grandTotal = orders.reduce((sum, o) => sum + o.total, 0);
+
+    res.json({ restaurant, tableNumber, sessionId: latestOrder.sessionId, orders, subtotal, gstAmount, gstPercent: restaurant.gstPercent, grandTotal, generatedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
