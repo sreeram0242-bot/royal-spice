@@ -437,6 +437,27 @@ body {
 .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
 .empty-icon { font-size: 40px; margin-bottom: 10px; }
 
+/* TABLE PILL (NEW ORDER GRID) */
+.table-pill {
+  width: 100%;
+  padding: 18px 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.1s, filter 0.2s;
+}
+.table-pill:active {
+  transform: scale(0.95);
+}
+.table-pill:hover {
+  filter: brightness(1.1);
+}
+
 @media print {
   body * { visibility: hidden; }
   .bill-content, .bill-content * { visibility: visible; }
