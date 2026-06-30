@@ -287,6 +287,37 @@
         </div>
       </div>
 
+  <!-- WAITERS VIEW -->
+  <div id="view-waiters" class="view hidden">
+    <div class="panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+        <h2 style="font-size:20px; font-weight:700;">Waiter Accounts</h2>
+        <button class="btn-gold" onclick="openAddWaiterModal()" style="padding: 10px 18px;">+ Add Waiter</button>
+      </div>
+      <div style="background:var(--panel-bg); border-radius:12px; padding:4px; border:1px solid #2a2a2a; margin-bottom:16px;">
+        <p style="padding:12px 16px; font-size:13px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="lightbulb" style="color:var(--gold); width:16px; height:16px;"></i> <strong>Restaurant ID:</strong> <span id="adminRestaurantIdDisplay" style="font-family:monospace; color:var(--gold); font-size:12px; cursor:pointer;" onclick="copyRestaurantId()" title="Click to copy">—</span>
+          &nbsp;— Share this with your waiters for their login.
+        </p>
+      </div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="border-bottom:1px solid #2a2a2a; font-size:13px; color:var(--text-muted);">
+          <th style="padding:10px 12px; text-align:left;">Name</th>
+          <th style="padding:10px 12px; text-align:left;">Username</th>
+          <th style="padding:10px 12px; text-align:left;">Status</th>
+          <th style="padding:10px 12px; text-align:left;">Created</th>
+          <th style="padding:10px 12px; text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="waitersTableBody">
+        <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">Loading...</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+
       <!-- SETTINGS VIEW -->
       <div id="view-settings" class="view hidden">
         <div class="panel" style="max-width: 500px;">
@@ -370,36 +401,6 @@
 
   <!-- Datalist for Categories -->
   <datalist id="categoryOptions"></datalist>
-
-  <!-- WAITERS VIEW -->
-  <div id="view-waiters" class="view hidden">
-    <div class="panel">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-        <h2 style="font-size:20px; font-weight:700;">Waiter Accounts</h2>
-        <button class="btn-gold" onclick="openAddWaiterModal()" style="padding: 10px 18px;">+ Add Waiter</button>
-      </div>
-      <div style="background:var(--panel-bg); border-radius:12px; padding:4px; border:1px solid #2a2a2a; margin-bottom:16px;">
-        <p style="padding:12px 16px; font-size:13px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-          <i data-lucide="lightbulb" style="color:var(--gold); width:16px; height:16px;"></i> <strong>Restaurant ID:</strong> <span id="adminRestaurantIdDisplay" style="font-family:monospace; color:var(--gold); font-size:12px; cursor:pointer;" onclick="copyRestaurantId()" title="Click to copy">—</span>
-          &nbsp;— Share this with your waiters for their login.
-        </p>
-      </div>
-    <table style="width:100%; border-collapse:collapse;">
-      <thead>
-        <tr style="border-bottom:1px solid #2a2a2a; font-size:13px; color:var(--text-muted);">
-          <th style="padding:10px 12px; text-align:left;">Name</th>
-          <th style="padding:10px 12px; text-align:left;">Username</th>
-          <th style="padding:10px 12px; text-align:left;">Status</th>
-          <th style="padding:10px 12px; text-align:left;">Created</th>
-          <th style="padding:10px 12px; text-align:right;">Action</th>
-        </tr>
-      </thead>
-      <tbody id="waitersTableBody">
-        <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">Loading...</td></tr>
-      </tbody>
-    </table>
-    </div>
-  </div>
 
   <!-- ADD WAITER MODAL -->
   <div id="addWaiterModal" class="modal-overlay hidden">

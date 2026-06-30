@@ -178,9 +178,12 @@ function closeTableModal() {
   document.getElementById('tableModal').classList.remove('open');
 }
 
+let currentBillTableNum = null;
+
 // ── PRINT BILL ──
 async function printBill(tableNumber) {
   closeTableModal();
+  currentBillTableNum = tableNumber;
   const billModal = document.getElementById('billModal');
   const billContent = document.getElementById('billContent');
   billContent.innerHTML = '<div class="loading-text" style="color:#333;">Generating bill...</div>';
@@ -251,6 +254,12 @@ function closeBillModal() {
   document.getElementById('billModal').classList.remove('open');
 }
 
+function markPaymentDone() {
+  if (currentBillTableNum) {
+    closeSession(currentBillTableNum);
+  }
+}
+
 // ── CLOSE SESSION ──
 async function closeSession(tableNumber) {
   if (!confirm(`Close session for Table ${tableNumber}? This will mark the table as free.`)) return;
@@ -312,12 +321,61 @@ let cart = {};
 let fullMenu = [];
 let activeCategory = 'All';
 
-function startOrderForTable(tableNumber) {
+function resetOrderFlow() {
+  document.getElementById('orderTable').value = '';
+  document.getElementById('orderSessionId').value = '';
+  cart = {}; 
+  initNewOrder();
+}
+
+function startOrderForTable(tableNumber, sessionId) {
   showTab('neworder');
+  
+  const backBtn = document.getElementById('backToTablesBtn');
+  const grid = document.getElementById('orderTableGrid');
+  const menuSec = document.getElementById('orderMenuSection');
+  
+  if (backBtn) backBtn.style.display = 'block';
+  if (grid) grid.style.display = 'none';
+  if (menuSec) menuSec.style.display = 'block';
+  
+  document.getElementById('activeOrderTableNum').innerText = tableNumber;
   document.getElementById('orderTable').value = tableNumber;
+  if (document.getElementById('orderSessionId')) {
+    document.getElementById('orderSessionId').value = sessionId || '';
+  }
+  
+  cart = {};
+  renderCart();
+  renderMenuItems();
 }
 
 async function initNewOrder() {
+  const backBtn = document.getElementById('backToTablesBtn');
+  const grid = document.getElementById('orderTableGrid');
+  const menuSec = document.getElementById('orderMenuSection');
+  
+  if (backBtn) backBtn.style.display = 'none';
+  if (grid) grid.style.display = 'grid';
+  if (menuSec) menuSec.style.display = 'none';
+
+  if (grid) {
+    try {
+      const res = await api('/api/waiter/tables');
+      if (!res.ok) throw new Error();
+      const tables = await res.json();
+      
+      grid.innerHTML = tables.map(t => {
+        let color = '#22C55E';
+        if (t.status === 'new' || t.status === 'preparing' || t.status === 'ready') color = '#F4A017';
+        if (t.status === 'occupied') color = '#8B5CF6';
+        return `<button class="table-pill" style="background:${color};" onclick="startOrderForTable(${t.tableNumber}, '${t.sessionId || ''}')">Table ${t.tableNumber}</button>`;
+      }).join('');
+    } catch (e) {
+      grid.innerHTML = '<div class="loading-text">Error loading tables.</div>';
+    }
+  }
+
   if (fullMenu.length === 0) {
     try {
       const res = await api('/api/waiter/menu');
@@ -418,19 +476,25 @@ async function placeOrder() {
 
   const items = keys.map(k => ({ menuItemId: cart[k].menuItemId, name: cart[k].name, price: cart[k].price, qty: cart[k].qty }));
 
+  const sessionIdInput = document.getElementById('orderSessionId');
+  const sessionId = sessionIdInput ? sessionIdInput.value : '';
+
   const btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
   btn.textContent = 'Placing Order...';
 
   try {
-    const res = await api('/api/waiter/order', 'POST', { tableNumber, items, subtotal, gst, total });
+    const payload = { tableNumber, items, subtotal, gst, total };
+    if (sessionId) payload.sessionId = sessionId;
+
+    const res = await api('/api/waiter/order', 'POST', payload);
     const data = await res.json();
     if (res.ok) {
       alert(`Order placed! Order #${data.order.orderNumber}`);
       cart = {};
       renderMenuItems();
       renderCart();
-      document.getElementById('orderTable').value = '';
+      resetOrderFlow();
       showTab('tables');
     } else {
       alert(data.message || 'Failed to place order');

@@ -138,7 +138,17 @@ router.post('/order', authWaiter, async (req, res) => {
 
     const count = await prisma.order.count({ where: { restaurantId } });
     const orderNumber = 1000 + count + 1;
-    const currentSessionId = sessionId || uuidv4();
+    // Enforce single-session per table: always check for an active order first
+    let currentSessionId = sessionId;
+    const activeOrder = await prisma.order.findFirst({
+      where: { restaurantId, tableNumber: parseInt(tableNumber), status: { not: 'completed' } },
+      orderBy: { createdAt: 'desc' }
+    });
+    if (activeOrder) {
+      currentSessionId = activeOrder.sessionId;
+    } else if (!currentSessionId) {
+      currentSessionId = uuidv4();
+    }
 
     const order = await prisma.order.create({
       data: {

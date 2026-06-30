@@ -64,13 +64,24 @@
 
   <!-- NEW ORDER TAB -->
   <div class="tab-content" id="tabNeworder">
-    <div class="section-header"><span>Place New Order</span></div>
+    <div class="section-header">
+      <span>Place New Order</span>
+      <button class="btn-refresh" id="backToTablesBtn" style="display:none; padding: 6px 12px; font-size: 13px;" onclick="resetOrderFlow()">← Back to Tables</button>
+    </div>
 
     <div class="order-form">
-      <div class="form-row">
-        <label class="form-label">Table Number</label>
-        <input type="number" id="orderTable" class="form-input" placeholder="e.g. 3" min="1">
+      <!-- Table Selection Grid -->
+      <div id="orderTableGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin-bottom: 24px;">
+        <div class="loading-text">Loading tables...</div>
       </div>
+
+      <!-- Menu Section (Hidden initially) -->
+      <div id="orderMenuSection" style="display:none;">
+        <div class="form-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+          <h3 style="color:var(--gold-primary); margin:0;">Ordering for Table <span id="activeOrderTableNum"></span></h3>
+          <input type="hidden" id="orderTable">
+          <input type="hidden" id="orderSessionId">
+        </div>
 
       <!-- Category Filter -->
       <div class="cat-filter" id="catFilter"></div>
@@ -86,6 +97,7 @@
         <div id="cartItems"></div>
         <div class="cart-totals" id="cartTotals"></div>
         <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">Place Order</button>
+      </div>
       </div>
     </div>
   </div>
@@ -111,6 +123,7 @@
       <div class="modal-header no-print">
         <span class="modal-title">Bill Preview</span>
         <div style="display:flex;gap:8px;">
+          <button class="btn-print" style="display:flex; align-items:center; gap:6px; background:var(--green); color:#000; border-color:var(--green);" id="paymentDoneBtn" onclick="markPaymentDone()"><i data-lucide="check-circle" style="width:14px;height:14px;"></i> Payment Done</button>
           <button class="btn-print" style="display:flex; align-items:center; gap:6px;" onclick="window.print()"><i data-lucide="printer" style="width:14px;height:14px;"></i> Print</button>
           <button class="modal-close" onclick="closeBillModal()">✕</button>
         </div>
