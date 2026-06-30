@@ -13,18 +13,16 @@
     }
 
     :root {
-      --purple: #7C3AED;
+      --purple: #8B5CF6;
       --purple-light: #A78BFA;
-      --purple-dim: rgba(124, 58, 237, 0.15);
+      --purple-dim: rgba(139, 92, 246, 0.15);
       --gold: #C9A84C;
-      --gold-dim: rgba(201, 168, 76, 0.12);
-      --bg: #060608;
-      --panel: #0E0E14;
-      --border: rgba(124, 58, 237, 0.2);
-      --border-gold: rgba(201, 168, 76, 0.2);
+      --bg: #050505;
+      --panel: #0E0E12;
+      --border: rgba(139, 92, 246, 0.25);
       --text: #FFFFFF;
       --muted: #888888;
-      --input-bg: #141420;
+      --input-bg: #141418;
       --error: #EF4444;
     }
 
@@ -44,110 +42,161 @@
     .bg-orb {
       position: fixed;
       border-radius: 50%;
-      filter: blur(120px);
+      filter: blur(100px);
+      opacity: 0.12;
       pointer-events: none;
-      animation: float 10s ease-in-out infinite;
+      animation: float 8s ease-in-out infinite;
     }
     .bg-orb-1 {
-      width: 600px; height: 600px;
+      width: 500px; height: 500px;
       background: var(--purple);
-      opacity: 0.08;
-      top: -200px; right: -150px;
+      top: -150px; left: -150px;
       animation-delay: 0s;
     }
     .bg-orb-2 {
       width: 400px; height: 400px;
       background: var(--gold);
-      opacity: 0.06;
-      bottom: -100px; left: -100px;
-      animation-delay: -5s;
+      bottom: -100px; right: -100px;
+      animation-delay: -4s;
+      opacity: 0.08;
     }
     .bg-orb-3 {
-      width: 250px; height: 250px;
-      background: var(--purple-light);
-      opacity: 0.05;
-      top: 40%; left: 30%;
-      animation-delay: -2.5s;
+      width: 300px; height: 300px;
+      background: var(--purple);
+      bottom: 20%; right: 20%;
+      animation-delay: -2s;
+      opacity: 0.06;
     }
 
     @keyframes float {
       0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-25px) scale(1.04); }
+      50% { transform: translateY(-30px) scale(1.05); }
     }
 
-    /* Subtle dot grid */
-    .dot-grid {
+    /* Grid pattern overlay */
+    .grid-overlay {
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(124,58,237,0.08) 1px, transparent 1px);
-      background-size: 40px 40px;
+      background-image:
+        linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
       pointer-events: none;
     }
 
-    /* Card */
-    .login-card {
+    /* Main layout */
+    .login-wrapper {
+      display: flex;
+      width: 900px;
+      max-width: 95vw;
+      min-height: 540px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px var(--border);
       position: relative;
       z-index: 10;
-      width: 480px;
-      max-width: 95vw;
-      background: var(--panel);
-      border-radius: 24px;
-      border: 1px solid var(--border);
-      padding: 52px 48px;
-      box-shadow:
-        0 50px 150px rgba(0,0,0,0.8),
-        0 0 0 1px rgba(255,255,255,0.04) inset;
     }
 
-    /* Crown icon at top */
-    .card-icon {
-      width: 64px;
-      height: 64px;
-      background: linear-gradient(135deg, var(--purple-dim), rgba(124,58,237,0.08));
+    /* Left panel - branding */
+    .brand-panel {
+      flex: 1;
+      background: linear-gradient(145deg, #09090C 0%, #150F25 100%);
+      padding: 50px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(139,92,246,0.08) 0%, transparent 70%);
+    }
+
+    .brand-logo {
+      font-size: 48px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .brand-name {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--purple-light);
+      letter-spacing: -0.5px;
+      line-height: 1;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .brand-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 48px;
+      position: relative;
+    }
+
+    .brand-divider {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple-light), transparent);
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .brand-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .brand-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #777;
+    }
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--purple-dim);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      margin-bottom: 28px;
-    }
-
-    .card-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.8px;
-      margin-bottom: 6px;
-    }
-
-    .card-subtitle {
       font-size: 14px;
-      color: var(--muted);
-      font-weight: 400;
-      margin-bottom: 36px;
+      flex-shrink: 0;
     }
 
-    /* Access level badge */
-    .access-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(90deg, rgba(124,58,237,0.2), rgba(201,168,76,0.1));
+    .brand-badge {
+      margin-top: auto;
+      background: var(--purple-dim);
       border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 5px 12px;
-      font-size: 11px;
-      font-weight: 600;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
       color: var(--purple-light);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 36px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-
+    
     .badge-dot {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       background: var(--purple-light);
       border-radius: 50%;
       animation: pulse-dot 1.5s ease-in-out infinite;
@@ -158,9 +207,36 @@
       50% { opacity: 0.5; transform: scale(0.8); }
     }
 
-    /* Form elements */
+    /* Right panel - form */
+    .form-panel {
+      width: 400px;
+      background: var(--panel);
+      padding: 50px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-header {
+      margin-bottom: 36px;
+    }
+
+    .form-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .form-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .form-label {
@@ -176,7 +252,7 @@
     .form-input {
       width: 100%;
       background: var(--input-bg);
-      border: 1px solid rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px;
       padding: 14px 16px;
       color: var(--text);
@@ -187,11 +263,13 @@
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .form-input::placeholder { color: #333; }
+    .form-input::placeholder {
+      color: #444;
+    }
 
     .form-input:focus {
       border-color: var(--purple-light);
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
     }
 
     .password-wrapper {
@@ -228,23 +306,16 @@
       margin-top: 8px;
       transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
       letter-spacing: 0.3px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-login::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
     }
 
     .btn-login:hover {
       transform: translateY(-1px);
-      box-shadow: 0 8px 28px rgba(124, 58, 237, 0.45);
+      box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
     }
 
-    .btn-login:active { transform: translateY(0); }
+    .btn-login:active {
+      transform: translateY(0);
+    }
 
     .btn-login:disabled {
       opacity: 0.6;
@@ -266,38 +337,18 @@
 
     .error-msg.show { display: block; }
 
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 28px 0 0;
-    }
-
-    .divider-line {
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.07);
-    }
-
-    .divider-text {
-      font-size: 11px;
-      color: #444;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .footer-note {
-      margin-top: 20px;
-      text-align: center;
+    .form-footer {
+      margin-top: 28px;
       font-size: 12px;
-      color: #333;
+      color: #444;
+      text-align: center;
     }
 
-    @media (max-width: 520px) {
-      .login-card { padding: 36px 24px; }
-      .card-title { font-size: 24px; }
+    /* Responsive */
+    @media (max-width: 700px) {
+      .brand-panel { display: none; }
+      .login-wrapper { width: 100%; min-height: 100vh; border-radius: 0; }
+      .form-panel { width: 100%; padding: 40px 24px; }
     }
   </style>
 </head>
@@ -305,43 +356,67 @@
   <div class="bg-orb bg-orb-1"></div>
   <div class="bg-orb bg-orb-2"></div>
   <div class="bg-orb bg-orb-3"></div>
-  <div class="dot-grid"></div>
+  <div class="grid-overlay"></div>
 
-  <div class="login-card">
-    <div class="card-icon">👑</div>
-    <div class="card-title">Master Panel</div>
-    <div class="card-subtitle">Central control for all restaurant operations</div>
-
-    <div class="access-badge">
-      <span class="badge-dot"></span>
-      Super Admin Access
+  <div class="login-wrapper">
+    <!-- Left branding panel -->
+    <div class="brand-panel">
+      <div class="brand-logo">👑</div>
+      <div class="brand-name">Master Panel</div>
+      <div class="brand-sub">Central Operations</div>
+      <div class="brand-divider"></div>
+      <ul class="brand-features">
+        <li class="brand-feature">
+          <span class="feature-icon">🏢</span>
+          <span>Manage all registered restaurants</span>
+        </li>
+        <li class="brand-feature">
+          <span class="feature-icon">📈</span>
+          <span>Platform-wide revenue statistics</span>
+        </li>
+        <li class="brand-feature">
+          <span class="feature-icon">💳</span>
+          <span>Subscription and billing control</span>
+        </li>
+        <li class="brand-feature">
+          <span class="feature-icon">⚠️</span>
+          <span>Monitor global complaints and alerts</span>
+        </li>
+      </ul>
+      <div class="brand-badge">
+        <span class="badge-dot"></span>
+        Super Admin Access — System Control
+      </div>
     </div>
 
-    <div class="error-msg" id="errorMsg">Invalid credentials. Please try again.</div>
-
-    <form id="loginForm" autocomplete="on">
-      <div class="form-group">
-        <label class="form-label" for="username">Username</label>
-        <input type="text" id="username" class="form-input" placeholder="Enter master username" required autocomplete="username">
+    <!-- Right form panel -->
+    <div class="form-panel">
+      <div class="form-header">
+        <div class="form-title">Master Access</div>
+        <div class="form-subtitle">Enter your super admin credentials</div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="password">Password</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 46px;">
-          <button type="button" class="toggle-eye" id="eyeBtn" onclick="togglePassword()">👁️</button>
+      <div class="error-msg" id="errorMsg">Invalid credentials. Please try again.</div>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="form-group">
+          <label class="form-label" for="username">Master Username</label>
+          <input type="text" id="username" class="form-input" placeholder="Enter master username" required autocomplete="username">
         </div>
-      </div>
 
-      <button type="submit" class="btn-login" id="loginBtn">Access Master Panel</button>
-    </form>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 46px;">
+            <button type="button" class="toggle-eye" id="eyeBtn" onclick="togglePassword()">👁️</button>
+          </div>
+        </div>
 
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-text">Royal Spice Platform</span>
-      <div class="divider-line"></div>
+        <button type="submit" class="btn-login" id="loginBtn">Access Master Panel</button>
+      </form>
+
+      <div class="form-footer">Royal Spice Platform &mdash; Authorized Only</div>
     </div>
-    <div class="footer-note">Restricted access — authorized personnel only</div>
   </div>
 
   <script>
