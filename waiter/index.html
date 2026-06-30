@@ -213,14 +213,6 @@
     <div class="error-box" id="errorBox"></div>
 
     <form id="loginForm" autocomplete="off">
-      <div class="input-group">
-        <label class="input-label" for="restaurantId">Restaurant ID</label>
-        <div class="input-wrap">
-          <span class="input-icon">🏢</span>
-          <input id="restaurantId" type="text" class="form-input" placeholder="Paste Restaurant ID" required autocomplete="off">
-        </div>
-        <div class="rid-hint">Ask your admin for the Restaurant ID</div>
-      </div>
 
       <div class="input-group">
         <label class="input-label" for="username">Username</label>
@@ -246,9 +238,6 @@
   </div>
 
   <script>
-    // Pre-fill restaurantId if saved
-    const savedRid = localStorage.getItem('waiterRestaurantId');
-    if (savedRid) document.getElementById('restaurantId').value = savedRid;
 
     function togglePwd() {
       const inp = document.getElementById('password');
@@ -259,7 +248,6 @@
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const restaurantId = document.getElementById('restaurantId').value.trim();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
       const btn = document.getElementById('submitBtn');
@@ -273,7 +261,7 @@
         const res = await fetch('/api/auth/waiter/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ restaurantId, username, password })
+          body: JSON.stringify({ username, password })
         });
         const data = await res.json();
 

@@ -48,15 +48,15 @@ router.post('/admin/login', async (req, res) => {
 
 // Waiter Login
 router.post('/waiter/login', async (req, res) => {
-  const { restaurantId, username, password } = req.body;
+  const { username, password } = req.body;
 
   try {
-    if (!restaurantId || !username || !password) {
-      return res.status(400).json({ message: 'Restaurant ID, username and password are required' });
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
     }
 
     const waiter = await prisma.waiter.findUnique({
-      where: { restaurantId_username: { restaurantId, username } }
+      where: { username }
     });
 
     if (!waiter) return res.status(401).json({ message: 'Invalid credentials' });

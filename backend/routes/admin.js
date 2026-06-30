@@ -448,11 +448,11 @@ router.post('/waiters', authAdmin, async (req, res) => {
       return res.status(400).json({ message: 'Name, username and password are required' });
     }
 
-    // Check username uniqueness within restaurant
+    // Check username uniqueness globally
     const existing = await prisma.waiter.findUnique({
-      where: { restaurantId_username: { restaurantId: req.user.restaurantId, username } }
+      where: { username }
     });
-    if (existing) return res.status(409).json({ message: 'Username already exists for this restaurant' });
+    if (existing) return res.status(409).json({ message: 'Username already exists globally. Please choose another username.' });
 
     const passwordHash = await bcrypt.hash(password, 10);
     const waiter = await prisma.waiter.create({

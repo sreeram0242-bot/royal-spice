@@ -137,11 +137,10 @@ model Waiter {
   id           String     @id @default(cuid())
   restaurantId String
   name         String
-  username     String
+  username     String     @unique
   passwordHash String
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
 
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  @@unique([restaurantId, username])
 }

@@ -40,7 +40,7 @@ function showTab(name) {
 
   if (name === 'tables') loadTables();
   if (name === 'calls') loadCalls();
-  if (name === 'neworder') initNewOrder();
+  if (name === 'liveorders') loadLiveOrders();
 }
 
 // ── LOAD SETTINGS ──
@@ -317,27 +317,19 @@ async function attendCall(id) {
   } catch (e) { alert('Error'); }
 }
 
-// ── NEW ORDER (from New Order tab) ──
+// ── NEW ORDER (from Overlay) ──
 let cart = {};
 let fullMenu = [];
 let activeCategory = 'All';
 
-function resetOrderFlow() {
-  document.getElementById('orderTable').value = '';
-  document.getElementById('orderSessionId').value = '';
-  cart = {}; 
-  initNewOrder();
+function closeOrderOverlay() {
+  document.getElementById('orderOverlay').style.display = 'none';
 }
 
-function startOrderForTable(tableNumber, sessionId) {
-  showTab('neworder');
+async function startOrderForTable(tableNumber, sessionId) {
+  document.getElementById('orderOverlay').style.display = 'block';
   
-  const backBtn = document.getElementById('backToTablesBtn');
-  const grid = document.getElementById('orderTableGrid');
   const menuSec = document.getElementById('orderMenuSection');
-  
-  if (backBtn) backBtn.style.display = 'block';
-  if (grid) grid.style.display = 'none';
   if (menuSec) menuSec.style.display = 'block';
   
   document.getElementById('activeOrderTableNum').innerText = tableNumber;
@@ -347,41 +339,14 @@ function startOrderForTable(tableNumber, sessionId) {
   }
   
   cart = {};
-  renderCart();
-  renderMenuItems();
-}
-
-async function initNewOrder() {
-  const backBtn = document.getElementById('backToTablesBtn');
-  const grid = document.getElementById('orderTableGrid');
-  const menuSec = document.getElementById('orderMenuSection');
   
-  if (backBtn) backBtn.style.display = 'none';
-  if (grid) grid.style.display = 'grid';
-  if (menuSec) menuSec.style.display = 'none';
-
-  if (grid) {
-    try {
-      const res = await api('/api/waiter/tables');
-      if (!res.ok) throw new Error();
-      const tables = await res.json();
-      
-      grid.innerHTML = tables.map(t => {
-        let color = '#4B5563'; // grey (unoccupied)
-        if (t.status !== 'available') color = '#3B82F6'; // blue (occupied)
-        return `<button class="table-pill" style="background:${color};" onclick="startOrderForTable(${t.tableNumber}, '${t.sessionId || ''}')">Table ${t.tableNumber}</button>`;
-      }).join('');
-    } catch (e) {
-      grid.innerHTML = '<div class="loading-text">Error loading tables.</div>';
-    }
-  }
-
   if (fullMenu.length === 0) {
     try {
       const res = await api('/api/waiter/menu');
       if (res && res.ok) fullMenu = await res.json();
     } catch (e) { console.error(e); }
   }
+  
   renderCategoryFilter();
   renderMenuItems();
   renderCart();
@@ -492,19 +457,74 @@ async function placeOrder() {
     if (res.ok) {
       alert(`Order placed! Order #${data.order.orderNumber}`);
       cart = {};
-      renderMenuItems();
-      renderCart();
-      resetOrderFlow();
-      showTab('tables');
+      document.getElementById('cartTotals').innerHTML = '';
+      closeOrderOverlay();
+      loadLiveOrders();
+      alert('Order placed successfully!');
     } else {
-      alert(data.message || 'Failed to place order');
-      btn.disabled = false;
-      btn.textContent = 'Place Order';
+      alert('Failed to place order');
     }
   } catch (e) {
     alert('Error placing order');
+  } finally {
     btn.disabled = false;
     btn.textContent = 'Place Order';
+  }
+}
+
+// ── LIVE ORDERS ──
+async function loadLiveOrders() {
+  const container = document.getElementById('liveOrdersContainer');
+  container.innerHTML = '<div class="loading-text">Loading live orders...</div>';
+  try {
+    const res = await api('/api/waiter/live-orders');
+    if (!res.ok) throw new Error('Failed');
+    const data = await res.json();
+
+    if (data.length === 0) {
+      container.innerHTML = '<div class="no-calls"><div style="font-size:36px;margin-bottom:8px;"><i data-lucide="check-circle-2" style="width:48px;height:48px;color:var(--gold);"></i></div>No active orders currently</div>';
+      setTimeout(() => lucide.createIcons(), 10);
+      return;
+    }
+
+    let html = '';
+    // Group orders by table
+    const tableMap = {};
+    data.forEach(order => {
+      if (!tableMap[order.tableNumber]) tableMap[order.tableNumber] = [];
+      tableMap[order.tableNumber].push(order);
+    });
+
+    Object.keys(tableMap).sort((a,b) => parseInt(a) - parseInt(b)).forEach(tableNum => {
+      html += `<div style="background:#0E0E12; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0; color:var(--gold); border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px; margin-bottom:12px;">Table ${tableNum}</h3>`;
+      
+      tableMap[tableNum].forEach(order => {
+        const isReceived = (order.status !== 'new');
+        const statusColor = isReceived ? 'var(--green)' : 'var(--orange)';
+        const statusText = isReceived ? 'Received / Preparing' : 'Pending Admin';
+        
+        html += `<div style="margin-bottom:12px; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--text-muted)">Order #${order.orderNumber}</span>
+            <span style="color:${statusColor}; font-weight:600;"><i data-lucide="${isReceived ? 'check-check' : 'clock'}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>${statusText}</span>
+          </div>`;
+        
+        order.items.forEach(item => {
+          html += `<div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;">
+            <span>${item.qty}x ${item.name}</span>
+          </div>`;
+        });
+        
+        html += `</div>`;
+      });
+      html += `</div>`;
+    });
+
+    container.innerHTML = html;
+    setTimeout(() => lucide.createIcons(), 10);
+  } catch (e) {
+    container.innerHTML = '<div class="loading-text">Error loading live orders.</div>';
   }
 }
 

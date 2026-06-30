@@ -35,8 +35,8 @@
     <button class="tab-btn" id="tab-calls" onclick="showTab('calls')">
       <span><i data-lucide="bell"></i></span> Calls
     </button>
-    <button class="tab-btn" id="tab-neworder" onclick="showTab('neworder')">
-      <span><i data-lucide="plus-circle"></i></span> New Order
+    <button class="tab-btn" id="tab-liveorders" onclick="showTab('liveorders')">
+      <span><i data-lucide="activity"></i></span> Live Orders
     </button>
   </div>
 
@@ -62,19 +62,26 @@
     </div>
   </div>
 
-  <!-- NEW ORDER TAB -->
-  <div class="tab-content" id="tabNeworder">
+  <!-- LIVE ORDERS TAB -->
+  <div class="tab-content" id="tabLiveorders">
     <div class="section-header">
-      <span>Place New Order</span>
-      <button class="btn-refresh" id="backToTablesBtn" style="display:none; padding: 6px 12px; font-size: 13px;" onclick="resetOrderFlow()">← Back to Tables</button>
+      <span>Live Orders (Table-wise)</span>
+      <button class="btn-refresh" onclick="loadLiveOrders()">↻ Refresh</button>
+    </div>
+    <div id="liveOrdersContainer">
+      <div class="loading-text">Loading live orders...</div>
+    </div>
+  </div>
+
+  <!-- ORDER OVERLAY (Hidden by default) -->
+  <div id="orderOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:999; overflow-y:auto; padding:20px;">
+    <div class="section-header" style="margin-bottom: 20px;">
+      <span>Place Order</span>
+      <button class="btn-refresh" id="backToTablesBtn" style="padding: 6px 12px; font-size: 13px;" onclick="closeOrderOverlay()">← Back</button>
     </div>
 
     <div class="order-form">
-      <div id="orderTableGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px; margin-bottom: 24px;">
-        <div class="loading-text">Loading tables...</div>
-      </div>
-
-      <!-- Menu Section (Hidden initially) -->
+      <!-- Menu Section -->
       <div id="orderMenuSection" style="display:none;">
         <div class="form-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
           <h3 style="color:var(--gold-primary); margin:0;">Ordering for Table <span id="activeOrderTableNum"></span></h3>
@@ -96,7 +103,6 @@
         <div id="cartItems"></div>
         <div class="cart-totals" id="cartTotals"></div>
         <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">Place Order</button>
-      </div>
       </div>
     </div>
   </div>

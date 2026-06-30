@@ -239,4 +239,21 @@ router.put('/calls/:id/attend', authWaiter, async (req, res) => {
   }
 });
 
+// GET /api/waiter/live-orders — active orders for restaurant
+router.get('/live-orders', authWaiter, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: req.user.restaurantId,
+        status: { not: 'completed' }
+      },
+      include: { items: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
