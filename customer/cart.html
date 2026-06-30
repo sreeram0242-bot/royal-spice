@@ -6,6 +6,7 @@
   <title>Cart - Royal Spice</title>
   <link rel="stylesheet" href="style.css?v=15">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -56,25 +57,44 @@
   </div>
 
   <!-- Passcode Prompt Modal -->
-  <div class="popup-overlay" id="passcodePromptOverlay">
-    <div class="popup-box" style="text-align:center;">
-      <div style="background: rgba(235, 178, 91, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
-        <i data-lucide="lock" style="width: 32px; height: 32px; color: var(--gold-primary);"></i>
+  <div class="popup-overlay" id="passcodePromptOverlay" style="align-items:center; justify-content:center;">
+    <div class="popup-box" style="text-align:center; border-radius:24px; padding:32px 24px; width:85%; max-width:320px; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(235,178,91,0.2);">
+      
+      <!-- Lock Icon Circle -->
+      <div style="background: rgba(235,178,91,0.12); width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:2px solid rgba(235,178,91,0.3);">
+        <i data-lucide="lock" style="width:34px; height:34px; color:#EBB25B; stroke-width:2;"></i>
       </div>
-      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Waiter PIN Required</h2>
-      <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">Please ask your waiter for the 4-digit table PIN to confirm your order.</p>
-      <input type="number" id="orderPasscodeInput" placeholder="Enter 4-Digit PIN" style="width: 100%; padding: 14px; text-align: center; font-size: 20px; letter-spacing: 4px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--panel-color); color: var(--text-primary); margin-bottom: 20px; outline: none;">
+      
+      <h2 style="font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">Waiter PIN Required</h2>
+      <p style="color:var(--text-secondary); font-size:13px; margin-bottom:22px; line-height:1.6;">Please ask your waiter for the 4-digit table PIN to confirm your order.</p>
+      
+      <input type="number" id="orderPasscodeInput" placeholder="Enter 4-Digit PIN"
+        style="width:100%; padding:16px; text-align:center; font-size:22px; letter-spacing:6px; font-weight:700;
+               border-radius:14px; border:2px solid rgba(235,178,91,0.4); background:rgba(235,178,91,0.06);
+               color:var(--text-primary); margin-bottom:22px; outline:none;
+               font-family:'Inter',sans-serif;"
+        maxlength="4" oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">
+      
       <div style="display:flex; gap:12px;">
-        <button class="btn-secondary" style="flex:1;" onclick="document.getElementById('passcodePromptOverlay').style.display='none'">Cancel</button>
-        <button class="btn-primary" style="flex:1;" onclick="submitOrderWithPasscode()">Confirm</button>
+        <button onclick="document.getElementById('passcodePromptOverlay').style.display='none'"
+          style="flex:1; padding:14px; border-radius:12px; border:1px solid rgba(235,178,91,0.3);
+                 background:transparent; color:var(--text-secondary); font-size:15px;
+                 font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Cancel</button>
+        <button onclick="submitOrderWithPasscode()"
+          style="flex:1; padding:14px; border-radius:12px; border:none;
+                 background:linear-gradient(135deg,#EBB25B,#D4983E); color:#000;
+                 font-size:15px; font-weight:700; cursor:pointer;
+                 font-family:'Inter',sans-serif;
+                 box-shadow:0 4px 16px rgba(235,178,91,0.35);">Confirm</button>
       </div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
   <script>
     renderCart();
+    lucide.createIcons();
   </script>
 </body>
 </html>

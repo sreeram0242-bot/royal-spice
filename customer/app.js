@@ -393,14 +393,12 @@ function setTip(amt) {
 
 async function placeOrder() {
   if (cart.length === 0) return;
-  const savedPasscode = localStorage.getItem('tablePasscode');
-  if (savedPasscode) {
-    await submitOrder(savedPasscode);
-  } else {
-    document.getElementById('passcodePromptOverlay').style.display = 'flex';
-    document.getElementById('orderPasscodeInput').value = '';
-    document.getElementById('orderPasscodeInput').focus();
-  }
+  // Always show PIN popup — customer must verify every time
+  const overlay = document.getElementById('passcodePromptOverlay');
+  const input = document.getElementById('orderPasscodeInput');
+  overlay.style.display = 'flex';
+  input.value = '';
+  setTimeout(() => input.focus(), 100);
 }
 
 async function submitOrderWithPasscode() {
