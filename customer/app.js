@@ -393,9 +393,14 @@ function setTip(amt) {
 
 async function placeOrder() {
   if (cart.length === 0) return;
-  document.getElementById('passcodePromptOverlay').style.display = 'flex';
-  document.getElementById('orderPasscodeInput').value = '';
-  document.getElementById('orderPasscodeInput').focus();
+  const savedPasscode = localStorage.getItem('tablePasscode');
+  if (savedPasscode) {
+    await submitOrder(savedPasscode);
+  } else {
+    document.getElementById('passcodePromptOverlay').style.display = 'flex';
+    document.getElementById('orderPasscodeInput').value = '';
+    document.getElementById('orderPasscodeInput').focus();
+  }
 }
 
 async function submitOrderWithPasscode() {
@@ -405,7 +410,10 @@ async function submitOrderWithPasscode() {
     return;
   }
   document.getElementById('passcodePromptOverlay').style.display = 'none';
+  await submitOrder(passcode);
+}
 
+async function submitOrder(passcode) {
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const gst = Math.round(subTotal * 0.05);
   const total = subTotal + gst + selectedTip;
@@ -436,10 +444,19 @@ async function submitOrderWithPasscode() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || 'Failed to place order');
+      if (res.status === 401) {
+        localStorage.removeItem('tablePasscode');
+        localStorage.removeItem('sessionId');
+        alert('Passcode expired or invalid. Please ask waiter for the new PIN.');
+        placeOrder(); // Trigger prompt again
+      } else {
+        alert(data.message || 'Failed to place order');
+      }
+      hideLoader();
       return;
     }
 
+    localStorage.setItem('tablePasscode', passcode);
     if (!sessionId) {
       localStorage.setItem('sessionId', data.order.sessionId);
     }

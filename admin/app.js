@@ -814,10 +814,10 @@ async function renderFullTableGrid(total) {
     grid.innerHTML = '';
     tables.forEach(t => {
       const isOccupied = t.status === 'occupied';
-      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'status-new' : 'available'}" style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; border: 1px solid ${isOccupied ? 'rgba(59,130,246,0.4)' : '#333'}; background: var(--panel-bg); color: var(--text-primary); border-radius: 8px;">
+      const statusText = isOccupied ? 'Occupied' : (t.passcode ? `<span style="color:var(--gold);font-weight:bold;font-size:14px;">PIN: ${t.passcode}</span>` : 'Free');
+      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'status-new' : (t.passcode ? 'status-new' : 'available')}" style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; border: 1px solid ${(isOccupied || t.passcode) ? 'rgba(59,130,246,0.4)' : '#333'}; background: var(--panel-bg); color: var(--text-primary); border-radius: 8px;">
         <div>T${t.tableNumber.toString().padStart(2, '0')}</div>
-        <div style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">${isOccupied ? 'Occupied' : 'Free'}</div>
-        ${t.passcode ? `<div style="font-size: 14px; margin-top: 4px; color: var(--gold); font-weight: bold;">PIN: ${t.passcode}</div>` : ''}
+        <div style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">${statusText}</div>
       </div>`;
     });
   } catch (err) {

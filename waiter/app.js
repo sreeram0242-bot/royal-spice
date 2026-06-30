@@ -83,7 +83,7 @@ async function loadTables() {
       card.style.width = '100%';
 
       const pillClass = {
-        available: 'pill-available',
+        available: t.passcode ? 'pill-new' : 'pill-available',
         new: 'pill-new',
         preparing: 'pill-preparing',
         ready: 'pill-ready',
@@ -91,7 +91,7 @@ async function loadTables() {
       }[t.status] || 'pill-available';
 
       const statusLabel = {
-        available: 'Free',
+        available: t.passcode ? `PIN: ${t.passcode}` : 'Free',
         new: 'Ordered',
         preparing: 'Cooking',
         ready: 'Ready',
@@ -101,7 +101,6 @@ async function loadTables() {
       card.innerHTML = `
         <div class="table-num">T${String(t.tableNumber).padStart(2,'0')}</div>
         <span class="table-status-pill ${pillClass}">${statusLabel}</span>
-        ${t.passcode ? `<div style="font-size:12px; color:var(--text-muted); margin-top:8px;">PIN: <strong style="color:var(--gold-primary); font-size:16px;">${t.passcode}</strong></div>` : ''}
         ${t.total > 0 ? `<div class="table-total">₹${t.total.toFixed(2)}</div>` : ''}
       `;
       grid.appendChild(card);
