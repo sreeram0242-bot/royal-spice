@@ -44,7 +44,14 @@ body.light-theme {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', sans-serif;
+}
+
+.lucide {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  vertical-align: middle;
 }
 
 body {
@@ -71,8 +78,9 @@ body {
 }
 .brand h2 {
   color: var(--gold);
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .nav-link {

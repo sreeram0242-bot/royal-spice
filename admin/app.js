@@ -452,6 +452,7 @@ async function loadMenu() {
             <th style="text-align: left; padding: 12px 8px; color: var(--text-muted); font-weight: normal; font-size: 14px;">Name</th>
             <th style="text-align: left; padding: 12px 8px; color: var(--text-muted); font-weight: normal; font-size: 14px;">Price</th>
             <th style="text-align: left; padding: 12px 8px; color: var(--text-muted); font-weight: normal; font-size: 14px;">Veg/Non-Veg</th>
+            <th style="text-align: left; padding: 12px 8px; color: var(--text-muted); font-weight: normal; font-size: 14px;">Status</th>
             <th style="text-align: right; padding: 12px 8px; color: var(--text-muted); font-weight: normal; font-size: 14px;">Actions</th>
           </tr>
         </thead>
@@ -462,7 +463,9 @@ async function loadMenu() {
               <td style="padding: 12px 8px; color: white;">${m.name}</td>
               <td style="padding: 12px 8px; color: white;">₹${m.price}</td>
               <td style="padding: 12px 8px; color: white;">${m.isVeg ? 'Veg' : 'Non-Veg'}</td>
+              <td style="padding: 12px 8px; color: white;">${m.isAvailable ? '<span style="color:var(--green);font-size:12px;">Available</span>' : '<span style="color:var(--red);font-size:12px;">Out of Stock</span>'}</td>
               <td style="padding: 12px 8px; text-align: right;">
+                <button style="color: var(--gold); background: transparent; border: none; cursor: pointer; margin-right: 12px;" onclick="toggleItemAvailability('${m.id}', ${!m.isAvailable})">${m.isAvailable ? 'Mark Out of Stock' : 'Mark Available'}</button>
                 <button style="color: var(--blue); background: transparent; border: none; cursor: pointer; margin-right: 12px;" onclick="openEditMenuModal('${m.id}')">Edit</button>
                 <button style="color: var(--red); background: transparent; border: none; cursor: pointer;" onclick="deleteMenuItem('${m.id}')">Delete</button>
               </td>
@@ -608,6 +611,26 @@ async function saveEditMenuItem() {
   
   closeModal('editMenuModal');
   loadMenu();
+}
+
+async function toggleItemAvailability(id, isAvailable) {
+  try {
+    const res = await fetch(`/api/admin/menu/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+      },
+      body: JSON.stringify({ isAvailable })
+    });
+    if (res.ok) {
+      loadMenu();
+    } else {
+      alert('Error updating status');
+    }
+  } catch (e) {
+    alert('Failed to connect to server');
+  }
 }
 
 async function deleteMenuItem(id) {

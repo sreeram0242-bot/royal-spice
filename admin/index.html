@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login — Royal Spice</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -402,7 +403,7 @@
   <!-- RIGHT PANEL -->
   <div class="right-panel">
     <div class="logo-row">
-      <div class="logo-icon">🍛</div>
+      <div class="logo-icon"><i data-lucide="chef-hat" style="color:white;width:24px;height:24px;"></i></div>
       <div class="logo-text">Royal <span>Spice</span></div>
     </div>
 
@@ -418,16 +419,16 @@
       <div class="input-group">
         <label class="input-label" for="username">Username</label>
         <div class="input-wrap">
-          <span class="input-icon">👤</span>
+          <span class="input-icon"><i data-lucide="user" style="width:16px;height:16px;"></i></span>
           <input id="username" type="text" class="form-input" placeholder="Enter your username" required autocomplete="username">
         </div>
       </div>
       <div class="input-group">
         <label class="input-label" for="password">Password</label>
         <div class="input-wrap">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon"><i data-lucide="lock" style="width:16px;height:16px;"></i></span>
           <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 48px;">
-          <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePwd()">👁️</button>
+          <button type="button" class="eye-btn" onclick="togglePwd()"><i data-lucide="eye" id="eyeBtn" style="width:16px;height:16px;"></i></button>
         </div>
       </div>
 
@@ -438,11 +439,19 @@
   </div>
 
   <script>
+    lucide.createIcons();
+    
     function togglePwd() {
       const inp = document.getElementById('password');
       const btn = document.getElementById('eyeBtn');
-      inp.type = inp.type === 'password' ? 'text' : 'password';
-      btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.setAttribute('data-lucide', 'eye-off');
+      } else {
+        inp.type = 'password';
+        btn.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Waiter Dashboard — Royal Spice</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,15 +13,15 @@
   <!-- Top Bar -->
   <div class="topbar">
     <div class="topbar-left">
-      <span class="topbar-icon">🧑‍🍳</span>
+      <span class="topbar-icon"><i data-lucide="chef-hat" style="color:#000;"></i></span>
       <div>
         <div class="topbar-name" id="waiterName">Waiter</div>
         <div class="topbar-restaurant" id="restaurantNameTop">Loading...</div>
       </div>
     </div>
     <div class="topbar-right">
-      <button class="call-badge" id="callBadge" onclick="showTab('calls')" style="display:none;">
-        🔔 <span id="callCount">0</span>
+      <button class="call-badge" id="callBadge" onclick="showTab('calls')" style="display:none; align-items: center; gap: 4px;">
+        <i data-lucide="bell-ring" style="width:16px;height:16px;"></i> <span id="callCount">0</span>
       </button>
       <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
@@ -29,13 +30,13 @@
   <!-- Tab Nav -->
   <div class="tab-nav">
     <button class="tab-btn active" id="tab-tables" onclick="showTab('tables')">
-      <span>🪑</span> Tables
+      <span><i data-lucide="armchair"></i></span> Tables
     </button>
     <button class="tab-btn" id="tab-calls" onclick="showTab('calls')">
-      <span>🔔</span> Calls
+      <span><i data-lucide="bell"></i></span> Calls
     </button>
     <button class="tab-btn" id="tab-neworder" onclick="showTab('neworder')">
-      <span>➕</span> New Order
+      <span><i data-lucide="plus-circle"></i></span> New Order
     </button>
   </div>
 
@@ -81,7 +82,7 @@
 
       <!-- Cart -->
       <div class="cart-section" id="cartSection" style="display:none;">
-        <div class="cart-title">🛒 Order Summary</div>
+        <div class="cart-title"><i data-lucide="shopping-cart" style="vertical-align: middle; margin-right: 4px;"></i> Order Summary</div>
         <div id="cartItems"></div>
         <div class="cart-totals" id="cartTotals"></div>
         <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">Place Order</button>
@@ -110,7 +111,7 @@
       <div class="modal-header no-print">
         <span class="modal-title">Bill Preview</span>
         <div style="display:flex;gap:8px;">
-          <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+          <button class="btn-print" style="display:flex; align-items:center; gap:6px;" onclick="window.print()"><i data-lucide="printer" style="width:14px;height:14px;"></i> Print</button>
           <button class="modal-close" onclick="closeBillModal()">✕</button>
         </div>
       </div>
@@ -118,6 +119,9 @@
     </div>
   </div>
 
-  <script src="app.js?v=1"></script>
+  <script src="app.js?v=2"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

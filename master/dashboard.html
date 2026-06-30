@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master Dashboard - Royal Spice</title>
   <link rel="stylesheet" href="style.css?v=3">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="sidebar">
     <div class="brand">
-      <h2>👑 Master Panel</h2>
+      <h2><i data-lucide="crown" style="width:28px;height:28px;margin-bottom:-4px;"></i> Master Panel</h2>
     </div>
-    <a class="nav-link active" onclick="showView('dashboard')">🏠 Dashboard</a>
-    <a class="nav-link" onclick="showView('restaurants')">🏢 Restaurants</a>
-    <a class="nav-link" onclick="showView('complaints')">📨 Complaints</a>
-    <a class="nav-link" onclick="showView('revenue')">💰 Platform Revenue</a>
-    <a class="nav-link" style="margin-top: auto;" onclick="logout()">🚪 Logout</a>
+    <a class="nav-link active" onclick="showView('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-link" onclick="showView('restaurants')"><i data-lucide="store"></i> Restaurants</a>
+    <a class="nav-link" onclick="showView('complaints')"><i data-lucide="message-square-warning"></i> Complaints</a>
+    <a class="nav-link" onclick="showView('revenue')"><i data-lucide="indian-rupee"></i> Platform Revenue</a>
+    <a class="nav-link" style="margin-top: auto;" onclick="logout()"><i data-lucide="log-out"></i> Logout</a>
   </div>
 
   <div class="main-content">
@@ -258,5 +260,8 @@
   </div>
 
   <script src="app.js?v=2"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

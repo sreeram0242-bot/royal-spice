@@ -155,7 +155,10 @@ function renderMenu(filterCategory = null, searchQuery = '') {
       const cartItem = cart.find(c => c.id === item.id);
       const qty = cartItem ? cartItem.qty : 0;
 
-      const controls = qty > 0
+      const isAvail = item.isAvailable !== false;
+      const controls = !isAvail 
+        ? `<div style="color:#EF4444; font-size:12px; font-weight:700; text-align:center; padding:8px 0;">OUT OF STOCK</div>`
+        : qty > 0
         ? `<div class="qty-control">
              <button class="qty-btn" onclick="updateQty('${item.id}', -1)">−</button>
              <span class="qty-val">${qty}</span>
@@ -166,7 +169,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
            </div>`;
 
       htmlString += `
-        <div class="menu-card">
+        <div class="menu-card" style="${!isAvail ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
           <div class="card-img-wrapper">
             <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'" class="card-img" alt="${item.name}">
             <div class="veg-dot ${item.isVeg ? '' : 'non-veg-dot'}"></div>

@@ -128,10 +128,11 @@ async function openTableModal(tableNumber) {
     if (!res.ok) {
       // No active orders — show empty
       sub.textContent = 'No active orders';
-      body.innerHTML = '<div class="empty-state"><div class="empty-icon">🪑</div><div>This table is free</div></div>';
+      body.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="armchair" style="width:48px;height:48px;opacity:0.5;"></i></div><div>This table is free</div></div>';
       actions.innerHTML = `
-        <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})">➕ Place Order for this Table</button>
+        <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order for this Table</button>
       `;
+      setTimeout(() => lucide.createIcons(), 10);
       return;
     }
 
@@ -162,10 +163,11 @@ async function openTableModal(tableNumber) {
     body.innerHTML = bodyHTML;
 
     actions.innerHTML = `
-      <button class="btn-action btn-secondary" onclick="printBill(${tableNumber})">🖨️ View & Print Bill</button>
-      <button class="btn-action btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber})">➕ Add More Items</button>
-      <button class="btn-action btn-danger" onclick="closeSession(${tableNumber})">✓ Close Table Session</button>
+      <button class="btn-action btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="printer" style="width:16px;height:16px;vertical-align:middle;"></i> View & Print Bill</button>
+      <button class="btn-action btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Add More Items</button>
+      <button class="btn-action btn-danger" onclick="closeSession(${tableNumber})"><i data-lucide="check" style="width:16px;height:16px;vertical-align:middle;"></i> Close Table Session</button>
     `;
+    setTimeout(() => lucide.createIcons(), 10);
   } catch (e) {
     console.error(e);
     body.innerHTML = '<div class="loading-text">Error loading data.</div>';
@@ -277,19 +279,21 @@ async function loadCalls() {
     document.getElementById('callCount').textContent = calls.length;
 
     if (calls.length === 0) {
-      list.innerHTML = '<div class="no-calls"><div style="font-size:36px;margin-bottom:8px;">✅</div>No pending calls</div>';
+      list.innerHTML = '<div class="no-calls"><div style="font-size:36px;margin-bottom:8px;"><i data-lucide="check-circle-2" style="width:48px;height:48px;color:var(--gold);"></i></div>No pending calls</div>';
+      setTimeout(() => lucide.createIcons(), 10);
       return;
     }
 
     list.innerHTML = calls.map(c => `
       <div class="call-card" id="call-${c.id}">
         <div class="call-info">
-          <div class="call-table">🔔 Table ${c.tableNumber}</div>
+          <div class="call-table"><i data-lucide="bell" style="width:14px;height:14px;vertical-align:middle;"></i> Table ${c.tableNumber}</div>
           <div class="call-time">${new Date(c.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
         </div>
         <button class="btn-attend" onclick="attendCall('${c.id}')">Attended</button>
       </div>
     `).join('');
+    setTimeout(() => lucide.createIcons(), 10);
   } catch (e) {
     list.innerHTML = '<div class="loading-text">Error loading calls.</div>';
   }
@@ -345,19 +349,23 @@ function renderMenuItems() {
   if (filtered.length === 0) { grid.innerHTML = '<div class="loading-text">No items in this category</div>'; return; }
   grid.innerHTML = filtered.map(item => {
     const qty = cart[item.id]?.qty || 0;
+    const isAvail = item.isAvailable !== false; // handle true/undefined vs false
     return `
-      <div class="menu-item-card">
+      <div class="menu-item-card" style="${isAvail ? '' : 'opacity: 0.5; filter: grayscale(1); pointer-events: none;'}">
         <div class="menu-item-info">
-          <div class="menu-item-name">${item.name}</div>
+          <div class="menu-item-name">${item.name} ${!isAvail ? '<span style="font-size:10px;color:#c00;border:1px solid #c00;border-radius:4px;padding:2px 4px;margin-left:4px;">OUT OF STOCK</span>' : ''}</div>
           <div style="display:flex;gap:8px;align-items:center;">
             <span class="menu-item-price">₹${item.price}</span>
-            <span class="menu-item-veg">${item.isVeg ? '🟢 Veg' : '🔴 Non-veg'}</span>
+            <span class="menu-item-veg" style="display:flex;align-items:center;gap:4px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:${item.isVeg ? '#22C55E' : '#EF4444'};"></div>
+              ${item.isVeg ? 'Veg' : 'Non-veg'}
+            </span>
           </div>
         </div>
         <div class="qty-control">
           ${qty > 0 ? `<button class="qty-btn" onclick="updateCart('${item.id}', ${item.price}, '${item.name.replace(/'/g, "\\'")}', -1)">−</button>` : ''}
           ${qty > 0 ? `<span class="qty-num">${qty}</span>` : ''}
-          <button class="qty-btn" onclick="updateCart('${item.id}', ${item.price}, '${item.name.replace(/'/g, "\\'")}', 1)">+</button>
+          <button class="qty-btn" onclick="updateCart('${item.id}', ${item.price}, '${item.name.replace(/'/g, "\\'")}', 1)" ${!isAvail ? 'disabled' : ''}>+</button>
         </div>
       </div>
     `;
