@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node backend/server.js",
+    "dev": "concurrently \"npm run start\" \"cloudflared tunnel --url http://localhost:5000\"",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
@@ -27,6 +28,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "concurrently": "^10.0.3",
     "prisma": "^5.7.0"
   }
 }
