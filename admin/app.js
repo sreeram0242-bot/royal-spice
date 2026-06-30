@@ -1097,10 +1097,10 @@ function downloadHistoryPDF() {
   doc.setFontSize(11);
   const startDate = document.getElementById('historyStartDate').value;
   const endDate = document.getElementById('historyEndDate').value;
-  doc.text(\`Date Range: \${startDate} to \${endDate}\`, 14, 30);
+  doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 30);
   
   const totalRev = allHistorySessions.reduce((sum, s) => sum + s.total, 0);
-  doc.text(\`Total Sessions: \${allHistorySessions.length} | Total Revenue: Rs. \${totalRev.toFixed(2)}\`, 14, 36);
+  doc.text(`Total Sessions: ${allHistorySessions.length} | Total Revenue: Rs. ${totalRev.toFixed(2)}`, 14, 36);
 
   const tableColumn = ["Date", "Session #", "Table", "Payment", "Amount (Rs.)"];
   const tableRows = [];
@@ -1126,7 +1126,7 @@ function downloadHistoryPDF() {
     headStyles: { fillColor: [201, 168, 76] }
   });
 
-  doc.save(\`Revenue_Report_\${startDate}_to_\${endDate}.pdf\`);
+  doc.save(`Revenue_Report_${startDate}_to_${endDate}.pdf`);
 }
 
 // Init if on dashboard
