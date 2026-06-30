@@ -191,14 +191,14 @@
 
     /* ── RIGHT PANEL ── */
     .right-panel {
-      width: 480px;
+      width: 440px;
       flex-shrink: 0;
       background: #08080E;
       border-left: 1px solid rgba(255,255,255,0.05);
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 64px 52px;
+      padding: 0 40px;
       position: relative;
       overflow: hidden;
     }
@@ -323,8 +323,16 @@
     .form-input::placeholder { color: rgba(255,255,255,0.18); }
     .form-input:focus {
       border-color: rgba(139,92,246,0.5);
-      background: rgba(139,92,246,0.05);
-      box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+      background: rgba(139,92,246,0.04);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.08);
+    }
+    .form-input:-webkit-autofill,
+    .form-input:-webkit-autofill:hover,
+    .form-input:-webkit-autofill:focus,
+    .form-input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px #08080E inset !important;
+      -webkit-text-fill-color: #fff !important;
+      transition: background-color 5000s ease-in-out 0s;
     }
     .eye-btn {
       position: absolute;
@@ -469,19 +477,19 @@
       <span id="errorText">Invalid username or password.</span>
     </div>
 
-    <form id="loginForm" autocomplete="on">
+    <form id="loginForm" autocomplete="off">
       <div class="input-group">
-        <label class="input-label" for="username">Master Username</label>
+        <label class="input-label" for="username">Username</label>
         <div class="input-wrap">
           <span class="input-icon"><i data-lucide="user" style="width:16px;height:16px;"></i></span>
-          <input id="username" type="text" class="form-input" placeholder="Enter master username" required autocomplete="username">
+          <input id="username" type="text" class="form-input" placeholder="Enter your username" required autocomplete="off">
         </div>
       </div>
       <div class="input-group">
         <label class="input-label" for="password">Password</label>
         <div class="input-wrap">
           <span class="input-icon"><i data-lucide="lock" style="width:16px;height:16px;"></i></span>
-          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 48px;">
+          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="off" style="padding-right: 48px;">
           <button type="button" class="eye-btn" onclick="togglePwd()"><i data-lucide="eye" id="eyeBtn" style="width:16px;height:16px;"></i></button>
         </div>
       </div>

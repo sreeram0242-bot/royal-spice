@@ -280,6 +280,14 @@
       background: rgba(201,168,76,0.04);
       box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
     }
+    .form-input:-webkit-autofill,
+    .form-input:-webkit-autofill:hover,
+    .form-input:-webkit-autofill:focus,
+    .form-input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px #06060A inset !important;
+      -webkit-text-fill-color: #fff !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
     .eye-btn {
       position: absolute;
       right: 14px;
@@ -415,19 +423,19 @@
       <span id="errorText">Invalid username or password.</span>
     </div>
 
-    <form id="loginForm" autocomplete="on">
+    <form id="loginForm" autocomplete="off">
       <div class="input-group">
         <label class="input-label" for="username">Username</label>
         <div class="input-wrap">
           <span class="input-icon"><i data-lucide="user" style="width:16px;height:16px;"></i></span>
-          <input id="username" type="text" class="form-input" placeholder="Enter your username" required autocomplete="username">
+          <input id="username" type="text" class="form-input" placeholder="Enter your username" required autocomplete="off">
         </div>
       </div>
       <div class="input-group">
         <label class="input-label" for="password">Password</label>
         <div class="input-wrap">
           <span class="input-icon"><i data-lucide="lock" style="width:16px;height:16px;"></i></span>
-          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 48px;">
+          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="off" style="padding-right: 48px;">
           <button type="button" class="eye-btn" onclick="togglePwd()"><i data-lucide="eye" id="eyeBtn" style="width:16px;height:16px;"></i></button>
         </div>
       </div>
