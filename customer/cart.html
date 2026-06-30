@@ -27,7 +27,17 @@
     <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;"><span>GST (5%)</span><span id="summaryGST">₹0</span></div>
     <div class="summary-row total" style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border-top: 1px dashed var(--border-color); padding-top: 16px;"><span style="color:var(--text-primary);">Total</span><span id="summaryTotal" style="color:var(--gold-primary);">₹0</span></div>
     
-    <button class="btn-primary-large" style="width:100%; margin:24px 0 0;" onclick="placeOrder()">Place Order</button>
+    <div style="margin: 24px 0 16px;">
+      <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Add a Tip <span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">(Optional)</span></div>
+      <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+        <button class="tip-btn active" onclick="setTip(0)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--gold-primary); background:var(--gold-primary); color:#000; font-weight:bold; cursor:pointer;">No Tip</button>
+        <button class="tip-btn" onclick="setTip(10)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹10</button>
+        <button class="tip-btn" onclick="setTip(20)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹20</button>
+        <button class="tip-btn" onclick="setTip(50)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹50</button>
+      </div>
+    </div>
+
+    <button class="btn-primary-large" style="width:100%; margin:8px 0 0;" onclick="placeOrder()">Place Order</button>
   </div>
 
   <!-- Success Popup -->

@@ -223,6 +223,7 @@ function renderBillContent(bill, container) {
     <div class="bill-meta"><span>Date:</span><span>${dateStr}</span></div>
     <div class="bill-meta"><span>Time:</span><span>${timeStr}</span></div>
     <div class="bill-meta"><span>Table:</span><span>No. ${bill.tableNumber}</span></div>
+    <div class="bill-meta"><span>Session:</span><span>#${bill.orders[0].orderNumber}</span></div>
     <div class="bill-meta"><span>Orders:</span><span>${bill.orders.map(o => '#' + o.orderNumber).join(', ')}</span></div>
     <div class="bill-dashed"></div>
     <div class="bill-items-header">

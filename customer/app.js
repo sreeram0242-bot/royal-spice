@@ -8,6 +8,17 @@ let categorySettings = [];
 
 const socket = io(BASE_URL);
 
+if (restaurantId) {
+  socket.emit('join_restaurant', restaurantId);
+}
+
+socket.on('new_order', (order) => {
+  if (order.sessionId === localStorage.getItem('sessionId')) {
+    if (window.location.pathname.includes('order-status.html')) {
+      loadOrders();
+    }
+  }
+});
 // Loader Functions
 function showLoader() {
   if (!document.getElementById('global-loader')) {
@@ -334,7 +345,7 @@ function renderCart() {
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const gst = Math.round(subTotal * 0.05); // Assuming 5% GST
-  const grandTotal = subTotal + gst;
+  const grandTotal = subTotal + gst + selectedTip;
 
   document.getElementById('summaryItems').innerText = totalItems;
   document.getElementById('summarySubTotal').innerText = '₹' + subTotal;
@@ -344,20 +355,45 @@ function renderCart() {
   summary.style.display = 'block';
 }
 
+let selectedTip = 0;
+function setTip(amt) {
+  selectedTip = amt;
+  const btns = document.querySelectorAll('.tip-btn');
+  btns.forEach(btn => {
+    btn.classList.remove('active');
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--text-primary)';
+    btn.style.borderColor = 'var(--border-color)';
+  });
+  if (event && event.target) {
+    const activeBtn = event.target;
+    activeBtn.classList.add('active');
+    activeBtn.style.background = 'var(--gold-primary)';
+    activeBtn.style.color = '#000';
+    activeBtn.style.borderColor = 'var(--gold-primary)';
+  }
+  renderCart();
+}
+
 async function placeOrder() {
   if (cart.length === 0) return;
 
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const gst = Math.round(subTotal * 0.05);
-  const total = subTotal + gst;
+  const total = subTotal + gst + selectedTip;
 
   let sessionId = localStorage.getItem('sessionId');
+
+  const orderItems = cart.map(i => ({ menuItemId: i.id, name: i.name, price: i.price, qty: i.qty }));
+  if (selectedTip > 0) {
+    orderItems.push({ menuItemId: 'tip', name: 'Tip', price: selectedTip, qty: 1 });
+  }
 
   const payload = {
     restaurantId,
     tableNumber: parseInt(tableNumber),
-    items: cart.map(i => ({ menuItemId: i.id, name: i.name, price: i.price, qty: i.qty })),
-    subtotal: subTotal,
+    items: orderItems,
+    subtotal: subTotal + selectedTip,
     gst,
     total,
     sessionId
@@ -410,7 +446,13 @@ async function loadOrders() {
       return;
     }
 
-    let htmlString = '';
+    let htmlString = `
+      <div style="background:var(--panel-color); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:20px; text-align:center;">
+        <h3 style="color:var(--gold-primary); margin:0 0 8px; font-size:18px;">Session #${orders[orders.length - 1].orderNumber}</h3>
+        <div style="font-size:14px; color:var(--text-secondary);">Table ${orders[0].tableNumber}</div>
+      </div>
+    `;
+
     orders.forEach(order => {
       let statusHtml = '';
       if (order.status === 'new') statusHtml = '<div class="status-badge-outlined" style="border-color:#F4A017; color:#F4A017;"><svg style="fill:#F4A017;" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg> NEW</div>';
