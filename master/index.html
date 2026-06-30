@@ -4,445 +4,512 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master Login — Royal Spice</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --purple: #8B5CF6;
-      --purple-light: #A78BFA;
-      --purple-dim: rgba(139, 92, 246, 0.15);
-      --gold: #C9A84C;
-      --bg: #050505;
-      --panel: #0E0E12;
-      --border: rgba(139, 92, 246, 0.25);
-      --text: #FFFFFF;
-      --muted: #888888;
-      --input-bg: #141418;
-      --error: #EF4444;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
       min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #04040A;
+      color: #fff;
       overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      flex: 1;
       position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 60px 56px;
+      background: linear-gradient(160deg, #050010 0%, #0F0020 50%, #06000F 100%);
     }
 
-    /* Animated background orbs */
-    .bg-orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.12;
-      pointer-events: none;
-      animation: float 8s ease-in-out infinite;
-    }
-    .bg-orb-1 {
-      width: 500px; height: 500px;
-      background: var(--purple);
-      top: -150px; left: -150px;
-      animation-delay: 0s;
-    }
-    .bg-orb-2 {
-      width: 400px; height: 400px;
-      background: var(--gold);
-      bottom: -100px; right: -100px;
-      animation-delay: -4s;
-      opacity: 0.08;
-    }
-    .bg-orb-3 {
-      width: 300px; height: 300px;
-      background: var(--purple);
-      bottom: 20%; right: 20%;
-      animation-delay: -2s;
-      opacity: 0.06;
+    /* Decorative mesh */
+    .mesh {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(139,92,246,0.22) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(167,139,250,0.10) 0%, transparent 60%);
     }
 
-    @keyframes float {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-30px) scale(1.05); }
-    }
-
-    /* Grid pattern overlay */
-    .grid-overlay {
-      position: fixed;
+    /* Animated grid lines */
+    .grid-lines {
+      position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
-      background-size: 60px 60px;
+        linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px);
+      background-size: 70px 70px;
+    }
+
+    /* Animated ring */
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(139,92,246,0.1);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-ring 5s ease-in-out infinite;
+    }
+    .ring-1 { width: 280px; height: 280px; animation-delay: 0s; }
+    .ring-2 { width: 480px; height: 480px; animation-delay: 0.7s; opacity: 0.6; }
+    .ring-3 { width: 680px; height: 680px; animation-delay: 1.4s; opacity: 0.3; }
+    .ring-4 { width: 900px; height: 900px; animation-delay: 2.1s; opacity: 0.15; }
+    @keyframes pulse-ring {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+      50% { transform: translate(-50%, -50%) scale(1.03); opacity: 1; }
+    }
+
+    /* Crown in center */
+    .center-crown {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 80px;
+      opacity: 0.08;
+      animation: breathe 4s ease-in-out infinite;
+      user-select: none;
       pointer-events: none;
     }
-
-    /* Main layout */
-    .login-wrapper {
-      display: flex;
-      width: 900px;
-      max-width: 95vw;
-      min-height: 540px;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px var(--border);
-      position: relative;
-      z-index: 10;
+    @keyframes breathe {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.08; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.14; }
     }
 
-    /* Left panel - branding */
-    .brand-panel {
-      flex: 1;
-      background: linear-gradient(145deg, #09090C 0%, #150F25 100%);
-      padding: 50px 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      border-right: 1px solid var(--border);
-    }
-
-    .brand-panel::before {
-      content: '';
+    /* Floating particles */
+    .particles { position: absolute; inset: 0; pointer-events: none; }
+    .particle {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at 30% 50%, rgba(139,92,246,0.08) 0%, transparent 70%);
+      width: 3px; height: 3px;
+      background: rgba(167,139,250,0.4);
+      border-radius: 50%;
+      animation: particle-float linear infinite;
+    }
+    .particle:nth-child(1)  { left: 10%; top: 20%; animation-duration: 6s; animation-delay: 0s; }
+    .particle:nth-child(2)  { left: 30%; top: 70%; animation-duration: 8s; animation-delay: -2s; }
+    .particle:nth-child(3)  { left: 55%; top: 15%; animation-duration: 5s; animation-delay: -4s; }
+    .particle:nth-child(4)  { left: 75%; top: 60%; animation-duration: 9s; animation-delay: -1s; }
+    .particle:nth-child(5)  { left: 85%; top: 30%; animation-duration: 7s; animation-delay: -3s; }
+    .particle:nth-child(6)  { left: 20%; top: 85%; animation-duration: 6s; animation-delay: -5s; }
+    .particle:nth-child(7)  { left: 65%; top: 85%; animation-duration: 10s; animation-delay: -6s; }
+    .particle:nth-child(8)  { left: 45%; top: 50%; animation-duration: 5.5s; animation-delay: -1.5s; }
+    @keyframes particle-float {
+      0%   { transform: translateY(0) scale(1); opacity: 0.4; }
+      50%  { transform: translateY(-30px) scale(1.5); opacity: 0.8; }
+      100% { transform: translateY(0) scale(1); opacity: 0.4; }
     }
 
-    .brand-logo {
-      font-size: 48px;
-      margin-bottom: 20px;
-      position: relative;
-    }
+    /* Text content */
+    .panel-content { position: relative; z-index: 2; }
 
-    .brand-name {
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--purple-light);
-      letter-spacing: -0.5px;
-      line-height: 1;
-      margin-bottom: 8px;
-      position: relative;
-    }
-
-    .brand-sub {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
+    .panel-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.35);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #A78BFA;
       text-transform: uppercase;
-      letter-spacing: 3px;
-      margin-bottom: 48px;
-      position: relative;
+      letter-spacing: 1.5px;
+      margin-bottom: 24px;
+    }
+    .panel-tag-dot {
+      width: 6px; height: 6px;
+      background: #A78BFA;
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+      box-shadow: 0 0 6px #A78BFA;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
     }
 
-    .brand-divider {
-      width: 40px;
-      height: 2px;
-      background: linear-gradient(90deg, var(--purple-light), transparent);
-      margin-bottom: 32px;
-      position: relative;
+    .panel-title {
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .panel-title span {
+      background: linear-gradient(135deg, #A78BFA, #7C3AED);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .brand-features {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative;
+    .panel-desc {
+      font-size: 15px;
+      color: rgba(255,255,255,0.3);
+      font-weight: 400;
+      line-height: 1.7;
+      max-width: 380px;
       margin-bottom: 40px;
     }
 
-    .brand-feature {
+    .panel-stats {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 14px;
-      color: #777;
+      gap: 28px;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px 20px;
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 12px;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #A78BFA;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.25);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .feature-icon {
-      width: 32px;
-      height: 32px;
-      background: var(--purple-dim);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      width: 480px;
       flex-shrink: 0;
-    }
-
-    .brand-badge {
-      margin-top: auto;
-      background: var(--purple-dim);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 12px;
-      color: var(--purple-light);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .badge-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--purple-light);
-      border-radius: 50%;
-      animation: pulse-dot 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
-    }
-
-    /* Right panel - form */
-    .form-panel {
-      width: 400px;
-      background: var(--panel);
-      padding: 50px 40px;
+      background: #08080E;
+      border-left: 1px solid rgba(255,255,255,0.05);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      padding: 64px 52px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .form-header {
-      margin-bottom: 36px;
+    .right-panel::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .right-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -100px;
+      left: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%);
+      pointer-events: none;
     }
 
-    .form-title {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--text);
+    /* Logo */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 52px;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #7C3AED, #5B21B6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.35);
+    }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
       letter-spacing: -0.5px;
-      margin-bottom: 6px;
+    }
+    .logo-text span { color: #A78BFA; }
+
+    /* Access badge */
+    .access-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #A78BFA;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .access-dot {
+      width: 5px; height: 5px;
+      background: #A78BFA;
+      border-radius: 50%;
+      box-shadow: 0 0 4px #A78BFA;
     }
 
-    .form-subtitle {
+    .form-heading {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .form-subheading {
       font-size: 14px;
-      color: var(--muted);
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 40px;
       font-weight: 400;
     }
 
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #aaa;
+    .input-group { margin-bottom: 20px; }
+    .input-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 8px;
+      letter-spacing: 1.2px;
+      display: block;
+      margin-bottom: 9px;
     }
-
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
     .form-input {
       width: 100%;
-      background: var(--input-bg);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 14px 16px;
-      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 14px 16px 14px 46px;
+      color: #fff;
       font-family: 'Inter', sans-serif;
       font-size: 15px;
       font-weight: 400;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
     }
-
-    .form-input::placeholder {
-      color: #444;
-    }
-
+    .form-input::placeholder { color: rgba(255,255,255,0.18); }
     .form-input:focus {
-      border-color: var(--purple-light);
-      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+      border-color: rgba(139,92,246,0.5);
+      background: rgba(139,92,246,0.05);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
     }
-
-    .password-wrapper {
-      position: relative;
-    }
-
-    .toggle-eye {
+    .eye-btn {
       position: absolute;
       right: 14px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: var(--muted);
+      color: rgba(255,255,255,0.25);
       cursor: pointer;
-      font-size: 18px;
-      padding: 0;
-      line-height: 1;
+      font-size: 16px;
+      padding: 4px;
       transition: color 0.2s;
     }
-    .toggle-eye:hover { color: var(--purple-light); }
+    .eye-btn:hover { color: #A78BFA; }
 
-    .btn-login {
+    .error-box {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #FCA5A5;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      align-items: center;
+      gap: 10px;
+    }
+    .error-box.show { display: flex; }
+
+    .btn-submit {
       width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
-      color: white;
+      padding: 16px;
+      margin-top: 4px;
+      background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+      color: #fff;
       font-family: 'Inter', sans-serif;
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      margin-top: 8px;
+      letter-spacing: 0.2px;
       transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
-      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
     }
-
-    .btn-login:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
     }
-
-    .btn-login:active {
-      transform: translateY(0);
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(139,92,246,0.4);
     }
-
-    .btn-login:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .error-msg {
-      display: none;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 13px;
-      color: #F87171;
-      margin-bottom: 16px;
-      font-weight: 500;
-    }
-
-    .error-msg.show { display: block; }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
     .form-footer {
-      margin-top: 28px;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.05);
       font-size: 12px;
-      color: #444;
+      color: rgba(255,255,255,0.15);
       text-align: center;
     }
 
-    /* Responsive */
-    @media (max-width: 700px) {
-      .brand-panel { display: none; }
-      .login-wrapper { width: 100%; min-height: 100vh; border-radius: 0; }
-      .form-panel { width: 100%; padding: 40px 24px; }
+    @media (max-width: 820px) {
+      .left-panel { display: none; }
+      body { justify-content: center; }
+      .right-panel { width: 100%; max-width: 480px; border: none; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-orb bg-orb-1"></div>
-  <div class="bg-orb bg-orb-2"></div>
-  <div class="bg-orb bg-orb-3"></div>
-  <div class="grid-overlay"></div>
 
-  <div class="login-wrapper">
-    <!-- Left branding panel -->
-    <div class="brand-panel">
-      <div class="brand-logo">👑</div>
-      <div class="brand-name">Master Panel</div>
-      <div class="brand-sub">Central Operations</div>
-      <div class="brand-divider"></div>
-      <ul class="brand-features">
-        <li class="brand-feature">
-          <span class="feature-icon">🏢</span>
-          <span>Manage all registered restaurants</span>
-        </li>
-        <li class="brand-feature">
-          <span class="feature-icon">📈</span>
-          <span>Platform-wide revenue statistics</span>
-        </li>
-        <li class="brand-feature">
-          <span class="feature-icon">💳</span>
-          <span>Subscription and billing control</span>
-        </li>
-        <li class="brand-feature">
-          <span class="feature-icon">⚠️</span>
-          <span>Monitor global complaints and alerts</span>
-        </li>
-      </ul>
-      <div class="brand-badge">
-        <span class="badge-dot"></span>
-        Super Admin Access — System Control
-      </div>
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="mesh"></div>
+    <div class="grid-lines"></div>
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-3"></div>
+    <div class="ring ring-4"></div>
+    <div class="center-crown">👑</div>
+    <div class="particles">
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
     </div>
-
-    <!-- Right form panel -->
-    <div class="form-panel">
-      <div class="form-header">
-        <div class="form-title">Master Access</div>
-        <div class="form-subtitle">Enter your super admin credentials</div>
+    <div class="panel-content">
+      <div class="panel-tag">
+        <span class="panel-tag-dot"></span>
+        Super Admin
       </div>
-
-      <div class="error-msg" id="errorMsg">Invalid credentials. Please try again.</div>
-
-      <form id="loginForm" autocomplete="on">
-        <div class="form-group">
-          <label class="form-label" for="username">Master Username</label>
-          <input type="text" id="username" class="form-input" placeholder="Enter master username" required autocomplete="username">
+      <h1 class="panel-title">Control Every<br><span>Restaurant</span><br>From One Place.</h1>
+      <p class="panel-desc">
+        Master-level access to manage all restaurant accounts, view platform-wide analytics, and control subscriptions from a single powerful dashboard.
+      </p>
+      <div class="panel-stats">
+        <div class="stat">
+          <span class="stat-value">All</span>
+          <span class="stat-label">Restaurants</span>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <div class="password-wrapper">
-            <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 46px;">
-            <button type="button" class="toggle-eye" id="eyeBtn" onclick="togglePassword()">👁️</button>
-          </div>
+        <div class="stat">
+          <span class="stat-value">Full</span>
+          <span class="stat-label">Control</span>
         </div>
-
-        <button type="submit" class="btn-login" id="loginBtn">Access Master Panel</button>
-      </form>
-
-      <div class="form-footer">Royal Spice Platform &mdash; Authorized Only</div>
+        <div class="stat">
+          <span class="stat-value">Live</span>
+          <span class="stat-label">Analytics</span>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="logo-row">
+      <div class="logo-icon">👑</div>
+      <div class="logo-text">Master <span>Panel</span></div>
+    </div>
+
+    <div class="access-badge">
+      <span class="access-dot"></span>
+      Super Admin Access
+    </div>
+
+    <div class="form-heading">Master Access</div>
+    <div class="form-subheading">Enter your master credentials to continue</div>
+
+    <div class="error-box" id="errorBox">
+      <span>⚠️</span>
+      <span id="errorText">Invalid username or password.</span>
+    </div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="input-group">
+        <label class="input-label" for="username">Master Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input id="username" type="text" class="form-input" placeholder="Enter master username" required autocomplete="username">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="password">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 48px;">
+          <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePwd()">👁️</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">Access Master Panel</button>
+    </form>
+
+    <div class="form-footer">Royal Spice Platform &mdash; Authorized Personnel Only</div>
+  </div>
+
   <script>
-    function togglePassword() {
-      const input = document.getElementById('password');
+    function togglePwd() {
+      const inp = document.getElementById('password');
       const btn = document.getElementById('eyeBtn');
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        btn.textContent = '👁️';
-      }
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
+      const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
-      const btn = document.getElementById('loginBtn');
-      const errorMsg = document.getElementById('errorMsg');
+      const btn = document.getElementById('submitBtn');
+      const errorBox = document.getElementById('errorBox');
+      const errorText = document.getElementById('errorText');
 
       btn.disabled = true;
       btn.textContent = 'Verifying...';
-      errorMsg.classList.remove('show');
+      errorBox.classList.remove('show');
 
       try {
         const res = await fetch('/api/auth/master/login', {
@@ -451,20 +518,19 @@
           body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-
         if (res.ok) {
-          btn.textContent = 'Access Granted';
+          btn.textContent = '✓ Access Granted';
           localStorage.setItem('masterToken', data.token);
-          setTimeout(() => window.location.href = 'dashboard.html', 400);
+          setTimeout(() => window.location.href = 'dashboard.html', 500);
         } else {
-          errorMsg.textContent = data.message || 'Invalid credentials. Please try again.';
-          errorMsg.classList.add('show');
+          errorText.textContent = data.message || 'Invalid credentials. Please try again.';
+          errorBox.classList.add('show');
           btn.disabled = false;
           btn.textContent = 'Access Master Panel';
         }
-      } catch (err) {
-        errorMsg.textContent = 'Cannot connect to server. Please try again.';
-        errorMsg.classList.add('show');
+      } catch {
+        errorText.textContent = 'Cannot connect to server. Please try again.';
+        errorBox.classList.add('show');
         btn.disabled = false;
         btn.textContent = 'Access Master Panel';
       }

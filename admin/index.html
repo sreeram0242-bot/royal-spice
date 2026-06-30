@@ -4,429 +4,452 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login — Royal Spice</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --gold: #C9A84C;
-      --gold-light: #E8C97A;
-      --gold-dim: rgba(201, 168, 76, 0.15);
-      --bg: #080808;
-      --panel: #111111;
-      --border: rgba(201, 168, 76, 0.2);
-      --text: #FFFFFF;
-      --muted: #888888;
-      --input-bg: #1A1A1A;
-      --error: #EF4444;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
       min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #06060A;
+      color: #fff;
       overflow: hidden;
-      position: relative;
     }
 
-    /* Animated background orbs */
-    .bg-orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.12;
-      pointer-events: none;
-      animation: float 8s ease-in-out infinite;
-    }
-    .bg-orb-1 {
-      width: 500px; height: 500px;
-      background: var(--gold);
-      top: -150px; left: -150px;
-      animation-delay: 0s;
-    }
-    .bg-orb-2 {
-      width: 400px; height: 400px;
-      background: #8B5CF6;
-      bottom: -100px; right: -100px;
-      animation-delay: -4s;
-    }
-    .bg-orb-3 {
-      width: 300px; height: 300px;
-      background: var(--gold);
-      bottom: 20%; right: 20%;
-      animation-delay: -2s;
-      opacity: 0.06;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-30px) scale(1.05); }
-    }
-
-    /* Grid pattern overlay */
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
-      background-size: 60px 60px;
-      pointer-events: none;
-    }
-
-    /* Main layout */
-    .login-wrapper {
-      display: flex;
-      width: 900px;
-      max-width: 95vw;
-      min-height: 540px;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px var(--border);
-      position: relative;
-      z-index: 10;
-    }
-
-    /* Left panel - branding */
-    .brand-panel {
+    /* ── LEFT PANEL ── */
+    .left-panel {
       flex: 1;
-      background: linear-gradient(145deg, #0F0F0F 0%, #1A1400 100%);
-      padding: 50px 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
       position: relative;
       overflow: hidden;
-      border-right: 1px solid var(--border);
-    }
-
-    .brand-panel::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at 30% 50%, rgba(201,168,76,0.08) 0%, transparent 70%);
-    }
-
-    .brand-logo {
-      font-size: 48px;
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .brand-name {
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--gold);
-      letter-spacing: -0.5px;
-      line-height: 1;
-      margin-bottom: 8px;
-      position: relative;
-    }
-
-    .brand-sub {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      margin-bottom: 48px;
-      position: relative;
-    }
-
-    .brand-divider {
-      width: 40px;
-      height: 2px;
-      background: linear-gradient(90deg, var(--gold), transparent);
-      margin-bottom: 32px;
-      position: relative;
-    }
-
-    .brand-features {
-      list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      position: relative;
+      justify-content: flex-end;
+      padding: 60px 56px;
+      background: linear-gradient(160deg, #0A0700 0%, #1C1100 50%, #0D0A00 100%);
+    }
+
+    /* Decorative mesh */
+    .mesh {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(201,168,76,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(201,168,76,0.10) 0%, transparent 60%);
+    }
+
+    /* Animated ring */
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.08);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-ring 4s ease-in-out infinite;
+    }
+    .ring-1 { width: 300px; height: 300px; animation-delay: 0s; }
+    .ring-2 { width: 500px; height: 500px; animation-delay: 0.5s; opacity: 0.6; }
+    .ring-3 { width: 700px; height: 700px; animation-delay: 1s; opacity: 0.3; }
+    @keyframes pulse-ring {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      50% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+    }
+
+    /* Floating food emoji */
+    .float-icons {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .fi {
+      position: absolute;
+      font-size: 28px;
+      opacity: 0.18;
+      animation: drift linear infinite;
+      filter: grayscale(30%);
+    }
+    .fi:nth-child(1)  { top: 10%; left: 15%; animation-duration: 14s; animation-delay: 0s; }
+    .fi:nth-child(2)  { top: 22%; left: 70%; animation-duration: 18s; animation-delay: -3s; }
+    .fi:nth-child(3)  { top: 55%; left: 10%; animation-duration: 12s; animation-delay: -6s; }
+    .fi:nth-child(4)  { top: 70%; left: 60%; animation-duration: 20s; animation-delay: -9s; }
+    .fi:nth-child(5)  { top: 38%; left: 45%; animation-duration: 16s; animation-delay: -2s; }
+    .fi:nth-child(6)  { top: 85%; left: 25%; animation-duration: 13s; animation-delay: -5s; }
+    .fi:nth-child(7)  { top: 5%;  left: 50%; animation-duration: 22s; animation-delay: -1s; }
+    @keyframes drift {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      50%  { transform: translateY(-20px) rotate(8deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    /* Big decorative number */
+    .panel-number {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 320px;
+      font-weight: 900;
+      color: rgba(201,168,76,0.03);
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+      letter-spacing: -20px;
+    }
+
+    /* Text content at bottom */
+    .panel-content { position: relative; z-index: 2; }
+
+    .panel-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #C9A84C;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 24px;
+    }
+    .panel-tag-dot {
+      width: 6px; height: 6px;
+      background: #C9A84C;
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .panel-title {
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .panel-title span { color: #C9A84C; }
+
+    .panel-desc {
+      font-size: 15px;
+      color: rgba(255,255,255,0.35);
+      font-weight: 400;
+      line-height: 1.7;
+      max-width: 380px;
       margin-bottom: 40px;
     }
 
-    .brand-feature {
+    .panel-stats {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 14px;
-      color: #666;
+      gap: 32px;
     }
-
-    .feature-icon {
-      width: 32px;
-      height: 32px;
-      background: var(--gold-dim);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+    .stat {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
+      flex-direction: column;
+      gap: 4px;
     }
-
-    .brand-badge {
-      margin-top: auto;
-      background: var(--gold-dim);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 12px;
-      color: var(--gold);
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #C9A84C;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 11px;
       font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    /* Right panel - form */
-    .form-panel {
-      width: 400px;
-      background: var(--panel);
-      padding: 50px 40px;
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      width: 480px;
+      flex-shrink: 0;
+      background: #0C0C0F;
+      border-left: 1px solid rgba(255,255,255,0.05);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      padding: 64px 52px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .form-header {
-      margin-bottom: 36px;
+    .right-panel::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+      pointer-events: none;
     }
 
-    .form-title {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--text);
+    /* Top logo */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 52px;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #C9A84C, #8a6f2a);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
       letter-spacing: -0.5px;
-      margin-bottom: 6px;
+    }
+    .logo-text span {
+      color: #C9A84C;
     }
 
-    .form-subtitle {
+    .form-heading {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .form-subheading {
       font-size: 14px;
-      color: var(--muted);
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 40px;
       font-weight: 400;
     }
 
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #aaa;
+    .input-group { margin-bottom: 20px; }
+    .input-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 8px;
+      letter-spacing: 1.2px;
+      display: block;
+      margin-bottom: 9px;
     }
-
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
     .form-input {
       width: 100%;
-      background: var(--input-bg);
+      background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 14px 16px;
-      color: var(--text);
+      border-radius: 12px;
+      padding: 14px 16px 14px 46px;
+      color: #fff;
       font-family: 'Inter', sans-serif;
       font-size: 15px;
       font-weight: 400;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
     }
-
-    .form-input::placeholder {
-      color: #444;
-    }
-
+    .form-input::placeholder { color: rgba(255,255,255,0.2); }
     .form-input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+      border-color: rgba(201,168,76,0.5);
+      background: rgba(201,168,76,0.04);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
     }
-
-    .password-wrapper {
-      position: relative;
-    }
-
-    .toggle-eye {
+    .eye-btn {
       position: absolute;
       right: 14px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: var(--muted);
+      color: rgba(255,255,255,0.3);
       cursor: pointer;
-      font-size: 18px;
-      padding: 0;
-      line-height: 1;
+      font-size: 16px;
+      padding: 4px;
       transition: color 0.2s;
     }
-    .toggle-eye:hover { color: var(--gold); }
+    .eye-btn:hover { color: #C9A84C; }
 
-    .btn-login {
+    .error-box {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #FCA5A5;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      align-items: center;
+      gap: 10px;
+    }
+    .error-box.show { display: flex; }
+
+    .btn-submit {
       width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, var(--gold) 0%, #A8822A 100%);
+      padding: 16px;
+      margin-top: 4px;
+      background: linear-gradient(135deg, #C9A84C 0%, #9a7530 100%);
       color: #000;
       font-family: 'Inter', sans-serif;
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      margin-top: 8px;
+      letter-spacing: 0.2px;
       transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
-      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
     }
-
-    .btn-login:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(201, 168, 76, 0.35);
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.12), transparent);
     }
-
-    .btn-login:active {
-      transform: translateY(0);
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(201,168,76,0.35);
     }
-
-    .btn-login:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .error-msg {
-      display: none;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 13px;
-      color: #F87171;
-      margin-bottom: 16px;
-      font-weight: 500;
-    }
-
-    .error-msg.show { display: block; }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
     .form-footer {
-      margin-top: 28px;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.05);
       font-size: 12px;
-      color: #444;
+      color: rgba(255,255,255,0.2);
       text-align: center;
     }
 
-    /* Responsive */
-    @media (max-width: 700px) {
-      .brand-panel { display: none; }
-      .login-wrapper { width: 100%; min-height: 100vh; border-radius: 0; }
-      .form-panel { width: 100%; padding: 40px 24px; }
+    @media (max-width: 820px) {
+      .left-panel { display: none; }
+      body { justify-content: center; }
+      .right-panel { width: 100%; max-width: 480px; border: none; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-orb bg-orb-1"></div>
-  <div class="bg-orb bg-orb-2"></div>
-  <div class="bg-orb bg-orb-3"></div>
-  <div class="grid-overlay"></div>
 
-  <div class="login-wrapper">
-    <!-- Left branding panel -->
-    <div class="brand-panel">
-      <div class="brand-logo">🍛</div>
-      <div class="brand-name">Royal Spice</div>
-      <div class="brand-sub">Restaurant Platform</div>
-      <div class="brand-divider"></div>
-      <ul class="brand-features">
-        <li class="brand-feature">
-          <span class="feature-icon">📊</span>
-          <span>Live order monitoring and revenue tracking</span>
-        </li>
-        <li class="brand-feature">
-          <span class="feature-icon">🍽️</span>
-          <span>Full menu and category management</span>
-        </li>
-        <li class="brand-feature">
-          <span class="feature-icon">📱</span>
-          <span>QR code generation for each table</span>
-        </li>
-        <li class="brand-feature">
-          <span class="feature-icon">🔔</span>
-          <span>Real-time waiter call notifications</span>
-        </li>
-      </ul>
-      <div class="brand-badge">
-        🔒 Secure Admin Access — Authorized Personnel Only
-      </div>
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="mesh"></div>
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-3"></div>
+    <div class="panel-number">RS</div>
+    <div class="float-icons">
+      <span class="fi">🍛</span>
+      <span class="fi">🥘</span>
+      <span class="fi">🍱</span>
+      <span class="fi">🥗</span>
+      <span class="fi">🍲</span>
+      <span class="fi">🫕</span>
+      <span class="fi">🥙</span>
     </div>
-
-    <!-- Right form panel -->
-    <div class="form-panel">
-      <div class="form-header">
-        <div class="form-title">Welcome Back</div>
-        <div class="form-subtitle">Sign in to your Admin Panel</div>
+    <div class="panel-content">
+      <div class="panel-tag">
+        <span class="panel-tag-dot"></span>
+        Admin Portal
       </div>
-
-      <div class="error-msg" id="errorMsg">Invalid username or password. Please try again.</div>
-
-      <form id="loginForm" autocomplete="on">
-        <div class="form-group">
-          <label class="form-label" for="username">Username</label>
-          <input type="text" id="username" class="form-input" placeholder="Enter your username" required autocomplete="username">
+      <h1 class="panel-title">Manage Your<br><span>Restaurant</span><br>Smarter.</h1>
+      <p class="panel-desc">
+        One dashboard to track live orders, monitor tables, manage your menu, and grow your revenue — all in real time.
+      </p>
+      <div class="panel-stats">
+        <div class="stat">
+          <span class="stat-value">Live</span>
+          <span class="stat-label">Order Feed</span>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <div class="password-wrapper">
-            <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 46px;">
-            <button type="button" class="toggle-eye" id="eyeBtn" onclick="togglePassword()">👁️</button>
-          </div>
+        <div class="stat">
+          <span class="stat-value">QR</span>
+          <span class="stat-label">Table Codes</span>
         </div>
-
-        <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
-      </form>
-
-      <div class="form-footer">Royal Spice Admin Panel &mdash; Powered by Your Team</div>
+        <div class="stat">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">Cloud Sync</span>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="logo-row">
+      <div class="logo-icon">🍛</div>
+      <div class="logo-text">Royal <span>Spice</span></div>
+    </div>
+
+    <div class="form-heading">Welcome back</div>
+    <div class="form-subheading">Sign in to your Admin Panel</div>
+
+    <div class="error-box" id="errorBox">
+      <span>⚠️</span>
+      <span id="errorText">Invalid username or password.</span>
+    </div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="input-group">
+        <label class="input-label" for="username">Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input id="username" type="text" class="form-input" placeholder="Enter your username" required autocomplete="username">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="password">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 48px;">
+          <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePwd()">👁️</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">Sign In to Admin Panel</button>
+    </form>
+
+    <div class="form-footer">Royal Spice &mdash; Restaurant Management Platform</div>
+  </div>
+
   <script>
-    function togglePassword() {
-      const input = document.getElementById('password');
+    function togglePwd() {
+      const inp = document.getElementById('password');
       const btn = document.getElementById('eyeBtn');
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        btn.textContent = '👁️';
-      }
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
+      const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
-      const btn = document.getElementById('loginBtn');
-      const errorMsg = document.getElementById('errorMsg');
+      const btn = document.getElementById('submitBtn');
+      const errorBox = document.getElementById('errorBox');
+      const errorText = document.getElementById('errorText');
 
       btn.disabled = true;
       btn.textContent = 'Signing in...';
-      errorMsg.classList.remove('show');
+      errorBox.classList.remove('show');
 
       try {
         const res = await fetch('/api/auth/admin/login', {
@@ -435,23 +458,22 @@
           body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-
         if (res.ok) {
-          btn.textContent = 'Success!';
+          btn.textContent = '✓ Success!';
           localStorage.setItem('adminToken', data.token);
           localStorage.setItem('adminRestaurantId', data.restaurantId);
-          setTimeout(() => window.location.href = 'dashboard.html', 400);
+          setTimeout(() => window.location.href = 'dashboard.html', 500);
         } else {
-          errorMsg.textContent = data.message || 'Invalid credentials. Please try again.';
-          errorMsg.classList.add('show');
+          errorText.textContent = data.message || 'Invalid credentials. Please try again.';
+          errorBox.classList.add('show');
           btn.disabled = false;
-          btn.textContent = 'Sign In';
+          btn.textContent = 'Sign In to Admin Panel';
         }
-      } catch (err) {
-        errorMsg.textContent = 'Cannot connect to server. Please try again.';
-        errorMsg.classList.add('show');
+      } catch {
+        errorText.textContent = 'Cannot connect to server. Please try again.';
+        errorBox.classList.add('show');
         btn.disabled = false;
-        btn.textContent = 'Sign In';
+        btn.textContent = 'Sign In to Admin Panel';
       }
     });
   </script>
