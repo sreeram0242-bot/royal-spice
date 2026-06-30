@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: royal-spice
+    env: node
+    buildCommand: npm install && npm run db:generate
+    startCommand: node backend/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
