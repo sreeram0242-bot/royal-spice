@@ -72,6 +72,18 @@ router.get('/tables', authWaiter, async (req, res) => {
         else status = 'occupied';
       }
 
+      let passcodeStr = passcodes.find(p => p.tableNumber === i)?.passcode || null;
+      if (!passcodeStr) {
+        passcodeStr = Math.floor(1000 + Math.random() * 9000).toString();
+        // Since this is just a quick UI fetch, we won't await the DB save to block the UI, 
+        // we can just fire and forget or await it. We'll await it for consistency.
+        await prisma.tablePasscode.upsert({
+          where: { restaurantId_tableNumber: { restaurantId: req.user.restaurantId, tableNumber: i } },
+          update: { passcode: passcodeStr },
+          create: { restaurantId: req.user.restaurantId, tableNumber: i, passcode: passcodeStr }
+        });
+      }
+
       tables.push({
         tableNumber: i,
         status,
@@ -79,7 +91,7 @@ router.get('/tables', authWaiter, async (req, res) => {
         orderCount: tableOrders.length,
         total,
         sessionId: tableOrders.length > 0 ? tableOrders[0].sessionId : null,
-        passcode: passcodes.find(p => p.tableNumber === i)?.passcode || null
+        passcode: passcodeStr
       });
     }
 
@@ -256,12 +268,16 @@ router.post('/table/:num/close-session', authWaiter, async (req, res) => {
       }
     });
 
-    // Clear passcode
-    await prisma.tablePasscode.deleteMany({
-      where: { restaurantId, tableNumber }
+    // Generate new passcode for the next session
+    const newPasscode = Math.floor(1000 + Math.random() * 9000).toString();
+    await prisma.tablePasscode.upsert({
+      where: { restaurantId_tableNumber: { restaurantId, tableNumber } },
+      update: { passcode: newPasscode },
+      create: { restaurantId, tableNumber, passcode: newPasscode }
     });
 
     const io = req.app.get('io');
+    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode: newPasscode });
     io.to(restaurantId).emit('session_closed', { tableNumber, sessionId: latestOrder.sessionId });
 
     res.json({ message: 'Session closed successfully' });

@@ -132,16 +132,12 @@ async function openTableModal(tableNumber, passcode = null) {
       sub.textContent = 'No active orders';
       if (passcode) {
         body.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="key" style="width:48px;height:48px;color:var(--gold-primary);"></i></div><div>Customer PIN for this table:</div><div style="font-size:32px; font-weight:bold; letter-spacing:4px; margin-top:10px; color:var(--gold-primary);">${passcode}</div></div>`;
-        actions.innerHTML = `
-          <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order for this Table</button>
-        `;
       } else {
-        body.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="armchair" style="width:48px;height:48px;opacity:0.5;"></i></div><div>This table is free</div></div>';
-        actions.innerHTML = `
-          <button class="btn-action btn-secondary" onclick="generatePasscode(${tableNumber})"><i data-lucide="key" style="width:16px;height:16px;vertical-align:middle;"></i> Generate PIN</button>
-          <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order Without PIN</button>
-        `;
+        body.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="armchair" style="width:48px;height:48px;opacity:0.5;"></i></div><div>This table is free. Please refresh to load PIN.</div></div>`;
       }
+      actions.innerHTML = `
+        <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order for this Table</button>
+      `;
       setTimeout(() => lucide.createIcons(), 10);
       return;
     }

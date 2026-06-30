@@ -220,7 +220,18 @@ router.get('/tables', authAdmin, async (req, res) => {
     const tables = [];
     for (let i = 1; i <= restaurant.totalTables; i++) {
       const isOccupied = activeOrders.some(o => o.tableNumber === i);
-      const passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
+      let passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
+      
+      if (!passcode) {
+        passcode = Math.floor(1000 + Math.random() * 9000).toString();
+        // Fire and forget upsert, or await it. We await it to ensure consistency.
+        await prisma.tablePasscode.upsert({
+          where: { restaurantId_tableNumber: { restaurantId, tableNumber: i } },
+          update: { passcode },
+          create: { restaurantId, tableNumber: i, passcode }
+        });
+      }
+
       tables.push({
         tableNumber: i,
         status: isOccupied ? 'occupied' : 'available',
