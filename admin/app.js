@@ -597,7 +597,7 @@ function closeModal(id) {
   document.getElementById(id).classList.add('hidden');
 }
 
-function compressImageBase64(base64Str, maxWidth = 800, maxHeight = 800) {
+function compressImageBase64(base64Str, maxWidth = 400, maxHeight = 400) {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -623,7 +623,7 @@ function compressImageBase64(base64Str, maxWidth = 800, maxHeight = 800) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
       
-      resolve(canvas.toDataURL('image/jpeg', 0.7)); // Compress as JPEG with 70% quality
+      resolve(canvas.toDataURL('image/jpeg', 0.6)); // Compress as JPEG with 60% quality
     };
   });
 }
@@ -636,10 +636,8 @@ function handleImageUpload(event, previewId) {
   reader.onload = async function(e) {
     let base64 = e.target.result;
     
-    // Compress image if it's large to prevent UI lag
-    if (base64.length > 500000) {
-      base64 = await compressImageBase64(base64);
-    }
+    // Compress image to ensure it's fully optimized
+    base64 = await compressImageBase64(base64);
 
     document.getElementById(previewId + 'Base64').value = base64;
     const preview = document.getElementById(previewId);
@@ -809,10 +807,8 @@ async function loadCategories() {
       const reader = new FileReader();
       reader.onload = async (ev) => {
         let base64 = ev.target.result;
-        // Compress image to fix lag
-        if (base64.length > 500000) {
-          base64 = await compressImageBase64(base64);
-        }
+        // Compress image to ensure it's fully optimized
+        base64 = await compressImageBase64(base64);
         
         img.src = base64; // instant preview
         
