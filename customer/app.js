@@ -182,7 +182,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
       htmlString += `
         <div class="menu-card" style="${!isAvail ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
           <div class="card-img-wrapper">
-            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'" loading="lazy" class="card-img" alt="${item.name}">
+            <img src="${item.image || 'https://placehold.co/150x150/222222/666666?text=Food'}" onerror="this.src='https://placehold.co/150x150/222222/666666?text=Food'" loading="lazy" class="card-img" alt="${item.name}">
             <div class="veg-dot ${item.isVeg ? '' : 'non-veg-dot'}"></div>
           </div>
           <div class="card-info">
