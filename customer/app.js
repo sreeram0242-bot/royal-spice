@@ -134,10 +134,10 @@ function renderCategories() {
     let defaultImg = `https://via.placeholder.com/100?text=${encodeURIComponent(cat)}`;
     if (cat.toLowerCase() === 'all') defaultImg = 'images/cat_all.png';
     else if (cat.toLowerCase().includes('breakfast')) defaultImg = 'images/cat_breakfast.png';
-    else if (cat.toLowerCase().includes('meal')) defaultImg = 'images/cat_meals.png';
+    else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = 'images/cat_meals.png';
     else if (cat.toLowerCase().includes('starter')) defaultImg = 'images/cat_starters.png';
     else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = 'images/cat_breads.png';
-    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('curry')) defaultImg = 'images/cat_gravies.png';
+    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('gravi') || cat.toLowerCase().includes('curry')) defaultImg = 'images/cat_gravies.png';
     else if (cat.toLowerCase().includes('bev') || cat.toLowerCase().includes('drink')) defaultImg = 'images/cat_beverages.png';
     else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = 'images/cat_desserts.png';
 

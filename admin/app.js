@@ -512,11 +512,14 @@ async function loadMenu() {
     titleSection.style.alignItems = 'center';
     titleSection.style.gap = '12px';
     
-    let defaultImg = `https://via.placeholder.com/100?text=${encodeURIComponent(cat)}`;
-    if (cat.toLowerCase() === 'all') defaultImg = 'images/cat_all.png';
-    else if (cat.toLowerCase().includes('breakfast')) defaultImg = 'images/cat_breakfast.png';
-    else if (cat.toLowerCase().includes('meal')) defaultImg = 'images/cat_meals.png';
-    else if (cat.toLowerCase().includes('starter')) defaultImg = 'images/cat_starters.png';
+    let defaultImg = `/customer/images/cat_all.png`;
+    if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
+    else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = '/customer/images/cat_meals.png';
+    else if (cat.toLowerCase().includes('starter')) defaultImg = '/customer/images/cat_starters.png';
+    else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = '/customer/images/cat_breads.png';
+    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('gravi') || cat.toLowerCase().includes('curry')) defaultImg = '/customer/images/cat_gravies.png';
+    else if (cat.toLowerCase().includes('bev') || cat.toLowerCase().includes('drink')) defaultImg = '/customer/images/cat_beverages.png';
+    else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = '/customer/images/cat_desserts.png';
 
     const img = document.createElement('img');
     img.src = (setting && setting.image) ? setting.image : defaultImg;
@@ -779,13 +782,12 @@ async function loadCategories() {
     imgWrapper.style.position = 'relative';
     
     const img = document.createElement('img');
-    let defaultImg = `https://via.placeholder.com/120?text=${encodeURIComponent(cat)}`;
-    if (cat.toLowerCase() === 'all') defaultImg = '/customer/images/cat_all.png';
-    else if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
-    else if (cat.toLowerCase().includes('meal')) defaultImg = '/customer/images/cat_meals.png';
+    let defaultImg = `/customer/images/cat_all.png`;
+    if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
+    else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = '/customer/images/cat_meals.png';
     else if (cat.toLowerCase().includes('starter')) defaultImg = '/customer/images/cat_starters.png';
     else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = '/customer/images/cat_breads.png';
-    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('curry')) defaultImg = '/customer/images/cat_gravies.png';
+    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('gravi') || cat.toLowerCase().includes('curry')) defaultImg = '/customer/images/cat_gravies.png';
     else if (cat.toLowerCase().includes('bev') || cat.toLowerCase().includes('drink')) defaultImg = '/customer/images/cat_beverages.png';
     else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = '/customer/images/cat_desserts.png';
 
