@@ -525,3 +525,72 @@ body.light-theme .table-card.status-free { background-color: rgba(59, 130, 246, 
 body.light-theme .table-card.status-ordered { background-color: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2); }
 body.light-theme .table-card.status-cooking { background-color: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); }
 body.light-theme .table-card.status-ready { background-color: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); }
+
+/* Waiter Calls Section */
+.call-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.call-card:hover {
+  border-color: var(--blue);
+}
+.call-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.call-table {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.call-table i {
+  color: var(--blue);
+  animation: bell-ring 2s infinite;
+}
+@keyframes bell-ring {
+  0%, 100% { transform: rotate(0); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(10deg); }
+  20%, 40%, 60%, 80% { transform: rotate(-10deg); }
+}
+.call-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.btn-attend {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  text-align: center;
+  width: 100%;
+}
+.btn-attend:hover {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+.no-calls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
