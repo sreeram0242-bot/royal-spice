@@ -269,16 +269,10 @@
           <h3>Order History</h3>
           
           <div style="display: flex; gap: 16px; margin-top: 16px; align-items: center; flex-wrap: wrap;">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 12px; color: var(--text-secondary);">Start Date</label>
-              <input type="date" id="historyStartDate" class="login-input" style="padding: 8px; margin-bottom: 0; width: auto;">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; max-width: 300px;">
+              <input type="text" id="historySearchInput" class="login-input" placeholder="Search by date (e.g., 21-06-2026), session, or amount..." onkeyup="filterHistory()" style="padding: 10px; margin-bottom: 0;">
             </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 12px; color: var(--text-secondary);">End Date</label>
-              <input type="date" id="historyEndDate" class="login-input" style="padding: 8px; margin-bottom: 0; width: auto;">
-            </div>
-            <button class="btn-gold" style="margin-top: 20px; padding: 10px 16px;" onclick="loadHistory()">Search Orders</button>
-            <button class="btn-gold" style="margin-top: 20px; padding: 10px 16px; width: auto; margin-left: auto;" onclick="openPdfModal()">Download PDF</button>
+            <button class="btn-gold" style="padding: 10px 16px; width: auto; margin-left: auto;" onclick="openPdfModal()">Download PDF</button>
           </div>
 
           <div style="overflow-x: auto; margin-top: 24px;">

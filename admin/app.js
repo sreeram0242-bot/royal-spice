@@ -957,23 +957,7 @@ async function loadRevenue() {
 let allHistorySessions = [];
 
 async function loadHistory() {
-  const startDate = document.getElementById('historyStartDate').value;
-  const endDate = document.getElementById('historyEndDate').value;
-  
   let url = '/api/admin/history';
-  if (startDate && endDate) {
-    url += `?startDate=${startDate}&endDate=${endDate}`;
-  } else if (!startDate && !endDate) {
-    // Default to last 7 days if no dates selected
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    const start = d.toISOString().split('T')[0];
-    const end = new Date().toISOString().split('T')[0];
-    url += `?startDate=${start}&endDate=${end}`;
-    
-    document.getElementById('historyStartDate').value = start;
-    document.getElementById('historyEndDate').value = end;
-  }
 
   try {
     const orders = await fetchAPI(url);
@@ -1020,13 +1004,23 @@ function renderHistory() {
   const tbody = document.getElementById('historyTableBody');
   if (!tbody) return;
 
-  if (allHistorySessions.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="padding: 16px; text-align: center; color: var(--text-secondary);">No orders found for this date range.</td></tr>';
+  const searchInput = document.getElementById('historySearchInput');
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
+  
+  const filteredSessions = allHistorySessions.filter(session => {
+    const d = new Date(session.createdAt);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const fullText = `${dateStr} #${session.sessionNumber} Table ${session.tableNumber} ${session.paymentMethod}`.toLowerCase();
+    return fullText.includes(query);
+  });
+
+  if (filteredSessions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding: 16px; text-align: center; color: var(--text-secondary);">No orders found for your search.</td></tr>';
     return;
   }
 
   let html = '';
-  allHistorySessions.forEach((session, index) => {
+  filteredSessions.forEach((session, index) => {
     const d = new Date(session.createdAt);
     const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
@@ -1038,7 +1032,7 @@ function renderHistory() {
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
         <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
         <td style="padding: 12px;">
-          <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails(${index})">View Items</button>
+          <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails('${session.sessionId}')">View Items</button>
         </td>
       </tr>
     `;
@@ -1047,8 +1041,12 @@ function renderHistory() {
   tbody.innerHTML = html;
 }
 
-function viewHistoryDetails(index) {
-  const session = allHistorySessions[index];
+function filterHistory() {
+  renderHistory();
+}
+
+function viewHistoryDetails(sessionId) {
+  const session = allHistorySessions.find(s => s.sessionId === sessionId);
   if (!session) return;
 
   document.getElementById('historyModalTitle').innerText = `Session #${session.sessionNumber} - Table ${session.tableNumber}`;
