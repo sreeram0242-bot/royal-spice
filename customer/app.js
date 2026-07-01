@@ -82,6 +82,23 @@ async function loadMenu() {
     renderCategories();
     renderMenu();
     updateCartUI();
+
+    // Wait for all images to load before hiding the loader
+    const images = Array.from(document.querySelectorAll('img'));
+    const imagePromises = images.map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    });
+    
+    // Fallback timeout of 3 seconds just in case some images get stuck
+    await Promise.race([
+      Promise.all(imagePromises),
+      new Promise(r => setTimeout(r, 3000))
+    ]);
+
   } catch (err) {
     console.error(err);
   }
@@ -128,7 +145,7 @@ function renderCategories() {
 
     div.innerHTML = `
       <div class="cat-circle" style="overflow: hidden; padding: 0;">
-        <img src="${imageSrc}" alt="${cat}" style="width: 100%; height: 100%; object-fit: cover;">
+        <img src="${imageSrc}" onerror="this.onerror=null; this.src='images/cat_all.png';" alt="${cat}" style="width: 100%; height: 100%; object-fit: cover;">
       </div>
       <div class="cat-text">${cat}</div>
     `;
@@ -182,7 +199,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
       htmlString += `
         <div class="menu-card" style="${!isAvail ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
           <div class="card-img-wrapper">
-            <img src="${item.image || 'https://placehold.co/150x150/222222/666666?text=Food'}" onerror="this.src='https://placehold.co/150x150/222222/666666?text=Food'" loading="lazy" class="card-img" alt="${item.name}">
+            <img src="${item.image || 'images/cat_all.png'}" onerror="this.onerror=null; this.src='images/cat_all.png';" class="card-img" alt="${item.name}">
             <div class="veg-dot ${item.isVeg ? '' : 'non-veg-dot'}"></div>
           </div>
           <div class="card-info">
