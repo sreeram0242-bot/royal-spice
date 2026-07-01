@@ -28,7 +28,7 @@
 
 body.light-theme {
   --bg-dark: #E2E8F0;
-  --panel-bg: #F8FAFC;
+  --panel-bg: #FFFFFF;
   --gold: #EAB308;
   --gold-primary: #EAB308;
   --text-primary: #000000;
@@ -43,15 +43,15 @@ body.light-theme {
   --border-color: #CBD5E1;
   --sidebar-border: #94A3B8;
   --table-border: #CBD5E1;
-  --input-bg: #F8FAFC;
+  --input-bg: #FFFFFF;
   --input-border: #94A3B8;
   --input-color: #0F172A;
   --header-border: #CBD5E1;
-  --search-bg: #F8FAFC;
+  --search-bg: #FFFFFF;
   --search-border: #94A3B8;
   --search-color: #0F172A;
   --modal-overlay: rgba(15,23,42,0.5);
-  --sidebar-bg: linear-gradient(180deg, #FFF8ED 0%, #F8FAFC 100%);
+  --sidebar-bg: linear-gradient(180deg, #FFF8ED 0%, #FFFFFF 100%);
 }
 
 /* ── THEME TOGGLE BUTTON ── */

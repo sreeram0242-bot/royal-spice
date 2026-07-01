@@ -31,8 +31,8 @@ body.light-theme {
   --text: #000000;
   --text-muted: #333333;
   --muted: #555555;
-  --input-bg: #F5F5F4;
-  --card-bg: #FAFAF9;
+  --input-bg: #FFFFFF;
+  --card-bg: #FFFFFF;
   --table-border: #E7E5E4;
 }
 
