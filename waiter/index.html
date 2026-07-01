@@ -1,354 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Waiter Login — Cloud Dine</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      background: #06060A;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      animation: float 8s ease-in-out infinite;
-    }
-
-    .orb-1 {
-      width: 350px;
-      height: 350px;
-      background: #3B82F6;
-      opacity: 0.07;
-      top: -100px;
-      right: -80px;
-    }
-
-    .orb-2 {
-      width: 280px;
-      height: 280px;
-      background: #C9A84C;
-      opacity: 0.06;
-      bottom: -80px;
-      left: -60px;
-      animation-delay: -4s;
-    }
-
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-20px);
-      }
-    }
-
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: #0E0E12;
-      border: 1px solid rgba(59, 130, 246, 0.15);
-      border-radius: 24px;
-      padding: 44px 36px;
-      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
-      position: relative;
-      z-index: 10;
-    }
-
-    .logo-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-
-    .logo-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #3B82F6, #2563EB);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-    }
-
-    .logo-name {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
-
-    .logo-role {
-      font-size: 11px;
-      font-weight: 600;
-      color: #3B82F6;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .role-dot {
-      width: 5px;
-      height: 5px;
-      background: #3B82F6;
-      border-radius: 50%;
-      animation: blink 1.5s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.3;
-      }
-    }
-
-    .card-title {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-      margin-bottom: 6px;
-    }
-
-    .card-sub {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 32px;
-    }
-
-    .input-group {
-      margin-bottom: 18px;
-    }
-
-    .input-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      margin-bottom: 8px;
-    }
-
-    .input-wrap {
-      position: relative;
-    }
-
-    .input-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 15px;
-      opacity: 0.35;
-      pointer-events: none;
-    }
-
-    .form-input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 14px 14px 14px 42px;
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .form-input::placeholder {
-      color: rgba(255, 255, 255, 0.2);
-    }
-
-    .form-input:focus {
-      border-color: rgba(59, 130, 246, 0.5);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
-    }
-
-    .form-input:-webkit-autofill,
-    .form-input:-webkit-autofill:hover,
-    .form-input:-webkit-autofill:focus,
-    .form-input:-webkit-autofill:active {
-      -webkit-box-shadow: 0 0 0 1000px #0E0E12 inset !important;
-      -webkit-text-fill-color: #fff !important;
-      transition: background-color 5000s ease-in-out 0s;
-    }
-
-    .eye-btn {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: rgba(255, 255, 255, 0.3);
-      cursor: pointer;
-      font-size: 16px;
-      padding: 6px;
-    }
-
-    .eye-btn:hover {
-      color: #3B82F6;
-    }
-
-    .error-box {
-      display: none;
-      background: rgba(239, 68, 68, 0.08);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 10px;
-      padding: 12px 14px;
-      color: #FCA5A5;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-
-    .error-box.show {
-      display: block;
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 16px;
-      margin-top: 6px;
-      background: linear-gradient(135deg, #3B82F6, #2563EB);
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
-    }
-
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(59, 130, 246, 0.35);
-    }
-
-    .btn-submit:active {
-      transform: translateY(0);
-    }
-
-    .btn-submit:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .help-text {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.2);
-    }
-
-    /* Restaurant ID hint */
-    .rid-hint {
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.25);
-      margin-top: 5px;
-      padding-left: 2px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Waiter Portal - Login</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+<body class="login-body">
+  <div class="bg-watermark"></div>
 
-<body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-
-  <div class="card">
-    <div class="logo-row">
-      <div class="logo-icon">🧑‍🍳</div>
-      <div class="logo-info">
-        <div class="logo-name">Cloud Dine</div>
-        <div class="logo-role"><span class="role-dot"></span> Waiter Portal</div>
-      </div>
+  <div class="login-header">
+    <div style="font-size: 50px; color: #3b82f6; margin-bottom: 8px;">
+      <i data-lucide="cloud" style="width: 64px; height: 64px; stroke-width: 1.5;"></i>
     </div>
+    <div class="login-title">Cloud <span>Dine</span></div>
+    <div class="login-subtitle">WAITER PORTAL</div>
+  </div>
 
-    <div class="card-title">Staff Login</div>
-    <div class="card-sub">Enter your credentials provided by the admin</div>
-
-    <div class="error-box" id="errorBox"></div>
+  <div class="login-box">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div class="welcome-text">Welcome Back! <span style="font-size: 20px;">👋</span></div>
+      <div class="welcome-sub">Sign in to continue to your account</div>
+    </div>
+    
+    <div style="color: var(--red); font-size: 13px; text-align: center; margin-bottom: 12px; display: none;" id="errorBox"></div>
 
     <form id="loginForm" autocomplete="off">
-
       <div class="input-group">
-        <label class="input-label" for="username">Username</label>
-        <div class="input-wrap">
-          <span class="input-icon">👤</span>
-          <input id="username" type="text" class="form-input" placeholder="Your username" required autocomplete="off">
-        </div>
+        <i data-lucide="user" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+        <input type="text" id="username" placeholder="Username" required>
       </div>
 
       <div class="input-group">
-        <label class="input-label" for="password">Password</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input id="password" type="password" class="form-input" placeholder="Your password" required
-            autocomplete="off" style="padding-right: 46px;">
-          <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePwd()">👁️</button>
-        </div>
+        <i data-lucide="lock" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+        <input type="password" id="password" placeholder="Password" required>
+        <i data-lucide="eye" class="input-icon-right" id="eyeBtn" onclick="togglePwd()" style="width: 18px; height: 18px;"></i>
       </div>
 
-      <button type="submit" class="btn-submit" id="submitBtn">Sign In</button>
+      <div class="login-options">
+        <label><input type="checkbox" id="rememberMe"> Remember me</label>
+        <a href="#" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn-signin" id="submitBtn">Sign In</button>
     </form>
 
-    <div
-      style="margin-top: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85;">
-      <img src="logo.png" style="width: 24px; height: 24px; margin-bottom: 6px;" alt="Logo">
-      <div style="font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 500;">
-        Created by <br />
-        <span style="color: #fff; font-weight: 700; font-size: 13px;">Cloud</span> <span
-          style="color: #3B82F6; font-weight: 700; font-size: 13px;">Dine</span>
-      </div>
+    <div class="help-text">
+      Need help? <a href="#">Contact Admin</a>
     </div>
+    
+    <div class="version">v1.0.0</div>
   </div>
 
   <script>
+    lucide.createIcons();
 
     function togglePwd() {
       const inp = document.getElementById('password');
       const btn = document.getElementById('eyeBtn');
-      inp.type = inp.type === 'password' ? 'text' : 'password';
-      btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.setAttribute('data-lucide', 'eye-off');
+      } else {
+        inp.type = 'password';
+        btn.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -360,7 +78,7 @@
 
       btn.disabled = true;
       btn.textContent = 'Signing in...';
-      errorBox.classList.remove('show');
+      errorBox.style.display = 'none';
 
       try {
         const res = await fetch('/api/auth/waiter/login', {
@@ -374,22 +92,21 @@
           localStorage.setItem('waiterToken', data.token);
           localStorage.setItem('waiterRestaurantId', data.restaurantId);
           localStorage.setItem('waiterName', data.waiterName);
-          btn.textContent = '✓ Success!';
+          btn.textContent = 'Success!';
           setTimeout(() => window.location.href = 'dashboard.html', 400);
         } else {
           errorBox.textContent = data.message || 'Invalid credentials.';
-          errorBox.classList.add('show');
+          errorBox.style.display = 'block';
           btn.disabled = false;
           btn.textContent = 'Sign In';
         }
       } catch {
         errorBox.textContent = 'Cannot connect to server. Please try again.';
-        errorBox.classList.add('show');
+        errorBox.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Sign In';
       }
     });
   </script>
 </body>
-
 </html>

@@ -64,123 +64,134 @@ async function loadTables() {
     const res = await api('/api/waiter/tables');
     if (!res || !res.ok) { grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>'; return; }
     const tables = await res.json();
-
-    const pendingCalls = tables.filter(t => t.hasCall).length;
-    const badge = document.getElementById('callBadge');
-    const countEl = document.getElementById('callCount');
-    if (pendingCalls > 0) {
-      badge.style.display = 'flex';
-      countEl.textContent = pendingCalls;
-    } else {
-      badge.style.display = 'none';
+    window._allTablesData = tables;
+    
+    // Update metric cards
+    if (document.getElementById('totalTablesCount')) {
+      document.getElementById('totalTablesCount').textContent = tables.length;
+      document.getElementById('activeTablesCount').textContent = tables.filter(t => t.status !== 'available').length;
     }
 
-    grid.innerHTML = '';
-    tables.forEach(t => {
-      const card = document.createElement('button');
-      card.className = `table-card status-${t.status} ${t.hasCall ? 'has-call' : ''}`;
-      card.onclick = () => openTableModal(t.tableNumber, t.passcode);
-      card.style.display = 'block';
-      card.style.width = '100%';
-
-      const pillClass = {
-        available: t.passcode ? 'pill-new' : 'pill-available',
-        new: 'pill-new',
-        preparing: 'pill-preparing',
-        ready: 'pill-ready',
-        occupied: 'pill-ready'
-      }[t.status] || 'pill-available';
-
-      const statusLabel = {
-        available: t.passcode ? `PIN: ${t.passcode}` : 'Free',
-        new: 'Ordered',
-        preparing: 'Cooking',
-        ready: 'Ready',
-        occupied: 'Occupied'
-      }[t.status] || t.status;
-
-      card.innerHTML = `
-        <div class="table-num">T${String(t.tableNumber).padStart(2,'0')}</div>
-        <span class="table-status-pill ${pillClass}">${statusLabel}</span>
-        ${t.total > 0 ? `<div class="table-total">₹${t.total.toFixed(2)}</div>` : ''}
-      `;
-      grid.appendChild(card);
-    });
+    renderTableGrid(tables);
   } catch (e) {
-    console.error(e);
     grid.innerHTML = '<div class="loading-text">Error loading tables.</div>';
   }
 }
 
+function filterTables() {
+  if (!window._allTablesData) return;
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  const filtered = window._allTablesData.filter(t => String(t.tableNumber).includes(q));
+  renderTableGrid(filtered);
+}
+
+function renderTableGrid(tables) {
+  const grid = document.getElementById('tableGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  tables.forEach(t => {
+    const card = document.createElement('div');
+    card.onclick = () => openTableModal(t.tableNumber, t.passcode);
+    
+    const statusMap = {
+      available: 'free',
+      new: 'ordered',
+      preparing: 'cooking',
+      ready: 'ready',
+      occupied: 'ready'
+    };
+    const sType = statusMap[t.status] || 'free';
+    card.className = `table-card status-${sType}`;
+
+    const statusLabel = {
+      available: 'Free',
+      new: 'Ordered',
+      preparing: 'Cooking',
+      ready: 'Ready',
+      occupied: 'Occupied'
+    }[t.status] || t.status;
+
+    card.innerHTML = `
+      <div class="icon-row">
+        <i data-lucide="armchair" style="width:24px;height:24px;"></i>
+      </div>
+      <div class="table-name">T${String(t.tableNumber).padStart(2,'0')}</div>
+      <div class="table-pin">PIN: ${t.passcode || '----'}</div>
+      <div class="status-text">${t.total > 0 ? '₹'+t.total.toFixed(2) + ' <br>' : ''}${statusLabel}</div>
+    `;
+    grid.appendChild(card);
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 // ── TABLE MODAL ──
 async function openTableModal(tableNumber, passcode = null) {
-  console.log("openTableModal called for table:", tableNumber);
   const modal = document.getElementById('tableModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
   const body = document.getElementById('modalBody');
-  const actions = document.getElementById('modalActions');
 
   title.textContent = `Table ${tableNumber}`;
-  sub.textContent = 'Loading...';
-  body.innerHTML = '<div class="loading-text">Fetching orders...</div>';
-  actions.innerHTML = '';
+  sub.textContent = `PIN: ${passcode || '----'}`;
+  body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
   modal.classList.add('open');
 
   try {
     const res = await api(`/api/waiter/table/${tableNumber}/bill`);
-    if (!res) return; // api() returned undefined due to auth redirect
+    if (!res) return;
     if (!res.ok) {
-      // No active orders — show empty
-      sub.textContent = 'No active orders';
-      if (passcode) {
-        body.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="key" style="width:48px;height:48px;color:var(--gold-primary);"></i></div><div>Customer PIN for this table:</div><div style="font-size:32px; font-weight:bold; letter-spacing:4px; margin-top:10px; color:var(--gold-primary);">${passcode}</div></div>`;
-      } else {
-        body.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="armchair" style="width:48px;height:48px;opacity:0.5;"></i></div><div>This table is free. Please refresh to load PIN.</div></div>`;
-      }
-      actions.innerHTML = `
-        <button class="btn-action btn-primary" onclick="startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Place Order for this Table</button>
+      body.innerHTML = `
+        <div style="text-align:center; padding: 40px 0;">
+          <i data-lucide="info" style="width:48px;height:48px;color:var(--text-muted);opacity:0.5;margin-bottom:16px;"></i>
+          <div style="color:var(--text-muted);">Table is currently empty.</div>
+        </div>
+        <button class="action-btn btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber}, '')">
+          <i data-lucide="plus" style="width:18px;"></i> Place Order
+        </button>
       `;
-      setTimeout(() => lucide.createIcons(), 10);
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       return;
     }
 
     const bill = await res.json();
     const sessionNo = bill.orders[0]?.sessionNumber || bill.orders[0]?.orderNumber;
-    sub.textContent = `${bill.orders.length} order batch(es) · Session #${sessionNo}`;
+    
+    let statusPill = `<div class="modal-status-btn ready"><i data-lucide="check-circle" style="width:16px;"></i> Ready</div>`;
+    let timeStr = new Date(bill.orders[0].createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
-    // Render each order batch
-    let bodyHTML = '';
-    bill.orders.forEach((o, i) => {
-      bodyHTML += `<div class="order-block">
-        <div class="order-block-header">Order #${o.orderNumber} — ${new Date(o.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-        ${o.items.map(item => `
-          <div class="order-line">
-            <span class="order-line-name">${item.name}</span>
-            <span class="order-line-qty">x${item.qty}</span>
-            <span class="order-line-price">₹${(item.price * item.qty).toFixed(2)}</span>
+    let bodyHTML = `
+      ${statusPill}
+      <div class="modal-session-time">Session Started: ${timeStr}</div>
+      
+      <div class="summary-box">
+        <div class="summary-header">
+          <span>Order #${bill.orders[0].orderNumber}</span>
+          <span>${timeStr}</span>
+        </div>
+        ${bill.orders.flatMap(o => o.items).map(item => `
+          <div class="summary-item">
+            <span class="summary-item-name">${item.qty}x ${item.name}</span>
+            <span class="summary-item-price">₹${(item.price * item.qty).toFixed(2)}</span>
           </div>
         `).join('')}
-      </div>`;
-    });
-
-    bodyHTML += `<div class="bill-summary">
-      <div class="total-row"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
-      <div class="total-row"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
-      <div class="total-row grand"><span>Grand Total</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
-    </div>`;
+        
+        <div class="summary-totals">
+          <div class="summary-total-row"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
+          <div class="summary-total-row"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
+          <div class="summary-grand"><span>Grand Total</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
+        </div>
+      </div>
+      
+      <div class="section-title" style="padding:0; margin-bottom:12px;">ACTIONS</div>
+      <button class="action-btn btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="printer" style="width:18px;"></i> View & Print Bill</button>
+      <button class="action-btn btn-secondary" style="color:white; border-color:var(--border);" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:18px;"></i> Add More Items</button>
+      <button class="action-btn btn-danger" onclick="closeSession(${tableNumber})"><i data-lucide="x-circle" style="width:18px;"></i> Close Table Session</button>
+    `;
 
     body.innerHTML = bodyHTML;
-
-    actions.innerHTML = `
-      <button class="btn-action btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="printer" style="width:16px;height:16px;vertical-align:middle;"></i> View & Print Bill</button>
-      <button class="btn-action btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:middle;"></i> Add More Items</button>
-      <button class="btn-action btn-danger" onclick="closeSession(${tableNumber})"><i data-lucide="check" style="width:16px;height:16px;vertical-align:middle;"></i> Close Table Session</button>
-    `;
-    setTimeout(() => lucide.createIcons(), 10);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (e) {
-    console.error(e);
-    body.innerHTML = '<div class="loading-text">Error loading data.</div>';
+    body.innerHTML = '<div class="loading-text">Error loading table details.</div>';
   }
 }
 
@@ -537,59 +548,91 @@ async function placeOrder() {
 }
 
 // ── LIVE ORDERS ──
+let currentOrderFilter = 'all';
+let allLiveOrders = [];
+
+function setOrderFilter(filter) {
+  currentOrderFilter = filter;
+  // Update active pill
+  document.querySelectorAll('#orderSegments .segment-btn').forEach(btn => btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  renderLiveOrders();
+}
+
 async function loadLiveOrders() {
   const container = document.getElementById('liveOrdersContainer');
-  container.innerHTML = '<div class="loading-text">Loading live orders...</div>';
+  container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Loading orders...</div>';
   try {
     const res = await api('/api/waiter/live-orders');
     if (!res.ok) throw new Error('Failed');
-    const data = await res.json();
-
-    if (data.length === 0) {
-      container.innerHTML = '<div class="no-calls"><div style="font-size:36px;margin-bottom:8px;"><i data-lucide="check-circle-2" style="width:48px;height:48px;color:var(--gold);"></i></div>No active orders currently</div>';
-      setTimeout(() => lucide.createIcons(), 10);
-      return;
+    allLiveOrders = await res.json();
+    if (document.getElementById('activeOrdersCount')) {
+      document.getElementById('activeOrdersCount').textContent = allLiveOrders.length;
     }
-
-    let html = '';
-    // Group orders by table
-    const tableMap = {};
-    data.forEach(order => {
-      if (!tableMap[order.tableNumber]) tableMap[order.tableNumber] = [];
-      tableMap[order.tableNumber].push(order);
-    });
-
-    Object.keys(tableMap).sort((a,b) => parseInt(a) - parseInt(b)).forEach(tableNum => {
-      html += `<div style="background:#0E0E12; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; margin-bottom:16px;">
-        <h3 style="margin-top:0; color:var(--gold); border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px; margin-bottom:12px;">Table ${tableNum}</h3>`;
-      
-      tableMap[tableNum].forEach(order => {
-        const isReceived = (order.status !== 'new');
-        const statusColor = isReceived ? 'var(--green)' : 'var(--orange)';
-        const statusText = isReceived ? 'Received / Preparing' : 'Pending Admin';
-        
-        html += `<div style="margin-bottom:12px; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">
-          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
-            <span style="color:var(--text-muted)">Order #${order.orderNumber}</span>
-            <span style="color:${statusColor}; font-weight:600;"><i data-lucide="${isReceived ? 'check-check' : 'clock'}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>${statusText}</span>
-          </div>`;
-        
-        order.items.forEach(item => {
-          html += `<div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;">
-            <span>${item.qty}x ${item.name}</span>
-          </div>`;
-        });
-        
-        html += `</div>`;
-      });
-      html += `</div>`;
-    });
-
-    container.innerHTML = html;
-    setTimeout(() => lucide.createIcons(), 10);
+    renderLiveOrders();
   } catch (e) {
-    container.innerHTML = '<div class="loading-text">Error loading live orders.</div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Error loading orders.</div>';
   }
+}
+
+function renderLiveOrders() {
+  const container = document.getElementById('liveOrdersContainer');
+  let filtered = allLiveOrders;
+  
+  const countAll = allLiveOrders.length;
+  const countPrep = allLiveOrders.filter(o => o.status === 'preparing' || o.status === 'new').length;
+  const countReady = allLiveOrders.filter(o => o.status === 'ready').length;
+  const countServed = allLiveOrders.filter(o => o.status === 'served' || o.status === 'completed').length;
+  
+  if (document.getElementById('countAll')) document.getElementById('countAll').innerText = countAll;
+  if (document.getElementById('countPrep')) document.getElementById('countPrep').innerText = countPrep;
+  if (document.getElementById('countReady')) document.getElementById('countReady').innerText = countReady;
+  if (document.getElementById('countServed')) document.getElementById('countServed').innerText = countServed;
+  
+  if (currentOrderFilter === 'preparing') filtered = allLiveOrders.filter(o => o.status === 'preparing' || o.status === 'new');
+  else if (currentOrderFilter === 'ready') filtered = allLiveOrders.filter(o => o.status === 'ready');
+  else if (currentOrderFilter === 'served') filtered = allLiveOrders.filter(o => o.status === 'served' || o.status === 'completed');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">No orders in this category.</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(order => {
+    let pillClass = 'pill-served';
+    let statusName = 'Served';
+    if (order.status === 'preparing' || order.status === 'new') { pillClass = 'pill-preparing'; statusName = 'Preparing'; }
+    else if (order.status === 'ready') { pillClass = 'pill-ready'; statusName = 'Ready'; }
+    
+    let timeStr = new Date(order.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    return `
+      <div class="order-card">
+        <div class="order-card-header">
+          <div>
+            <div class="order-table-name">Table ${order.tableNumber}</div>
+            <div class="order-number">Order #${order.orderNumber}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="status-pill ${pillClass}">${statusName}</div>
+            <div class="order-time">${timeStr}</div>
+          </div>
+        </div>
+        
+        ${order.items.map(item => `
+          <div class="order-item-row">
+            <span class="order-item-name">${item.qty}x ${item.name}</span>
+            <span class="order-item-price">₹${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+        `).join('')}
+        
+        <div class="order-total-row">
+          <span>Total</span>
+          <span>₹${order.total.toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ── THEME TOGGLE ──
