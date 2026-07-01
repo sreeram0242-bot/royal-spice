@@ -941,48 +941,12 @@ async function loadRevenue() {
   try {
     const data = await fetchAPI('/api/admin/revenue');
     
-    document.getElementById('revTotal').innerText = `₹${data.totalRevenue || 0}`;
-    document.getElementById('revToday').innerText = `₹${data.todayRevenue || 0}`;
+    document.getElementById('revTotal').innerText = `₹${(data.totalRevenue || 0).toFixed(2)}`;
+    document.getElementById('revToday').innerText = `₹${(data.todayRevenue || 0).toFixed(2)}`;
     document.getElementById('revOrders').innerText = data.totalOrders || 0;
 
     // Load history when revenue tab is opened
     loadHistory();
-
-    const canvas = document.getElementById('revenueTabChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    if (revenueTabChartInstance) {
-      revenueTabChartInstance.destroy();
-    }
-
-    // data.revenueByDay is ordered from 6 days ago to today.
-    const labels = (data.revenueByDay || []).map(d => d.date);
-    const chartData = (data.revenueByDay || []).map(d => d.revenue);
-
-    revenueTabChartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Revenue (₹)',
-          data: chartData,
-          backgroundColor: '#F4A017',
-          borderRadius: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          x: { ticks: { color: '#9CA3AF' }, grid: { display: false } },
-          y: { ticks: { color: '#9CA3AF' }, grid: { color: '#333' }, beginAtZero: true }
-        }
-      }
-    });
 
   } catch (err) {
     console.error('Failed to load revenue', err);
