@@ -941,9 +941,9 @@ async function loadRevenue() {
   try {
     const data = await fetchAPI('/api/admin/revenue');
     
-    document.getElementById('revTotal').innerText = `₹${data.totalRevenue}`;
-    document.getElementById('revToday').innerText = `₹${data.todayRevenue}`;
-    document.getElementById('revOrders').innerText = data.totalOrders;
+    document.getElementById('revTotal').innerText = `₹${data.totalRevenue || 0}`;
+    document.getElementById('revToday').innerText = `₹${data.todayRevenue || 0}`;
+    document.getElementById('revOrders').innerText = data.totalOrders || 0;
 
     // Load history when revenue tab is opened
     loadHistory();
@@ -957,8 +957,8 @@ async function loadRevenue() {
     }
 
     // data.revenueByDay is ordered from 6 days ago to today.
-    const labels = data.revenueByDay.map(d => d.date);
-    const chartData = data.revenueByDay.map(d => d.revenue);
+    const labels = (data.revenueByDay || []).map(d => d.date);
+    const chartData = (data.revenueByDay || []).map(d => d.revenue);
 
     revenueTabChartInstance = new Chart(ctx, {
       type: 'bar',
@@ -978,7 +978,8 @@ async function loadRevenue() {
           legend: { display: false }
         },
         scales: {
-          y: { beginAtZero: true }
+          x: { ticks: { color: '#9CA3AF' }, grid: { display: false } },
+          y: { ticks: { color: '#9CA3AF' }, grid: { color: '#333' }, beginAtZero: true }
         }
       }
     });
