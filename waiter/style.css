@@ -331,6 +331,22 @@ body {
 .modal-status-btn.ready { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
 .modal-session-time { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
 
+/* Bill Styles */
+.bill-restaurant { text-align: center; margin-bottom: 16px; }
+.bill-restaurant-name { font-size: 18px; font-weight: 800; text-transform: uppercase; color: var(--text); }
+.bill-restaurant-address { font-size: 12px; color: var(--text-muted); }
+.bill-dashed { border-top: 1px dashed var(--border); margin: 12px 0; }
+.bill-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
+.bill-items-header { display: flex; font-size: 12px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; color: var(--text); }
+.bill-item-row { display: flex; font-size: 13px; margin-bottom: 8px; color: var(--text); }
+.bill-item-name { flex: 2; }
+.bill-item-qty { flex: 1; text-align: center; }
+.bill-item-price { flex: 1; text-align: right; }
+.bill-totals { margin-top: 16px; }
+.bill-total-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); }
+.bill-total-row.bill-grand { font-size: 16px; font-weight: 800; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; color: var(--text); }
+.bill-footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); }
+
 /* Order Summary Box */
 .summary-box {
   background: var(--card-bg);
@@ -444,3 +460,68 @@ body {
   pointer-events: none;
   z-index: 0;
 }
+
+/* Order Overlay Styles */
+.cat-chip {
+  background: var(--card-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cat-chip.active {
+  background: var(--border); /* Grey colour tab as requested */
+  color: white; /* White text as requested */
+  border-color: var(--text-muted);
+}
+.menu-item-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.menu-item-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.menu-item-price { font-size: 14px; color: var(--text-muted); }
+.menu-item-veg { font-size: 12px; color: var(--text-muted); }
+.qty-control { display: flex; align-items: center; gap: 12px; }
+.qty-btn {
+  background: var(--border);
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qty-num { font-size: 14px; font-weight: 600; color: var(--text); width: 20px; text-align: center; }
+.cart-item-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: var(--text); }
+.total-row { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; color: var(--text-muted); }
+.total-row.grand { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+
+
+/* Light Theme Variables */
+body.light-theme {
+  --bg: #f9fafb;
+  --panel: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #111827;
+  --text-muted: #6b7280;
+  --card-bg: #ffffff;
+}
+
+/* Light Theme Overrides for Table Tabs (Cards) */
+body.light-theme .table-card.status-free { background-color: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.2); }
+body.light-theme .table-card.status-ordered { background-color: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2); }
+body.light-theme .table-card.status-cooking { background-color: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); }
+body.light-theme .table-card.status-ready { background-color: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); }

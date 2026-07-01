@@ -174,11 +174,51 @@
           <input type="radio" name="paymentMethod" value="card" style="accent-color:var(--blue); width:18px; height:18px;" onchange="document.getElementById('splitInputs').style.display='none'">
           <span style="font-size:14px; font-weight:500;">Full Card</span>
         </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:14px; background:var(--bg); border:1px solid var(--border); border-radius:12px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="split" style="accent-color:var(--blue); width:18px; height:18px;" onchange="document.getElementById('splitInputs').style.display='block'">
+          <span style="font-size:14px; font-weight:500;">Split Payment</span>
+        </label>
+        
+        <div id="splitInputs" style="display:none; margin-top:8px; background:var(--bg); padding:12px; border-radius:12px; border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:13px; color:var(--text-muted);">Cash</span>
+            <input type="number" id="splitCash" style="width:80px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text); font-size:14px;" placeholder="₹0">
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:13px; color:var(--text-muted);">UPI</span>
+            <input type="number" id="splitUpi" style="width:80px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text); font-size:14px;" placeholder="₹0">
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size:13px; color:var(--text-muted);">Card</span>
+            <input type="number" id="splitCard" style="width:80px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text); font-size:14px;" placeholder="₹0">
+          </div>
+        </div>
       </div>
 
       <div style="display:flex; gap:12px;">
         <button class="action-btn" style="flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text);" onclick="closeConfirmModal()">Cancel</button>
         <button class="action-btn btn-primary" style="flex:1;" id="confirmCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILL MODAL -->
+  <div class="modal-overlay" id="billModal">
+    <div style="display:flex; flex-direction:column; height:100%; width:100%;">
+      <div class="modal-header">
+        <div class="modal-back" onclick="closeBillModal()">
+          <i data-lucide="arrow-left"></i>
+          <div>
+            <div class="modal-title">Bill Details</div>
+          </div>
+        </div>
+        <div class="modal-print btn-primary" style="padding: 6px 16px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 6px; cursor: pointer; border: none; background: var(--green); opacity: 1;" onclick="markPaymentDone()">
+          <i data-lucide="check" style="width: 16px; height: 16px;"></i> Paid
+        </div>
+      </div>
+      
+      <div id="billContent" class="modal-body">
+        <!-- Rendered by app.js -->
       </div>
     </div>
   </div>

@@ -34,9 +34,13 @@ async function api(path, method = 'GET', body = null) {
 // ── TAB SWITCHING ──
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  
+  const tabContent = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
+  if(tabContent) tabContent.classList.add('active');
+  
+  const navBtn = document.getElementById('nav-' + name);
+  if(navBtn) navBtn.classList.add('active');
 
   if (name === 'tables') loadTables();
   if (name === 'calls') loadCalls();
@@ -184,7 +188,7 @@ async function openTableModal(tableNumber, passcode = null) {
       
       <div class="section-title" style="padding:0; margin-bottom:12px;">ACTIONS</div>
       <button class="action-btn btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="printer" style="width:18px;"></i> View & Print Bill</button>
-      <button class="action-btn btn-secondary" style="color:white; border-color:var(--border);" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:18px;"></i> Add More Items</button>
+      <button class="action-btn btn-secondary" style="color:var(--text); border-color:var(--border);" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:18px;"></i> Add More Items</button>
       <button class="action-btn btn-danger" onclick="closeSession(${tableNumber})"><i data-lucide="x-circle" style="width:18px;"></i> Close Table Session</button>
     `;
 
@@ -293,6 +297,7 @@ function closeBillModal() {
 
 function markPaymentDone() {
   if (currentBillTableNum) {
+    closeBillModal();
     closeSession(currentBillTableNum);
   }
 }
@@ -304,7 +309,6 @@ function closeSession(tableNumber) {
   tableToClose = tableNumber;
   document.getElementById('confirmTableNum').innerText = tableNumber;
   document.getElementById('confirmCloseModal').classList.add('open');
-  lucide.createIcons();
 }
 
 function closeConfirmModal() {
@@ -360,8 +364,9 @@ async function loadCalls() {
     const calls = await res.json();
 
     const badge = document.getElementById('callBadge');
-    badge.style.display = calls.length > 0 ? 'flex' : 'none';
-    document.getElementById('callCount').textContent = calls.length;
+    if (badge) badge.style.display = calls.length > 0 ? 'flex' : 'none';
+    const countEl = document.getElementById('callCount');
+    if (countEl) countEl.textContent = calls.length;
 
     if (calls.length === 0) {
       list.innerHTML = '<div class="no-calls"><div style="font-size:36px;margin-bottom:8px;"><i data-lucide="check-circle-2" style="width:48px;height:48px;color:var(--gold);"></i></div>No pending calls</div>';
@@ -535,7 +540,7 @@ async function placeOrder() {
       document.getElementById('cartTotals').innerHTML = '';
       closeOrderOverlay();
       loadLiveOrders();
-      alert('Order placed successfully!');
+      loadTables();
     } else {
       alert('Failed to place order');
     }
@@ -554,8 +559,12 @@ let allLiveOrders = [];
 function setOrderFilter(filter) {
   currentOrderFilter = filter;
   // Update active pill
-  document.querySelectorAll('#orderSegments .segment-btn').forEach(btn => btn.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  document.querySelectorAll('#orderSegments .segment-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('onclick').includes(`'${filter}'`)) {
+      btn.classList.add('active');
+    }
+  });
   renderLiveOrders();
 }
 
@@ -643,10 +652,17 @@ function toggleTheme() {
 }
 
 function updateThemeIcon() {
-  const icon = document.querySelector('#themeToggleBtn i[data-lucide]');
-  if (!icon) return;
+  const oldBtn = document.getElementById('themeToggleBtn');
+  if (!oldBtn) return;
   const isLight = document.body.classList.contains('light-theme');
-  icon.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  
+  const newBtn = document.createElement('i');
+  newBtn.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  newBtn.className = 'theme-toggle';
+  newBtn.id = 'themeToggleBtn';
+  newBtn.setAttribute('onclick', 'toggleTheme()');
+  
+  oldBtn.replaceWith(newBtn);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
