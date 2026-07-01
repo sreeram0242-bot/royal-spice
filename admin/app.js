@@ -236,18 +236,23 @@ async function loadDashboard() {
   // Live orders table
   const tbody = document.getElementById('liveOrdersTable');
   tbody.innerHTML = '';
-  pendingOrders.slice(0, 5).forEach(o => {
-    tbody.innerHTML += `
-      <tr onclick="showView('orders');" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='transparent'">
-        <td><div class="table-pill" style="padding: 4px; border-radius: 4px; width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">Table ${o.tableNumber}</div></td>
-        <td>#${o.orderNumber}</td>
-        <td>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-        <td>${o.items.length} items</td>
-        <td>₹${o.total}</td>
-        <td><span class="status ${o.status}">${o.status.toUpperCase()}</span></td>
-      </tr>
-    `;
-  });
+  
+  if (pendingOrders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">Currently no live orders</td></tr>';
+  } else {
+    pendingOrders.slice(0, 5).forEach(o => {
+      tbody.innerHTML += `
+        <tr onclick="showView('orders');" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='transparent'">
+          <td><div class="table-pill" style="padding: 4px; border-radius: 4px; width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">Table ${o.tableNumber}</div></td>
+          <td>#${o.orderNumber}</td>
+          <td>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+          <td>${o.items.length} items</td>
+          <td>₹${o.total}</td>
+          <td><span class="status ${o.status}">${o.status.toUpperCase()}</span></td>
+        </tr>
+      `;
+    });
+  }
 
   // Table Grid
   const grid = document.getElementById('dashTableGrid');
@@ -339,6 +344,11 @@ async function loadOrders() {
     }
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
+  
+  if (filteredOrders.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">Currently no orders</div>';
+    return;
+  }
   
   filteredOrders.forEach(o => {
     let actionBtn = '';
