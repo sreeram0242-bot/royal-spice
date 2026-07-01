@@ -187,7 +187,7 @@ async function openTableModal(tableNumber, passcode = null) {
       </div>
       
       <div class="section-title" style="padding:0; margin-bottom:12px;">ACTIONS</div>
-      <button class="action-btn btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="printer" style="width:18px;"></i> View & Print Bill</button>
+      <button class="action-btn btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="file-text" style="width:18px;"></i> View Bill</button>
       <button class="action-btn btn-secondary" style="color:var(--text); border-color:var(--border);" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:18px;"></i> Add More Items</button>
       <button class="action-btn btn-danger" onclick="closeSession(${tableNumber})"><i data-lucide="x-circle" style="width:18px;"></i> Close Table Session</button>
     `;

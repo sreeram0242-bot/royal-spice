@@ -859,16 +859,138 @@ async function renderFullTableGrid(total) {
     grid.innerHTML = '';
     tables.forEach(t => {
       const isOccupied = t.status === 'occupied';
-      const statusText = isOccupied ? 'Occupied' : (t.passcode ? `<span style="color:var(--gold);font-weight:bold;font-size:14px;">PIN: ${t.passcode}</span>` : 'Free');
-      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'status-new' : (t.passcode ? 'status-new' : 'available')}" style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; border: 1px solid ${(isOccupied || t.passcode) ? 'rgba(59,130,246,0.4)' : '#333'}; background: var(--panel-bg); color: var(--text-primary); border-radius: 8px;">
-        <div>T${t.tableNumber.toString().padStart(2, '0')}</div>
-        <div style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">${statusText}</div>
+      const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : (t.passcode ? `<span style="color:var(--gold);font-weight:bold;font-size:14px;">PIN: ${t.passcode}</span>` : 'Free');
+      const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber}, '${t.passcode || ''}')" style="cursor:pointer;"` : '';
+      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'status-new' : (t.passcode ? 'status-new' : 'available')}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid ${(isOccupied || t.passcode) ? 'rgba(59,130,246,0.4)' : '#333'}; background: var(--panel-bg); color: var(--text-primary); border-radius: 8px; ${isOccupied ? 'cursor:pointer;' : ''}">
+        <div style="font-size: 24px; font-weight: bold; margin-bottom: 4px;">T${t.tableNumber.toString().padStart(2, '0')}</div>
+        <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
       </div>`;
     });
   } catch (err) {
     grid.innerHTML = '<div style="color:var(--red);">Failed to load tables</div>';
   }
 }
+
+// ── TABLE SESSION MANAGEMENT (Admin) ──
+async function openTableModal(tableNumber, passcode = null) {
+  const modal = document.getElementById('tableModal');
+  const title = document.getElementById('modalTitle');
+  const sub = document.getElementById('modalSub');
+  const body = document.getElementById('modalBody');
+  const headerAction = document.getElementById('modalHeaderAction');
+
+  title.textContent = `Table ${tableNumber}`;
+  sub.textContent = `PIN: ${passcode || '----'}`;
+  body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
+  
+  if (headerAction) {
+    headerAction.innerHTML = `<button class="btn-gold" style="background:#10B981; color:white; border:none; padding:6px 16px; border-radius:8px; display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;" onclick="closeSession(${tableNumber})"><i data-lucide="banknote" style="width:16px; height:16px;"></i> Receive Money</button>`;
+  }
+  
+  modal.classList.remove('hidden');
+
+  try {
+    const res = await fetchAPI(`/api/admin/table/${tableNumber}/bill`);
+    
+    let statusPill = `<div class="modal-status-btn ready" style="background:var(--blue); color:white; padding:4px 12px; border-radius:4px; font-size:12px; display:inline-flex; align-items:center; gap:6px; margin-bottom:12px;"><i data-lucide="check-circle" style="width:14px; height:14px;"></i> Active</div>`;
+    let timeStr = new Date(res.orders[0].createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    let bodyHTML = `
+      ${statusPill}
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Session Started: ${timeStr}</div>
+      
+      <div style="background:#111; border:1px solid #333; border-radius:12px; padding:16px; margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:12px;">
+          <span style="font-weight:bold; color:var(--text-primary);">Order #${res.orders[0].orderNumber}</span>
+          <span style="color:var(--text-muted); font-size:12px;">${timeStr}</span>
+        </div>
+        ${res.orders.flatMap(o => o.items).map(item => `
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px;">
+            <span style="color:var(--text-primary);"><span style="color:var(--gold); font-weight:bold; margin-right:8px;">${item.qty}x</span> ${item.name}</span>
+            <span style="color:var(--text-muted);">₹${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+        `).join('')}
+        
+        <div style="border-top:1px dashed #444; margin-top:16px; padding-top:16px;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-muted); margin-bottom:6px;"><span>Subtotal</span><span>₹${res.subtotal.toFixed(2)}</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-muted); margin-bottom:12px;"><span>GST (${res.gstPercent}%)</span><span>₹${res.gstAmount.toFixed(2)}</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:bold; color:var(--text-primary); border-top:1px solid #333; padding-top:12px;"><span>Grand Total</span><span style="color:var(--gold);">₹${res.grandTotal.toFixed(2)}</span></div>
+        </div>
+      </div>
+    `;
+
+    body.innerHTML = bodyHTML;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = '<div style="color:var(--red);">Error loading table details.</div>';
+  }
+}
+
+function closeTableModal() {
+  document.getElementById('tableModal').classList.add('hidden');
+}
+
+let tableToClose = null;
+
+function closeSession(tableNumber) {
+  tableToClose = tableNumber;
+  document.getElementById('confirmTableNum').innerText = tableNumber;
+  document.getElementById('confirmCloseModal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmCloseModal').classList.add('hidden');
+  tableToClose = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const confirmBtn = document.getElementById('confirmCloseBtn');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', async () => {
+      if (!tableToClose) return;
+      
+      const selectedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+      if (!selectedRadio) {
+        alert('Please select a payment method before closing the session.');
+        return;
+      }
+      let method = selectedRadio.value;
+      if (method === 'split') {
+        const cash = parseFloat(document.getElementById('splitCash').value) || 0;
+        const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
+        const card = parseFloat(document.getElementById('splitCard').value) || 0;
+        
+        if (cash + upi + card === 0) {
+          alert('Please enter at least one split amount.');
+          return;
+        }
+        method = `split (Cash: ₹${cash}, UPI: ₹${upi}, Card: ₹${card})`;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.innerText = 'Processing...';
+
+      try {
+        await fetchAPI(`/api/admin/table/${tableToClose}/close-session`, 'POST', { paymentMethod: method });
+        closeConfirmModal();
+        closeTableModal();
+        loadDashboard(); // Refresh UI
+        
+        // Ensure UI updates if Tables view is open
+        if (!document.getElementById('view-tables').classList.contains('hidden')) {
+           renderFullTableGrid();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to close session. Make sure the Node server has been restarted to load the new backend changes!');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = 'Done';
+      }
+    });
+  }
+});
 
 // QR CODES
 function loadQRCodes() {
@@ -1281,6 +1403,21 @@ function copyRestaurantId() {
 async function adminPrintBill(tableNumber) {
   const modal = document.getElementById('adminBillModal');
   const content = document.getElementById('adminBillContent');
+  
+  // Extract payment method from UI
+  const selectedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+  let paymentText = 'Not Specified';
+  if (selectedRadio) {
+    if (selectedRadio.value === 'split') {
+       const cash = parseFloat(document.getElementById('splitCash').value) || 0;
+       const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
+       const card = parseFloat(document.getElementById('splitCard').value) || 0;
+       paymentText = `Split (Cash: ₹${cash}, UPI: ₹${upi}, Card: ₹${card})`;
+    } else {
+       paymentText = 'Full ' + selectedRadio.value.charAt(0).toUpperCase() + selectedRadio.value.slice(1);
+    }
+  }
+
   content.innerHTML = '<p style="text-align:center;padding:20px;color:#555;">Generating bill...</p>';
   modal.classList.remove('hidden');
 
@@ -1330,6 +1467,7 @@ async function adminPrintBill(tableNumber) {
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:bold;border-top:2px solid #111;border-bottom:2px solid #111;padding:6px 0;margin-top:4px;"><span>GRAND TOTAL</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;"><span>Payment Mode:</span><span style="font-weight:bold;">${paymentText}</span></div>
       <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">
         Thank you for dining with us!<br>Please visit again — ${bill.restaurant.name}
       </div>

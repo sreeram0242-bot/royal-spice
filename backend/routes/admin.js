@@ -220,7 +220,14 @@ router.get('/tables', authAdmin, async (req, res) => {
 
     const tables = [];
     for (let i = 1; i <= restaurant.totalTables; i++) {
-      const isOccupied = activeOrders.some(o => o.tableNumber === i);
+      const tableOrders = activeOrders.filter(o => o.tableNumber === i);
+      const isOccupied = tableOrders.length > 0;
+      
+      const subtotal = tableOrders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+      const gstAmount = subtotal * ((restaurant.gstPercent || 0) / 100);
+      const tip = tableOrders.reduce((sum, o) => sum + (o.tip || 0), 0);
+      const total = subtotal + gstAmount + tip;
+
       let passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
       
       if (!passcode) {
@@ -236,12 +243,103 @@ router.get('/tables', authAdmin, async (req, res) => {
       tables.push({
         tableNumber: i,
         status: isOccupied ? 'occupied' : 'available',
-        passcode
+        passcode,
+        total
       });
     }
 
     res.json(tables);
   } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/table/:num/bill — full bill for a table
+router.get('/table/:num/bill', authAdmin, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: req.user.restaurantId },
+      select: { name: true, address: true, gstPercent: true }
+    });
+
+    const latestOrder = await prisma.order.findFirst({
+      where: { restaurantId: req.user.restaurantId, tableNumber, status: { not: 'completed' } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (!latestOrder) {
+      return res.status(404).json({ message: 'No active orders for this table' });
+    }
+
+    const orders = await prisma.order.findMany({
+      where: { sessionId: latestOrder.sessionId, status: { not: 'completed' } },
+      include: { items: true },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
+    const gstAmount = subtotal * (restaurant.gstPercent / 100);
+    const totalTip = orders.reduce((sum, o) => sum + (o.tip || 0), 0);
+    const grandTotal = subtotal + gstAmount + totalTip;
+
+    res.json({
+      restaurant,
+      tableNumber,
+      sessionId: latestOrder.sessionId,
+      orders,
+      subtotal,
+      gstAmount,
+      gstPercent: restaurant.gstPercent,
+      totalTip,
+      grandTotal,
+      generatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/admin/table/:num/close-session — close a table session
+router.post('/table/:num/close-session', authAdmin, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurantId = req.user.restaurantId;
+    const { paymentMethod } = req.body;
+
+    const latestOrder = await prisma.order.findFirst({
+      where: { restaurantId, tableNumber, status: { not: 'completed' } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (!latestOrder) {
+      return res.status(404).json({ message: 'No active session for this table' });
+    }
+
+    await prisma.order.updateMany({
+      where: { sessionId: latestOrder.sessionId },
+      data: { 
+        status: 'completed', 
+        paymentMethod: paymentMethod || 'cash',
+        closedByWaiter: 'Admin' 
+      }
+    });
+
+    const newPasscode = Math.floor(1000 + Math.random() * 9000).toString();
+    await prisma.tablePasscode.upsert({
+      where: { restaurantId_tableNumber: { restaurantId, tableNumber } },
+      update: { passcode: newPasscode },
+      create: { restaurantId, tableNumber, passcode: newPasscode }
+    });
+
+    const io = req.app.get('io');
+    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode: newPasscode });
+    io.to(restaurantId).emit('session_closed', { tableNumber, sessionId: latestOrder.sessionId });
+
+    res.json({ message: 'Session closed successfully' });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
