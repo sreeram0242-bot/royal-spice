@@ -82,7 +82,7 @@
       </div>
       <div class="search-bar" style="position:relative; display:flex; align-items:center;">
         <i data-lucide="search" style="position:absolute; left:12px; width:16px; height:16px; color:var(--text-muted);"></i>
-        <input type="text" placeholder="Search here..." style="padding-left:36px;">
+        <input type="text" id="globalSearchInput" placeholder="Search here..." style="padding-left:36px;" onkeyup="handleGlobalSearch()">
       </div>
       <div style="display: flex; gap: 16px; align-items: center;">
         <button class="theme-toggle-btn" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
@@ -267,7 +267,7 @@
         <div class="panel">
           <h3>Revenue - Last 7 Days</h3>
           <div style="position: relative; height: 350px; width: 100%; margin-top: 24px;">
-            <canvas id="revenueChart"></canvas>
+            <canvas id="revenueTabChart"></canvas>
           </div>
         </div>
         <div class="panel" style="margin-top: 24px;">
@@ -282,7 +282,7 @@
               <label style="font-size: 12px; color: var(--text-secondary);">End Date</label>
               <input type="date" id="historyEndDate" class="login-input" style="padding: 8px; margin-bottom: 0; width: auto;">
             </div>
-            <button class="btn-primary" style="margin-top: 20px;" onclick="loadHistory()">Search Orders</button>
+            <button class="btn-gold" style="margin-top: 20px; padding: 10px 16px;" onclick="loadHistory()">Search Orders</button>
             <button class="btn-gold" style="margin-top: 20px; padding: 10px 16px; width: auto; margin-left: auto;" onclick="openPdfModal()">Download PDF</button>
           </div>
 
@@ -307,8 +307,8 @@
       </div>
 
       <!-- Order Items Modal -->
-      <div class="popup-overlay" id="historyItemsModal" style="display: none;">
-        <div class="popup-box" style="width: 90%; max-width: 500px; padding: 24px; background: var(--panel-bg); border-radius: 12px;">
+      <div class="modal-overlay" id="historyItemsModal" style="display: none;">
+        <div class="modal" style="width: 90%; max-width: 500px; padding: 24px; background: var(--panel-bg); border-radius: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
             <h3 id="historyModalTitle" style="color: var(--gold-primary);">Order Details</h3>
             <button onclick="document.getElementById('historyItemsModal').style.display='none'" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
@@ -320,8 +320,8 @@
       </div>
 
       <!-- PDF Download Modal -->
-      <div class="popup-overlay" id="pdfModal" style="display: none;">
-        <div class="popup-box" style="width: 90%; max-width: 400px; padding: 24px; background: var(--panel-bg); border-radius: 12px;">
+      <div class="modal-overlay" id="pdfModal" style="display: none;">
+        <div class="modal" style="width: 90%; max-width: 400px; padding: 24px; background: var(--panel-bg); border-radius: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
             <h3 style="color: var(--gold-primary);">Download PDF Report</h3>
             <button onclick="document.getElementById('pdfModal').style.display='none'" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
@@ -343,7 +343,7 @@
                   <input type="date" id="pdfCustomEnd" class="login-input" style="margin-bottom: 0; padding: 8px; width: 100%;">
                 </div>
               </div>
-              <button class="btn-primary" style="width: 100%;" onclick="generatePDF('custom')">Download Custom Report</button>
+              <button class="btn-gold" style="width: 100%;" onclick="generatePDF('custom')">Download Custom Report</button>
             </div>
           </div>
         </div>
@@ -412,7 +412,7 @@
                   <span id="setQrPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to add<br>QR Code</span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <button class="btn-primary" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="document.getElementById('setQrFileInput').click()">Change QR</button>
+                  <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="document.getElementById('setQrFileInput').click()">Change QR</button>
                   <button style="padding: 6px 12px; font-size: 12px; background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; cursor: pointer;" onclick="removeSettingsQr()">Remove QR</button>
                   <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Upload your UPI or bank QR code for customers to scan when paying.</span>
                 </div>

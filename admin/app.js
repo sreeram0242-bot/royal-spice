@@ -343,11 +343,11 @@ async function loadOrders() {
   filteredOrders.forEach(o => {
     let actionBtn = '';
     if (o.status === 'new') {
-      actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing')">Receive (Start Preparing)</button>`;
+      actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing', this)">Receive (Start Preparing)</button>`;
     } else if (o.status === 'preparing') {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready')">Mark Ready</button>`;
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready', this)">Mark Ready</button>`;
     } else if (o.status === 'ready') {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served')">Mark Served</button>`;
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served', this)">Mark Served</button>`;
     } else if (o.status === 'served') {
       actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" disabled>Completed</button>`;
     }
@@ -413,9 +413,22 @@ async function loadOrders() {
   });
 }
 
-async function updateOrderStatus(id, status) {
-  await fetchAPI(`/api/admin/orders/${id}/status`, 'PUT', { status });
-  loadOrders();
+function updateOrderStatus(id, status, btn) {
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Updating...';
+    btn.style.opacity = '0.7';
+  }
+  fetchAPI(`/api/admin/orders/${id}/status`, 'PUT', { status })
+    .then(() => loadOrders())
+    .catch(err => {
+      console.error(err);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Error';
+        btn.style.opacity = '1';
+      }
+    });
 }
 
 // WAITER CALLS
@@ -805,7 +818,7 @@ async function loadCategories() {
     };
     
     const changeBtn = document.createElement('button');
-    changeBtn.className = 'btn-primary';
+    changeBtn.className = 'btn-gold';
     changeBtn.style.marginTop = '12px';
     changeBtn.style.fontSize = '12px';
     changeBtn.style.padding = '8px 16px';
@@ -935,7 +948,9 @@ async function loadRevenue() {
     // Load history when revenue tab is opened
     loadHistory();
 
-    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const canvas = document.getElementById('revenueTabChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     
     if (revenueTabChartInstance) {
       revenueTabChartInstance.destroy();
@@ -1058,7 +1073,7 @@ function renderHistory() {
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
         <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
         <td style="padding: 12px;">
-          <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails(${index})">View Items</button>
+          <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails(${index})">View Items</button>
         </td>
       </tr>
     `;
@@ -1150,6 +1165,7 @@ async function generatePDF(range) {
           tableNumber: o.tableNumber,
           createdAt: o.createdAt,
           paymentMethod: o.paymentMethod || 'cash',
+          closedByWaiter: o.closedByWaiter || 'Admin',
           total: 0
         };
       }
@@ -1174,7 +1190,7 @@ async function generatePDF(range) {
     const totalRev = sessions.reduce((sum, s) => sum + s.total, 0);
     doc.text(`Total Sessions: ${sessions.length} | Total Revenue: Rs. ${totalRev.toFixed(2)}`, 14, 36);
 
-    const tableColumn = ["Date", "Session #", "Table", "Payment", "Amount (Rs.)"];
+    const tableColumn = ["Date", "Session #", "Table", "Payment", "Waiter", "Amount (Rs.)"];
     const tableRows = [];
 
     sessions.forEach(session => {
@@ -1185,6 +1201,7 @@ async function generatePDF(range) {
         session.sessionNumber,
         session.tableNumber,
         session.paymentMethod,
+        session.closedByWaiter,
         session.total.toFixed(2)
       ];
       tableRows.push(rowData);
@@ -1390,5 +1407,30 @@ function showAdminQr() {
     document.getElementById('qrDisplayModal').classList.remove('hidden');
   } else {
     alert("No Payment QR Code set! You can upload it in the Settings tab.");
+  }
+}
+
+// GLOBAL SEARCH
+function handleGlobalSearch() {
+  const input = document.getElementById('globalSearchInput');
+  if (!input) return;
+  const query = input.value.toLowerCase();
+  
+  const currentViewTitle = document.getElementById('currentViewTitle');
+  if (!currentViewTitle) return;
+  const currentView = currentViewTitle.innerText.toLowerCase();
+  
+  if (currentView === 'orders') {
+    const cards = document.querySelectorAll('#ordersGrid .panel');
+    cards.forEach(card => {
+      if (card.innerText.toLowerCase().includes(query)) card.style.display = 'block';
+      else card.style.display = 'none';
+    });
+  } else if (currentView === 'menu items') {
+    const rows = document.querySelectorAll('#menuContainer tbody tr');
+    rows.forEach(row => {
+      if (row.innerText.toLowerCase().includes(query)) row.style.display = 'table-row';
+      else row.style.display = 'none';
+    });
   }
 }
