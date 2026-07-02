@@ -23,13 +23,13 @@ module.exports = (io) => {
           // Expired
           await prisma.restaurant.update({
             where: { id: rest.id },
-            data: { isActive: false, paymentStatus: 'unpaid' }
+            data: { paymentStatus: 'unpaid' }
           });
           
           const notif = await prisma.masterNotification.create({
             data: {
               restaurantId: rest.id,
-              message: 'Your trial has expired and your service is suspended. Please upgrade your plan.'
+              message: 'Your trial/subscription has expired! Please contact the Master Admin to renew.'
             }
           });
           
