@@ -51,6 +51,7 @@
 
       <!-- ─── DASHBOARD ─── -->
       <div id="view-dashboard" class="view">
+        <div id="dashboardAlerts" style="margin-bottom: 20px;"></div>
         <div class="dashboard-grid">
           <div class="stat-card">
             <div class="title">Total Platform Orders</div>
@@ -370,7 +371,10 @@
         <div style="flex:1;"><label>Plan</label><select id="managePlan" class="login-input"><option value="trial">Trial</option><option value="basic">Basic</option><option value="premium">Premium</option><option value="enterprise">Enterprise</option></select></div>
         <div style="flex:1;"><label>Trial Days</label><input type="number" id="manageTrialDays" class="login-input"></div>
       </div>
-      <div style="margin-bottom:16px;"><label>Subscription Expiry</label><input type="date" id="manageExpiry" class="login-input"></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;"><label>Subscription Expiry</label><input type="date" id="manageExpiry" class="login-input"></div>
+        <div style="flex:1;"><label>Amount Paid (₹)</label><input type="number" id="manageAmount" class="login-input" placeholder="0"></div>
+      </div>
       <div style="display:flex;gap:12px;">
         <button class="btn-gold" onclick="saveRestaurantDetails()">Save Changes</button>
         <button class="btn-outline" onclick="closeModal('manageModal')">Cancel</button>

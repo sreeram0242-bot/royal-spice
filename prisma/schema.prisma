@@ -21,6 +21,7 @@ model Restaurant {
   trialDays          Int           @default(14)
   trialStartDate     DateTime      @default(now())
   subscriptionExpiry DateTime?
+  subscriptionAmount Float?        @default(0)
   paymentStatus      String        @default("trial")
   paymentQrCode      String?
   isActive           Boolean       @default(true)

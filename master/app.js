@@ -83,6 +83,31 @@ function closeModal(id) {
 let platformChart = null;
 async function loadDashboard() {
   const stats = await fetchAPI('/api/master/dashboard-stats');
+  const restaurants = await fetchAPI('/api/master/restaurants');
+  
+  const alertsDiv = document.getElementById('dashboardAlerts');
+  if (alertsDiv) {
+    alertsDiv.innerHTML = '';
+    const now = new Date();
+    restaurants.forEach(r => {
+      if (r.isActive && r.subscriptionExpiry) {
+        const expDate = new Date(r.subscriptionExpiry);
+        const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 7 && daysLeft >= 0) {
+          alertsDiv.innerHTML += `<div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #F59E0B; color: #F59E0B; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="alert-triangle"></i>
+            <div><strong>${r.name}</strong> subscription expires in ${daysLeft} days (on ${expDate.toLocaleDateString()}).</div>
+          </div>`;
+        } else if (daysLeft < 0) {
+          alertsDiv.innerHTML += `<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #EF4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="alert-circle"></i>
+            <div><strong>${r.name}</strong> subscription expired ${Math.abs(daysLeft)} days ago!</div>
+          </div>`;
+        }
+      }
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
   
   document.getElementById('statOrders').innerText = stats.totalOrders;
   document.getElementById('statRev').innerText = '₹' + stats.totalRevenue.toFixed(2);
@@ -215,6 +240,8 @@ async function viewRestaurant(id) {
     document.getElementById('manageExpiry').value = '';
   }
   
+  document.getElementById('manageAmount').value = r.subscriptionAmount || '';
+  
   document.getElementById('manageModal').classList.remove('hidden');
 }
 
@@ -224,12 +251,14 @@ async function saveRestaurantDetails() {
   const plan = document.getElementById('managePlan').value;
   const trialDays = document.getElementById('manageTrialDays').value;
   const expiry = document.getElementById('manageExpiry').value;
+  const amount = document.getElementById('manageAmount').value;
   
   await fetchAPI(`/api/master/restaurants/${id}`, 'PUT', {
     name,
     plan,
     trialDays,
-    subscriptionExpiry: expiry ? expiry : null
+    subscriptionExpiry: expiry ? expiry : null,
+    subscriptionAmount: amount ? parseFloat(amount) : 0
   });
   
   alert('Restaurant details updated successfully!');

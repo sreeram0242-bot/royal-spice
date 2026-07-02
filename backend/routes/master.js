@@ -80,12 +80,13 @@ router.put('/restaurants/:id/status', authMaster, async (req, res) => {
 // Edit restaurant details
 router.put('/restaurants/:id', authMaster, async (req, res) => {
   try {
-    const { name, plan, trialDays, subscriptionExpiry } = req.body;
+    const { name, plan, trialDays, subscriptionExpiry, subscriptionAmount } = req.body;
     let data = {};
     if (name) data.name = name;
     if (plan) data.plan = plan;
     if (trialDays !== undefined) data.trialDays = parseInt(trialDays);
     if (subscriptionExpiry) data.subscriptionExpiry = new Date(subscriptionExpiry);
+    if (subscriptionAmount !== undefined) data.subscriptionAmount = parseFloat(subscriptionAmount);
     
     const updated = await prisma.restaurant.update({
       where: { id: req.params.id },
