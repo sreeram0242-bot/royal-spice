@@ -43,13 +43,26 @@ function showView(viewId) {
     'dashboard': 'Dashboard',
     'restaurants': 'Restaurants',
     'complaints': 'Complaints',
-    'revenue': 'Platform Revenue'
+    'revenue': 'Platform Revenue',
+    'subscriptions': '💳 Subscriptions',
+    'analytics': '📊 Platform Analytics',
+    'announcements': '📢 Announcements',
+    'activity': '📋 Activity Log',
+    'notes': '📓 Admin Notes',
+    'backup': '🗄️ Backup & Export',
+    'support': '🎧 Support Center',
+    'settings': '⚙️ Platform Settings'
   };
-  document.getElementById('currentViewTitle').innerText = titles[viewId];
+  document.getElementById('currentViewTitle').innerText = titles[viewId] || viewId;
 
   if (viewId === 'dashboard') loadDashboard();
   if (viewId === 'restaurants') loadRestaurants();
   if (viewId === 'complaints') loadComplaints();
+  if (viewId === 'subscriptions') loadSubscriptions();
+  if (viewId === 'analytics') loadPlatformAnalytics();
+  if (viewId === 'notes') renderNotes();
+  if (viewId === 'activity') renderActivityLog();
+  if (viewId === 'announcements') renderAnnouncements();
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {
@@ -334,4 +347,333 @@ async function sendGlobalBroadcast() {
 // Init
 if (window.location.pathname.includes('dashboard.html')) {
   loadDashboard();
+}
+
+// ══════════════════════════════════════════
+// 1. SUBSCRIPTIONS
+// ══════════════════════════════════════════
+async function loadSubscriptions() {
+  const data = await fetchAPI('/api/master/restaurants');
+  const now = new Date();
+  const in7 = new Date(); in7.setDate(now.getDate() + 7);
+
+  let monthly = 0, trial = 0, expiring = 0, suspended = 0;
+  const filter = document.getElementById('subFilterPlan')?.value;
+
+  const tbody = document.querySelector('#subscriptionTable tbody');
+  tbody.innerHTML = '';
+
+  data.forEach(r => {
+    if (filter && r.plan !== filter) return;
+    if (!r.isActive) suspended++;
+    else if (r.plan === 'trial') trial++;
+    else monthly++;
+
+    if (r.subscriptionExpiry) {
+      const exp = new Date(r.subscriptionExpiry);
+      if (exp > now && exp <= in7) expiring++;
+    }
+
+    const expText = r.subscriptionExpiry
+      ? new Date(r.subscriptionExpiry).toLocaleDateString()
+      : r.plan === 'trial' ? `Trial (${r.trialDays || 14} days)` : 'No Expiry';
+
+    const statusLabel = r.isActive ? (r.plan === 'trial' ? 'Trial' : 'Active') : 'Suspended';
+    const statusClass = r.isActive ? (r.plan === 'trial' ? 'trial' : 'active') : 'suspended';
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-weight:600;">${r.name}</td>
+        <td>${r.plan.toUpperCase()}</td>
+        <td><span class="status ${statusClass}">${statusLabel}</span></td>
+        <td style="color:var(--text-muted);">${expText}</td>
+        <td><button class="btn-gold" style="padding:4px 8px;font-size:12px;" onclick="viewRestaurant('${r.id}')">Manage</button></td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('subCountMonthly').innerText = monthly;
+  document.getElementById('subCountTrial').innerText = trial;
+  document.getElementById('subCountExpiring').innerText = expiring;
+  document.getElementById('subCountSuspended').innerText = suspended;
+}
+
+// ══════════════════════════════════════════
+// 2. PLATFORM ANALYTICS
+// ══════════════════════════════════════════
+let planDistChartInstance = null;
+async function loadPlatformAnalytics() {
+  try {
+    const stats = await fetchAPI('/api/master/dashboard-stats');
+    const restaurants = await fetchAPI('/api/master/restaurants');
+
+    const total = restaurants.length;
+    const totalOrders = stats.totalOrders || 0;
+    const totalRev = stats.totalRevenue || 0;
+    const avgOrders = total ? Math.round(totalOrders / total) : 0;
+
+    document.getElementById('analTotal').innerText = total;
+    document.getElementById('analOrders').innerText = totalOrders;
+    document.getElementById('analAvg').innerText = avgOrders;
+    document.getElementById('analRev').innerText = '\u20b9' + Math.round(totalRev).toLocaleString('en-IN');
+
+    // Top Restaurants (sorted by name for demo)
+    const topEl = document.getElementById('analTopRestaurants');
+    if (topEl) {
+      const sorted = [...restaurants].slice(0, 8);
+      topEl.innerHTML = sorted.map((r, i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-color);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="background:var(--gold);color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">${i+1}</span>
+            <span style="font-weight:600;color:var(--text-primary);">${r.name}</span>
+          </div>
+          <span class="status ${r.isActive ? 'active' : 'suspended'}">${r.plan.toUpperCase()}</span>
+        </div>
+      `).join('');
+    }
+
+    // Plan distribution pie chart
+    const planCounts = { trial: 0, monthly: 0, premium: 0, enterprise: 0 };
+    restaurants.forEach(r => { if (planCounts[r.plan] !== undefined) planCounts[r.plan]++; else planCounts.monthly++; });
+
+    const ctx = document.getElementById('planDistChart');
+    if (ctx) {
+      if (planDistChartInstance) planDistChartInstance.destroy();
+      planDistChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Trial', 'Monthly', 'Premium', 'Enterprise'],
+          datasets: [{ data: [planCounts.trial, planCounts.monthly, planCounts.premium, planCounts.enterprise], backgroundColor: ['#F59E0B','#3B82F6','#8B5CF6','#10B981'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#aaa', font: { size: 12 } } } } }
+      });
+    }
+  } catch(e) { console.error('Analytics error', e); }
+}
+
+// ══════════════════════════════════════════
+// 3. ANNOUNCEMENTS
+// ══════════════════════════════════════════
+function getAnnouncements() {
+  try { return JSON.parse(localStorage.getItem('master_announcements') || '[]'); } catch { return []; }
+}
+function saveAnnouncements(list) { localStorage.setItem('master_announcements', JSON.stringify(list)); }
+
+function openAnnouncementModal() {
+  document.getElementById('announcementModal').classList.remove('hidden');
+}
+
+function saveAnnouncement() {
+  const title = document.getElementById('annTitle').value.trim();
+  const body = document.getElementById('annBody').value.trim();
+  if (!title || !body) { alert('Please enter a title and message.'); return; }
+
+  const list = getAnnouncements();
+  list.unshift({ id: Date.now(), title, body, date: new Date().toLocaleDateString() });
+  saveAnnouncements(list);
+  logActivity(`📢 Announcement sent: "${title}"`);
+
+  // Also broadcast it to all admins
+  fetchAPI('/api/master/broadcast', 'POST', { message: `[Announcement] ${title}: ${body}` });
+
+  closeModal('announcementModal');
+  document.getElementById('annTitle').value = '';
+  document.getElementById('annBody').value = '';
+  renderAnnouncements();
+  alert('Announcement saved and broadcast to all restaurants!');
+}
+
+function renderAnnouncements() {
+  const list = getAnnouncements();
+  const el = document.getElementById('announcementList');
+  if (!el) return;
+  if (list.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No announcements yet.</div>';
+    return;
+  }
+  el.innerHTML = list.map(a => `
+    <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:700;color:var(--text-primary);">${a.title}</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;color:var(--text-muted);">${a.date}</span>
+          <button onclick="deleteAnnouncement(${a.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">Delete</button>
+        </div>
+      </div>
+      <div style="color:var(--text-muted);font-size:13px;">${a.body}</div>
+    </div>
+  `).join('');
+}
+
+function deleteAnnouncement(id) {
+  saveAnnouncements(getAnnouncements().filter(a => a.id !== id));
+  renderAnnouncements();
+}
+
+// ══════════════════════════════════════════
+// 4. ACTIVITY LOG
+// ══════════════════════════════════════════
+function logActivity(text) {
+  const log = JSON.parse(localStorage.getItem('master_activity') || '[]');
+  log.unshift({ text, time: new Date().toLocaleString() });
+  localStorage.setItem('master_activity', JSON.stringify(log.slice(0, 100)));
+}
+
+function renderActivityLog() {
+  const log = JSON.parse(localStorage.getItem('master_activity') || '[]');
+  const el = document.getElementById('activityLog');
+  if (!el) return;
+  if (log.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No activity recorded yet.</div>';
+    return;
+  }
+  el.innerHTML = log.map(l => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--gold);">
+      <span style="color:var(--text-primary);font-size:13px;">${l.text}</span>
+      <span style="color:var(--text-muted);font-size:11px;white-space:nowrap;margin-left:12px;">${l.time}</span>
+    </div>
+  `).join('');
+}
+
+function clearActivityLog() {
+  if (!confirm('Clear all activity logs?')) return;
+  localStorage.removeItem('master_activity');
+  renderActivityLog();
+}
+
+// Auto-log key actions
+const _origCreate = typeof createRestaurant !== 'undefined' ? createRestaurant : null;
+
+// ══════════════════════════════════════════
+// 5. ADMIN NOTES
+// ══════════════════════════════════════════
+function getNotes() {
+  try { return JSON.parse(localStorage.getItem('master_notes') || '[]'); } catch { return []; }
+}
+
+function addNote() {
+  const input = document.getElementById('noteInput');
+  const text = input?.value.trim();
+  if (!text) return;
+  const notes = getNotes();
+  notes.unshift({ id: Date.now(), text, date: new Date().toLocaleDateString() });
+  localStorage.setItem('master_notes', JSON.stringify(notes));
+  input.value = '';
+  renderNotes();
+}
+
+function renderNotes() {
+  const notes = getNotes();
+  const el = document.getElementById('notesList');
+  if (!el) return;
+  if (notes.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:16px;">No notes yet.</div>';
+    return;
+  }
+  el.innerHTML = notes.map(n => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--gold);">
+      <div>
+        <div style="color:var(--text-primary);font-size:13px;">${n.text}</div>
+        <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">${n.date}</div>
+      </div>
+      <button onclick="deleteNote(${n.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;margin-left:12px;">Delete</button>
+    </div>
+  `).join('');
+}
+
+function deleteNote(id) {
+  localStorage.setItem('master_notes', JSON.stringify(getNotes().filter(n => n.id !== id)));
+  renderNotes();
+}
+
+// ══════════════════════════════════════════
+// 6. BACKUP & EXPORT
+// ══════════════════════════════════════════
+async function exportSummaryJSON() {
+  const stats = await fetchAPI('/api/master/dashboard-stats');
+  const json = JSON.stringify({ exportedAt: new Date().toISOString(), ...stats }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'platform_summary.json';
+  a.click(); URL.revokeObjectURL(url);
+  logActivity('🗄️ Downloaded platform summary JSON');
+}
+
+function exportNotesTXT() {
+  const notes = getNotes();
+  const text = notes.map(n => `[${n.date}] ${n.text}`).join('\n');
+  const blob = new Blob([text || 'No notes.'], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'admin_notes.txt';
+  a.click(); URL.revokeObjectURL(url);
+  logActivity('📝 Downloaded admin notes TXT');
+}
+
+// ══════════════════════════════════════════
+// 7. SUPPORT — RESET PASSWORD
+// ══════════════════════════════════════════
+async function openResetPasswordModal() {
+  const data = await fetchAPI('/api/master/restaurants');
+  const select = document.getElementById('resetRestSelect');
+  select.innerHTML = '<option value="">Select restaurant...</option>';
+  data.forEach(r => { select.innerHTML += `<option value="${r.id}">${r.name}</option>`; });
+  document.getElementById('resetPasswordModal').classList.remove('hidden');
+}
+
+async function doResetPassword() {
+  const id = document.getElementById('resetRestSelect').value;
+  const newUser = document.getElementById('resetNewUser').value.trim();
+  const newPass = document.getElementById('resetNewPass').value.trim();
+  if (!id) { alert('Please select a restaurant.'); return; }
+  if (!newPass) { alert('Please enter a new password.'); return; }
+  try {
+    const payload = { adminPassword: newPass };
+    if (newUser) payload.adminUsername = newUser;
+    await fetchAPI(`/api/master/restaurants/${id}`, 'PUT', payload);
+    logActivity(`🔑 Reset password for restaurant ID ${id}`);
+    alert('Password reset successfully!');
+    closeModal('resetPasswordModal');
+    document.getElementById('resetNewPass').value = '';
+    document.getElementById('resetNewUser').value = '';
+  } catch(e) { alert('Failed to reset password.'); }
+}
+
+// ══════════════════════════════════════════
+// 8. PLATFORM SETTINGS
+// ══════════════════════════════════════════
+function savePlatformSettings() {
+  const settings = {
+    trialDays: document.getElementById('settingTrialDays').value,
+    platformName: document.getElementById('settingPlatformName').value,
+    supportEmail: document.getElementById('settingSupportEmail').value,
+    maintenanceMode: document.getElementById('settingMaintenanceMode').checked
+  };
+  localStorage.setItem('master_platform_settings', JSON.stringify(settings));
+  logActivity('⚙️ Platform settings updated');
+  alert('Settings saved successfully!');
+}
+
+function loadPlatformSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('master_platform_settings') || '{}');
+    if (s.trialDays) document.getElementById('settingTrialDays').value = s.trialDays;
+    if (s.platformName) document.getElementById('settingPlatformName').value = s.platformName;
+    if (s.supportEmail) document.getElementById('settingSupportEmail').value = s.supportEmail;
+    if (s.maintenanceMode) document.getElementById('settingMaintenanceMode').checked = s.maintenanceMode;
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+// 9. DOCS MODAL
+// ══════════════════════════════════════════
+function openDocsModal() {
+  document.getElementById('docsModal').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+if (window.location.pathname.includes('dashboard.html')) {
+  loadDashboard();
+  loadPlatformSettings();
 }

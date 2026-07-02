@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master Dashboard - Cloud Dine</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -19,6 +18,14 @@
     <a class="nav-link" onclick="showView('restaurants')"><i data-lucide="store"></i> Restaurants</a>
     <a class="nav-link" onclick="showView('complaints')"><i data-lucide="message-square-warning"></i> Complaints</a>
     <a class="nav-link" onclick="showView('revenue')"><i data-lucide="indian-rupee"></i> Platform Revenue</a>
+    <a class="nav-link" onclick="showView('subscriptions')"><i data-lucide="credit-card"></i> Subscriptions</a>
+    <a class="nav-link" onclick="showView('analytics')"><i data-lucide="bar-chart-3"></i> Platform Analytics</a>
+    <a class="nav-link" onclick="showView('announcements')"><i data-lucide="megaphone"></i> Announcements</a>
+    <a class="nav-link" onclick="showView('activity')"><i data-lucide="activity"></i> Activity Log</a>
+    <a class="nav-link" onclick="showView('notes')"><i data-lucide="notebook-pen"></i> Admin Notes</a>
+    <a class="nav-link" onclick="showView('backup')"><i data-lucide="database-backup"></i> Backup & Export</a>
+    <a class="nav-link" onclick="showView('support')"><i data-lucide="headphones"></i> Support Center</a>
+    <a class="nav-link" onclick="showView('settings')"><i data-lucide="settings"></i> Platform Settings</a>
     <a class="nav-link" style="margin-top: auto;" onclick="logout()"><i data-lucide="log-out"></i> Logout</a>
   </div>
 
@@ -31,7 +38,7 @@
         <input type="text" id="globalSearch" placeholder="🔍 Search restaurants..." onkeyup="handleGlobalSearch()">
       </div>
       <div style="display: flex; gap: 16px; align-items: center;">
-        <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; background: var(--red); border: none; color: white;" onclick="openGlobalBroadcastModal()">📢 Global Broadcast</button>
+        <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; background: var(--red); border: none; color: white;" onclick="openGlobalBroadcastModal()">📢 Broadcast</button>
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
           <i data-lucide="moon" style="width:18px;height:18px;"></i>
         </button>
@@ -43,7 +50,8 @@
     </div>
 
     <div class="content-body">
-      <!-- Dashboard -->
+
+      <!-- ─── DASHBOARD ─── -->
       <div id="view-dashboard" class="view">
         <div class="dashboard-grid">
           <div class="stat-card">
@@ -63,111 +71,254 @@
             <div class="value" id="statSuspended">0</div>
           </div>
         </div>
-
         <div class="panels-grid">
           <div class="panel">
-            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
               <h3>Revenue Growth (Last 7 Days)</h3>
             </div>
-            <div style="height: 300px; width: 100%;">
-              <canvas id="platformRevenueChart"></canvas>
-            </div>
+            <div style="height:300px;width:100%;"><canvas id="platformRevenueChart"></canvas></div>
           </div>
-          
           <div class="panel">
-            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
               <h3>Recently Added Restaurants</h3>
-              <a href="#" onclick="showView('restaurants')" style="color: var(--gold); text-decoration: none; font-size: 14px;">View All</a>
+              <a href="#" onclick="showView('restaurants')" style="color:var(--gold);text-decoration:none;font-size:14px;">View All</a>
             </div>
             <table id="recentRestaurantsTable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Name</th><th>Date</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- Restaurants -->
+      <!-- ─── RESTAURANTS ─── -->
       <div id="view-restaurants" class="view hidden">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
           <h3>All Restaurants</h3>
-          <div style="display: flex; gap: 12px;">
-            <button class="btn-outline" style="border-color: var(--green); color: var(--green);" onclick="exportRestaurantsCSV()">⬇ Export CSV</button>
+          <div style="display:flex;gap:12px;">
+            <button class="btn-outline" style="border-color:var(--green);color:var(--green);" onclick="exportRestaurantsCSV()">⬇ Export CSV</button>
             <button class="btn-gold" onclick="openAddRestaurantModal()">+ Create Restaurant</button>
           </div>
         </div>
         <div class="panel">
           <table id="restTable">
             <thead>
-              <tr>
-                <th>Name</th>
-                <th>Added On</th>
-                <th>Plan</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>Name</th><th>Added On</th><th>Plan</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Complaints -->
+      <!-- ─── COMPLAINTS ─── -->
       <div id="view-complaints" class="view hidden">
         <div class="panel">
           <h3>Complaints Inbox</h3>
-          <table id="compTable" style="margin-top: 16px;">
+          <table id="compTable" style="margin-top:16px;">
             <thead>
-              <tr>
-                <th>Restaurant</th>
-                <th>Message</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
+              <tr><th>Restaurant</th><th>Message</th><th>Date</th><th>Status</th><th>Action</th></tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Revenue -->
+      <!-- ─── PLATFORM REVENUE ─── -->
       <div id="view-revenue" class="view hidden">
         <div class="panel">
           <h3>Platform Revenue</h3>
-          <p style="color: var(--text-muted); margin-top: 16px;">SaaS subscription revenue tracking will appear here.</p>
+          <p style="color:var(--text-muted);margin-top:16px;">SaaS subscription revenue tracking will appear here.</p>
         </div>
       </div>
+
+      <!-- ─── 1. SUBSCRIPTIONS ─── -->
+      <div id="view-subscriptions" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3>💳 Subscription Manager</h3>
+            <select id="subFilterPlan" class="login-input" style="margin:0;padding:8px;width:auto;" onchange="loadSubscriptions()">
+              <option value="">All Plans</option>
+              <option value="trial">Trial</option>
+              <option value="monthly">Monthly</option>
+              <option value="premium">Premium</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
+            <div class="stat-card" style="border-left:4px solid #10B981;"><div class="title">Active Monthly</div><div class="value" id="subCountMonthly" style="color:#10B981;">0</div></div>
+            <div class="stat-card" style="border-left:4px solid #F59E0B;"><div class="title">On Trial</div><div class="value" id="subCountTrial" style="color:#F59E0B;">0</div></div>
+            <div class="stat-card" style="border-left:4px solid #EF4444;"><div class="title">Expiring in 7 Days</div><div class="value" id="subCountExpiring" style="color:#EF4444;">0</div></div>
+            <div class="stat-card" style="border-left:4px solid #8B5CF6;"><div class="title">Suspended</div><div class="value" id="subCountSuspended" style="color:#8B5CF6;">0</div></div>
+          </div>
+          <table id="subscriptionTable">
+            <thead><tr><th>Restaurant</th><th>Plan</th><th>Status</th><th>Expiry</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── 2. PLATFORM ANALYTICS ─── -->
+      <div id="view-analytics" class="view hidden">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+          <div class="stat-card" style="border-left:4px solid var(--gold);"><div class="title">Total Restaurants</div><div class="value" id="analTotal">0</div></div>
+          <div class="stat-card" style="border-left:4px solid #10B981;"><div class="title">Total Orders (All Time)</div><div class="value" id="analOrders">0</div></div>
+          <div class="stat-card" style="border-left:4px solid #3B82F6;"><div class="title">Avg Orders/Restaurant</div><div class="value" id="analAvg">0</div></div>
+          <div class="stat-card" style="border-left:4px solid #8B5CF6;"><div class="title">Total Revenue (All)</div><div class="value" id="analRev">₹0</div></div>
+        </div>
+        <div class="panels-grid">
+          <div class="panel">
+            <h3 style="margin-bottom:16px;">🏆 Top Performing Restaurants</h3>
+            <div id="analTopRestaurants"><div style="color:var(--text-muted);">Loading...</div></div>
+          </div>
+          <div class="panel">
+            <h3 style="margin-bottom:16px;">📊 Plan Distribution</h3>
+            <div style="height:220px;position:relative;"><canvas id="planDistChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── 3. ANNOUNCEMENTS ─── -->
+      <div id="view-announcements" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>📢 Announcements</h3>
+            <button class="btn-gold" onclick="openAnnouncementModal()">+ New Announcement</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Saved announcements you have sent or drafted.</p>
+          <div id="announcementList"><div style="color:var(--text-muted);text-align:center;padding:24px;">No announcements yet.</div></div>
+        </div>
+      </div>
+
+      <!-- ─── 4. ACTIVITY LOG ─── -->
+      <div id="view-activity" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>📋 Activity Log</h3>
+            <button class="btn-outline" onclick="clearActivityLog()">🗑 Clear Log</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">All major actions you perform are logged here.</p>
+          <div id="activityLog" style="max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+            <div style="color:var(--text-muted);text-align:center;padding:24px;">No activity recorded yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── 5. ADMIN NOTES ─── -->
+      <div id="view-notes" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>📓 Admin Notes</h3>
+            <button class="btn-gold" onclick="addNote()">+ Add Note</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Private notes stored on this device. Useful for tasks and memos.</p>
+          <input type="text" id="noteInput" class="login-input" placeholder="Type a note and press Enter..." onkeydown="if(event.key==='Enter') addNote()">
+          <div id="notesList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+      <!-- ─── 6. BACKUP & EXPORT ─── -->
+      <div id="view-backup" class="view hidden">
+        <div class="panel">
+          <h3 style="margin-bottom:8px;">🗄️ Backup & Export</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;">Download snapshots of your platform data.</p>
+          <div style="display:flex;flex-direction:column;gap:16px;max-width:520px;">
+            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-weight:600;color:var(--text-primary);">📋 All Restaurants CSV</div><div style="font-size:12px;color:var(--text-muted);">Name, Plan, Status, Date Added</div></div>
+              <button class="btn-gold" style="padding:8px 16px;" onclick="exportRestaurantsCSV()">Download</button>
+            </div>
+            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-weight:600;color:var(--text-primary);">📊 Platform Summary JSON</div><div style="font-size:12px;color:var(--text-muted);">Dashboard stats snapshot in JSON format</div></div>
+              <button class="btn-gold" style="padding:8px 16px;" onclick="exportSummaryJSON()">Download</button>
+            </div>
+            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-weight:600;color:var(--text-primary);">📝 Admin Notes TXT</div><div style="font-size:12px;color:var(--text-muted);">Download all saved admin notes as plain text</div></div>
+              <button class="btn-gold" style="padding:8px 16px;" onclick="exportNotesTXT()">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── 7. SUPPORT CENTER ─── -->
+      <div id="view-support" class="view hidden">
+        <div class="panel">
+          <h3 style="margin-bottom:8px;">🎧 Support Center</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;">Quick tools to help restaurants with common issues.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
+            <div style="padding:20px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:12px;">
+              <div style="font-size:28px;margin-bottom:8px;">🔑</div>
+              <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Reset Admin Password</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Reset a restaurant's admin login credentials.</div>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;" onclick="openResetPasswordModal()">Reset Password</button>
+            </div>
+            <div style="padding:20px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:12px;">
+              <div style="font-size:28px;margin-bottom:8px;">⏰</div>
+              <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Extend Trial</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Give a restaurant extra trial days.</div>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;background:#10B981;border:none;color:white;" onclick="showView('subscriptions')">Manage Subscriptions</button>
+            </div>
+            <div style="padding:20px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;">
+              <div style="font-size:28px;margin-bottom:8px;">📧</div>
+              <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Send Support Message</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Send a direct notification to a restaurant.</div>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;background:#F59E0B;border:none;color:white;" onclick="showView('restaurants')">Select Restaurant</button>
+            </div>
+            <div style="padding:20px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;">
+              <div style="font-size:28px;margin-bottom:8px;">📖</div>
+              <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Platform Docs</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Quick reference for how the platform works.</div>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;background:#8B5CF6;border:none;color:white;" onclick="openDocsModal()">View Docs</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── 8. PLATFORM SETTINGS ─── -->
+      <div id="view-settings" class="view hidden">
+        <div class="panel">
+          <h3 style="margin-bottom:20px;">⚙️ Platform Settings</h3>
+          <div style="display:flex;flex-direction:column;gap:20px;max-width:500px;">
+            <div>
+              <label style="color:var(--text-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;">Default Trial Days for New Restaurants</label>
+              <input type="number" id="settingTrialDays" class="login-input" value="14" style="margin-bottom:0;">
+            </div>
+            <div>
+              <label style="color:var(--text-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;">Platform Name</label>
+              <input type="text" id="settingPlatformName" class="login-input" value="Cloud Dine" style="margin-bottom:0;">
+            </div>
+            <div>
+              <label style="color:var(--text-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;">Support Email</label>
+              <input type="email" id="settingSupportEmail" class="login-input" placeholder="support@clouddine.com" style="margin-bottom:0;">
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--border-color);">
+              <input type="checkbox" id="settingMaintenanceMode" style="width:18px;height:18px;cursor:pointer;">
+              <div>
+                <div style="font-weight:600;color:var(--text-primary);">Maintenance Mode</div>
+                <div style="font-size:12px;color:var(--text-muted);">When ON, restaurant admin panels will show a maintenance message.</div>
+              </div>
+            </div>
+            <button class="btn-gold" style="align-self:flex-start;" onclick="savePlatformSettings()">💾 Save Settings</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <!-- Create Restaurant Modal -->
   <div id="addRestModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 style="margin-bottom: 16px;">Create New Restaurant</h3>
+      <h3 style="margin-bottom:16px;">Create New Restaurant</h3>
       <input type="text" id="newRestName" class="login-input" placeholder="Restaurant Name" required>
       <input type="text" id="newRestAddress" class="login-input" placeholder="Address" required>
-      
-      <div style="margin-bottom: 16px; display: flex; gap: 16px; align-items: center;">
-        <label style="color: var(--text-muted);">Plan:</label>
-        <select id="newRestPlan" class="login-input" style="margin-bottom: 0;">
-          <option value="trial">Free Trial</option>
-          <option value="monthly">Monthly Paid</option>
-        </select>
+      <div style="margin-bottom:16px;display:flex;gap:16px;align-items:center;">
+        <label style="color:var(--text-muted);">Plan:</label>
+        <select id="newRestPlan" class="login-input" style="margin-bottom:0;"><option value="trial">Free Trial</option><option value="monthly">Monthly Paid</option></select>
       </div>
-      
       <input type="number" id="newRestTrial" class="login-input" placeholder="Trial Days (default 14)">
-      
-      <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--gold);">Admin Credentials</h4>
+      <h4 style="margin-top:16px;margin-bottom:12px;color:var(--gold);">Admin Credentials</h4>
       <input type="text" id="newRestUsername" class="login-input" placeholder="Admin Username" required>
       <input type="password" id="newRestPassword" class="login-input" placeholder="Admin Password" required>
-      
-      <div style="display: flex; gap: 12px; margin-top: 16px;">
+      <div style="display:flex;gap:12px;margin-top:16px;">
         <button class="btn-gold" onclick="createRestaurant()">Create</button>
         <button class="btn-outline" onclick="closeModal('addRestModal')">Cancel</button>
       </div>
@@ -177,24 +328,24 @@
   <!-- Reply Complaint Modal -->
   <div id="replyModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 style="margin-bottom: 16px;">Reply to Complaint</h3>
-      <p id="replyCompMsg" style="margin-bottom: 16px; font-style: italic; color: var(--text-muted);"></p>
+      <h3 style="margin-bottom:16px;">Reply to Complaint</h3>
+      <p id="replyCompMsg" style="margin-bottom:16px;font-style:italic;color:var(--text-muted);"></p>
       <textarea id="replyText" class="login-input" rows="4" placeholder="Type reply here..."></textarea>
-      <div style="display: flex; gap: 12px;">
+      <div style="display:flex;gap:12px;">
         <button class="btn-gold" onclick="sendReply()">Send Reply</button>
         <button class="btn-outline" onclick="closeModal('replyModal')">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- Send Notification Modal -->
+  <!-- Notify Modal -->
   <div id="notifyModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 style="margin-bottom: 16px;">Send Push Notification</h3>
-      <p style="margin-bottom: 16px; color: var(--text-muted);">This will popup on the admin panel of the selected restaurant.</p>
+      <h3 style="margin-bottom:16px;">Send Push Notification</h3>
+      <p style="margin-bottom:16px;color:var(--text-muted);">This will popup on the admin panel of the selected restaurant.</p>
       <input type="hidden" id="notifyRestId">
       <textarea id="notifyText" class="login-input" rows="4" placeholder="Notification message..."></textarea>
-      <div style="display: flex; gap: 12px;">
+      <div style="display:flex;gap:12px;">
         <button class="btn-gold" onclick="sendNotification()">Send Push</button>
         <button class="btn-outline" onclick="closeModal('notifyModal')">Cancel</button>
       </div>
@@ -204,11 +355,11 @@
   <!-- Global Broadcast Modal -->
   <div id="globalBroadcastModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 style="margin-bottom: 16px;">📢 Global Broadcast Alert</h3>
-      <p style="margin-bottom: 16px; color: var(--text-muted);">This message will instantly appear as a popup on EVERY connected restaurant's admin panel.</p>
-      <textarea id="globalBroadcastText" class="login-input" rows="4" placeholder="Enter important announcement here..."></textarea>
-      <div style="display: flex; gap: 12px;">
-        <button class="btn-gold" style="background: var(--red); border: none; color: white;" onclick="sendGlobalBroadcast()">Broadcast Now</button>
+      <h3 style="margin-bottom:16px;">📢 Global Broadcast Alert</h3>
+      <p style="margin-bottom:16px;color:var(--text-muted);">This will instantly appear on EVERY connected restaurant's admin panel.</p>
+      <textarea id="globalBroadcastText" class="login-input" rows="4" placeholder="Enter announcement here..."></textarea>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-gold" style="background:var(--red);border:none;color:white;" onclick="sendGlobalBroadcast()">Broadcast Now</button>
         <button class="btn-outline" onclick="closeModal('globalBroadcastModal')">Cancel</button>
       </div>
     </div>
@@ -216,54 +367,84 @@
 
   <!-- Manage Restaurant Modal -->
   <div id="manageModal" class="modal-overlay hidden">
-    <div class="modal" style="max-width: 500px;">
-      <h3 style="margin-bottom: 16px;">Restaurant Overview</h3>
+    <div class="modal" style="max-width:500px;">
+      <h3 style="margin-bottom:16px;">Restaurant Overview</h3>
       <input type="hidden" id="manageRestId">
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-        <div class="stat-card" style="padding: 12px;">
-          <div class="title">Total Orders</div>
-          <div class="value" id="manageStatOrders">0</div>
-        </div>
-        <div class="stat-card" style="padding: 12px;">
-          <div class="title">Total Revenue</div>
-          <div class="value" id="manageStatRev">₹0</div>
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="stat-card" style="padding:12px;"><div class="title">Total Orders</div><div class="value" id="manageStatOrders">0</div></div>
+        <div class="stat-card" style="padding:12px;"><div class="title">Total Revenue</div><div class="value" id="manageStatRev">₹0</div></div>
       </div>
-
-      <div style="margin-bottom: 12px;">
-        <label>Name</label>
-        <input type="text" id="manageName" class="login-input">
+      <div style="margin-bottom:12px;"><label>Name</label><input type="text" id="manageName" class="login-input"></div>
+      <div style="display:flex;gap:12px;margin-bottom:12px;">
+        <div style="flex:1;"><label>Plan</label><select id="managePlan" class="login-input"><option value="trial">Trial</option><option value="basic">Basic</option><option value="premium">Premium</option><option value="enterprise">Enterprise</option></select></div>
+        <div style="flex:1;"><label>Trial Days</label><input type="number" id="manageTrialDays" class="login-input"></div>
       </div>
-      <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-        <div style="flex: 1;">
-          <label>Plan</label>
-          <select id="managePlan" class="login-input">
-            <option value="trial">Trial</option>
-            <option value="basic">Basic</option>
-            <option value="premium">Premium</option>
-            <option value="enterprise">Enterprise</option>
-          </select>
-        </div>
-        <div style="flex: 1;">
-          <label>Trial Days</label>
-          <input type="number" id="manageTrialDays" class="login-input">
-        </div>
-      </div>
-      <div style="margin-bottom: 16px;">
-        <label>Subscription Expiry</label>
-        <input type="date" id="manageExpiry" class="login-input">
-      </div>
-
-      <div style="display: flex; gap: 12px;">
+      <div style="margin-bottom:16px;"><label>Subscription Expiry</label><input type="date" id="manageExpiry" class="login-input"></div>
+      <div style="display:flex;gap:12px;">
         <button class="btn-gold" onclick="saveRestaurantDetails()">Save Changes</button>
         <button class="btn-outline" onclick="closeModal('manageModal')">Cancel</button>
       </div>
     </div>
   </div>
 
+  <!-- Announcement Modal -->
+  <div id="announcementModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom:16px;">📢 New Announcement</h3>
+      <input type="text" id="annTitle" class="login-input" placeholder="Announcement Title">
+      <textarea id="annBody" class="login-input" rows="4" placeholder="Announcement message..."></textarea>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-gold" onclick="saveAnnouncement()">Save & Broadcast</button>
+        <button class="btn-outline" onclick="closeModal('announcementModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div id="resetPasswordModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom:16px;">🔑 Reset Admin Password</h3>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Select a restaurant and set a new admin password.</p>
+      <select id="resetRestSelect" class="login-input"><option value="">Select restaurant...</option></select>
+      <input type="text" id="resetNewUser" class="login-input" placeholder="New Username (leave blank to keep)">
+      <input type="password" id="resetNewPass" class="login-input" placeholder="New Password">
+      <div style="display:flex;gap:12px;">
+        <button class="btn-gold" onclick="doResetPassword()">Reset Password</button>
+        <button class="btn-outline" onclick="closeModal('resetPasswordModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Docs Modal -->
+  <div id="docsModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:600px;max-height:80vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3>📖 Platform Documentation</h3>
+        <button class="btn-outline" style="padding:6px 12px;" onclick="closeModal('docsModal')">Close</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;font-size:14px;line-height:1.7;">
+        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid var(--gold);">
+          <div style="font-weight:700;color:var(--gold);margin-bottom:8px;">🏢 Creating a Restaurant</div>
+          <div style="color:var(--text-muted);">Go to Restaurants → Click "+ Create Restaurant" → Fill in name, address, plan, and admin credentials. The restaurant gets its own admin login and QR codes automatically.</div>
+        </div>
+        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid #3B82F6;">
+          <div style="font-weight:700;color:#3B82F6;margin-bottom:8px;">💳 Managing Subscriptions</div>
+          <div style="color:var(--text-muted);">Go to Subscriptions → See all trial, active, and expiring restaurants. Click "View" to update their plan or expiry date.</div>
+        </div>
+        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid #10B981;">
+          <div style="font-weight:700;color:#10B981;margin-bottom:8px;">📢 Sending Broadcasts</div>
+          <div style="color:var(--text-muted);">Use the red "Broadcast" button in the header for global alerts. Use the "Notify" button in Restaurants for targeted messages.</div>
+        </div>
+        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid #EF4444;">
+          <div style="font-weight:700;color:#EF4444;margin-bottom:8px;">🚫 Suspending a Restaurant</div>
+          <div style="color:var(--text-muted);">Go to Restaurants → Click "Suspend". This immediately blocks their admin login. Click "Restore" to reactivate.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
   <script>
     lucide.createIcons();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
