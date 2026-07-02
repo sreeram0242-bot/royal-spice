@@ -226,7 +226,7 @@ router.get('/tables', authAdmin, async (req, res) => {
       const subtotal = tableOrders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
       const gstAmount = subtotal * ((restaurant.gstPercent || 0) / 100);
       const tip = tableOrders.reduce((sum, o) => sum + (o.tip || 0), 0);
-      const total = subtotal + gstAmount + tip;
+      const total = Math.round(subtotal + gstAmount + tip);
 
       let passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
       
@@ -281,7 +281,7 @@ router.get('/table/:num/bill', authAdmin, async (req, res) => {
     const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
     const gstAmount = subtotal * (restaurant.gstPercent / 100);
     const totalTip = orders.reduce((sum, o) => sum + (o.tip || 0), 0);
-    const grandTotal = subtotal + gstAmount + totalTip;
+    const grandTotal = Math.round(subtotal + gstAmount + totalTip);
 
     res.json({
       restaurant,
@@ -356,10 +356,16 @@ router.get('/revenue', authAdmin, async (req, res) => {
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     let totalRevenue = 0;
     let todayRevenue = 0;
+    let weekRevenue = 0;
+    let monthRevenue = 0;
     let totalOrders = orders.length;
+    let cashTotal = 0, upiTotal = 0, cardTotal = 0;
 
     // Last 7 days
     const revenueByDay = [];
@@ -375,23 +381,33 @@ router.get('/revenue', authAdmin, async (req, res) => {
 
     orders.forEach(o => {
       totalRevenue += o.total;
-      
       const orderDate = new Date(o.createdAt);
-      if (orderDate >= todayStart) {
-        todayRevenue += o.total;
-      }
-      
+      if (orderDate >= todayStart) todayRevenue += o.total;
+      if (orderDate >= weekStart) weekRevenue += o.total;
+      if (orderDate >= monthStart) monthRevenue += o.total;
+
+      // Payment breakdown
+      const pm = (o.paymentMethod || 'cash').toLowerCase();
+      if (pm.includes('cash')) cashTotal += o.total;
+      else if (pm.includes('upi')) upiTotal += o.total;
+      else if (pm.includes('card')) cardTotal += o.total;
+      else cashTotal += o.total; // default
+
       const orderDateString = orderDate.toISOString().split('T')[0];
       const dayData = revenueByDay.find(d => d.dateString === orderDateString);
-      if (dayData) {
-        dayData.revenue += o.total;
-      }
+      if (dayData) dayData.revenue += o.total;
     });
+
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     res.json({
       totalRevenue,
       todayRevenue,
+      weekRevenue,
+      monthRevenue,
       totalOrders,
+      avgOrderValue,
+      paymentBreakdown: { cash: cashTotal, upi: upiTotal, card: cardTotal },
       revenueByDay
     });
   } catch (err) {
@@ -399,6 +415,55 @@ router.get('/revenue', authAdmin, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// --- Analytics ---
+router.get('/analytics', authAdmin, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: req.user.restaurantId,
+        status: { in: ['served', 'completed'] }
+      },
+      include: { items: true }
+    });
+
+    // Top selling items
+    const itemMap = {};
+    orders.forEach(o => {
+      o.items.forEach(item => {
+        if (!itemMap[item.name]) {
+          itemMap[item.name] = { name: item.name, qty: 0, revenue: 0 };
+        }
+        itemMap[item.name].qty += item.qty;
+        itemMap[item.name].revenue += item.price * item.qty;
+      });
+    });
+    const topItems = Object.values(itemMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+
+    // Revenue by table
+    const tableMap = {};
+    orders.forEach(o => {
+      const tn = `Table ${o.tableNumber}`;
+      if (!tableMap[tn]) tableMap[tn] = { table: tn, revenue: 0, orders: 0 };
+      tableMap[tn].revenue += o.total;
+      tableMap[tn].orders++;
+    });
+    const tableRevenue = Object.values(tableMap).sort((a, b) => b.revenue - a.revenue);
+
+    // Hourly breakdown (orders by hour of day)
+    const hourMap = Array(24).fill(0);
+    orders.forEach(o => {
+      const hour = new Date(o.createdAt).getHours();
+      hourMap[hour]++;
+    });
+
+    res.json({ topItems, tableRevenue, hourlyOrders: hourMap });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // --- Order History ---
 router.get('/history', authAdmin, async (req, res) => {
   try {
@@ -648,7 +713,7 @@ router.get('/table/:num/bill', authAdmin, async (req, res) => {
     const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
     const gstAmount = subtotal * (restaurant.gstPercent / 100);
     const totalTip = orders.reduce((sum, o) => sum + (o.tip || 0), 0);
-    const grandTotal = subtotal + gstAmount + totalTip;
+    const grandTotal = Math.round(subtotal + gstAmount + totalTip);
 
     res.json({ restaurant, tableNumber, sessionId: latestOrder.sessionId, orders, subtotal, gstAmount, gstPercent: restaurant.gstPercent, totalTip, grandTotal, generatedAt: new Date().toISOString() });
   } catch (err) {

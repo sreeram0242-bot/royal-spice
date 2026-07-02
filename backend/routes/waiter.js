@@ -130,7 +130,7 @@ router.get('/table/:num/bill', authWaiter, async (req, res) => {
     const subtotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
     const gstAmount = subtotal * (restaurant.gstPercent / 100);
     const totalTip = orders.reduce((sum, o) => sum + (o.tip || 0), 0);
-    const grandTotal = subtotal + gstAmount + totalTip;
+    const grandTotal = Math.round(subtotal + gstAmount + totalTip);
 
     res.json({
       restaurant,

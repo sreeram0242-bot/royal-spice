@@ -8,6 +8,7 @@
   --text-muted: #A1A1AA;
   --border-color: #2A2A2A;
   --sidebar-bg: linear-gradient(180deg, #171510 0%, #0D0C0A 100%);
+  --sidebar-color: #0B0F19;
   --card-shadow: none;
   /* Light theme overrides */
   --bg-light: #E2E8F0;
@@ -25,6 +26,7 @@ body.light-theme {
   --text-primary: var(--text-light);
   --text-muted: var(--text-muted-light);
   --border-color: var(--border-light);
+  --sidebar-color: #1E293B;
   --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -174,7 +176,7 @@ body {
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background: #0B0F19; /* Rich dark blue slate */
+  background: var(--sidebar-color); /* Rich dark blue slate */
   display: flex;
   flex-direction: column;
   padding: 20px 0;
@@ -200,7 +202,7 @@ body {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  color: #94A3B8;
+  color: white;
   text-decoration: none;
   cursor: pointer;
   gap: 12px;
@@ -351,19 +353,21 @@ th {
   gap: 16px;
 }
 .table-pill {
-  background-color: var(--border-color); /* Grey background for tabs */
-  color: white; /* White text */
+  background-color: var(--panel-bg);
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color);
   text-align: center;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 0; /* Sharp corners */
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s;
+  transition: transform 0.1s, opacity 0.2s, background-color 0.2s;
 }
 .table-pill:hover { opacity: 0.9; }
-.table-pill.ordered { background-color: var(--purple); color: white; }
-.table-pill.preparing { background-color: var(--orange); color: black; }
-.table-pill.served { background-color: var(--red); color: white; }
+.table-pill.ordered { background-color: var(--purple); color: white !important; }
+.table-pill.preparing { background-color: var(--orange); color: black !important; }
+.table-pill.served { background-color: var(--red); color: white !important; }
+.table-pill.occupied { background-color: #172554; color: white !important; border-color: #172554; }
 
 /* Login */
 .login-container {
@@ -441,7 +445,7 @@ th {
 
 /* ── LIGHT MODE OVERRIDES ── */
 body.light-theme .sidebar {
-  background: #1E293B !important;
+  background: var(--sidebar-color) !important;
   border-right: 1px solid #334155 !important;
 }
 body.light-theme .header {

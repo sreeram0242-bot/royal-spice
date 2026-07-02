@@ -243,7 +243,7 @@ async function loadDashboard() {
     pendingOrders.slice(0, 5).forEach(o => {
       tbody.innerHTML += `
         <tr onclick="showView('orders');" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='transparent'">
-          <td><div class="table-pill" style="padding: 4px; border-radius: 4px; width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">Table ${o.tableNumber}</div></td>
+          <td><div class="table-pill" style="padding: 4px; border-radius: 0; width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">Table ${o.tableNumber}</div></td>
           <td>#${o.orderNumber}</td>
           <td>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
           <td>${o.items.length} items</td>
@@ -861,7 +861,7 @@ async function renderFullTableGrid(total) {
       const isOccupied = t.status === 'occupied';
       const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : (t.passcode ? `<span style="color:var(--gold);font-weight:bold;font-size:14px;">PIN: ${t.passcode}</span>` : 'Free');
       const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber}, '${t.passcode || ''}')" style="cursor:pointer;"` : '';
-      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'status-new' : (t.passcode ? 'status-new' : 'available')}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid ${(isOccupied || t.passcode) ? 'rgba(59,130,246,0.4)' : '#333'}; background: var(--panel-bg); color: var(--text-primary); border-radius: 8px; ${isOccupied ? 'cursor:pointer;' : ''}">
+      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'occupied' : (t.passcode ? 'status-new' : 'available')}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
         <div style="font-size: 24px; font-weight: bold; margin-bottom: 4px;">T${t.tableNumber.toString().padStart(2, '0')}</div>
         <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
       </div>`;
@@ -899,25 +899,28 @@ async function openTableModal(tableNumber, passcode = null) {
       ${statusPill}
       <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Session Started: ${timeStr}</div>
       
-      <div style="background:#111; border:1px solid #333; border-radius:12px; padding:16px; margin-bottom:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:12px;">
+      <div style="background:var(--panel-bg); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:12px;">
           <span style="font-weight:bold; color:var(--text-primary);">Order #${res.orders[0].orderNumber}</span>
           <span style="color:var(--text-muted); font-size:12px;">${timeStr}</span>
         </div>
         ${res.orders.flatMap(o => o.items).map(item => `
           <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px;">
-            <span style="color:var(--text-primary);"><span style="color:var(--gold); font-weight:bold; margin-right:8px;">${item.qty}x</span> ${item.name}</span>
+            <span style="color:var(--text-primary);"><span style="color:var(--gold-primary); font-weight:bold; margin-right:8px;">${item.qty}x</span> ${item.name}</span>
             <span style="color:var(--text-muted);">₹${(item.price * item.qty).toFixed(2)}</span>
           </div>
         `).join('')}
         
-        <div style="border-top:1px dashed #444; margin-top:16px; padding-top:16px;">
+        <div style="border-top:1px dashed var(--border-color); margin-top:16px; padding-top:16px;">
           <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-muted); margin-bottom:6px;"><span>Subtotal</span><span>₹${res.subtotal.toFixed(2)}</span></div>
           <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-muted); margin-bottom:12px;"><span>GST (${res.gstPercent}%)</span><span>₹${res.gstAmount.toFixed(2)}</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:bold; color:var(--text-primary); border-top:1px solid #333; padding-top:12px;"><span>Grand Total</span><span style="color:var(--gold);">₹${res.grandTotal.toFixed(2)}</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:bold; color:var(--text-primary); border-top:1px solid var(--border-color); padding-top:12px;"><span>Grand Total</span><span style="color:var(--gold-primary);">₹${res.grandTotal.toFixed(2)}</span></div>
         </div>
       </div>
     `;
+
+    // Store for change calculator
+    window.currentGrandTotal = res.grandTotal;
 
     body.innerHTML = bodyHTML;
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -936,6 +939,33 @@ let tableToClose = null;
 function closeSession(tableNumber) {
   tableToClose = tableNumber;
   document.getElementById('confirmTableNum').innerText = tableNumber;
+  
+  // Setup change calculator
+  const calcTotal = document.getElementById('calcBillTotal');
+  if(calcTotal && window.currentGrandTotal) {
+    calcTotal.innerText = '₹' + window.currentGrandTotal.toFixed(2);
+  }
+  document.getElementById('customerPaid').value = '';
+  document.getElementById('changeDue').innerText = '₹0.00';
+  document.getElementById('changeDue').style.color = '#10B981';
+  document.getElementById('changeCalculator').style.display = 'none';
+
+  // Setup split calculator
+  const splitTotal = document.getElementById('splitBillTotal');
+  if(splitTotal && window.currentGrandTotal) {
+    splitTotal.innerText = '₹' + window.currentGrandTotal.toFixed(2);
+  }
+  document.getElementById('splitCash').value = '';
+  document.getElementById('splitUpi').value = '';
+  document.getElementById('splitCard').value = '';
+  document.getElementById('splitBalanceLabel').innerText = 'Remaining';
+  document.getElementById('splitBalanceValue').innerText = 'Need ₹' + (window.currentGrandTotal || 0).toFixed(2);
+  document.getElementById('splitBalanceValue').style.color = '#EF4444';
+
+  const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+  if(checkedRadio) checkedRadio.checked = false;
+  document.getElementById('splitInputs').style.display = 'none';
+  
   document.getElementById('confirmCloseModal').classList.remove('hidden');
 }
 
@@ -1064,24 +1094,414 @@ function loadQRCodes() {
   }
 }
 
-// REVENUE
+// REVENUE — 4-TAB SYSTEM
 let revenueTabChartInstance = null;
+let _revenueData = null; // cached revenue data
+
+function switchRevenueTab(tab) {
+  const tabs = ['overview', 'analytics', 'daily', 'expenses', 'history'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`rev-tab-${t}`);
+    const sec = document.getElementById(`rev-section-${t}`);
+    if (!btn || !sec) return;
+    if (t === tab) {
+      btn.style.background = 'var(--blue)';
+      btn.style.color = 'white';
+      sec.style.display = '';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--text-muted)';
+      sec.style.display = 'none';
+    }
+  });
+
+  if (tab === 'analytics') loadAnalytics();
+  if (tab === 'daily') {
+    const dMonth = document.getElementById('dailySalesMonth');
+    if (dMonth && !dMonth.value) {
+      const now = new Date();
+      dMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
+    loadDailySales();
+  }
+  if (tab === 'expenses') {
+    // Set today as default
+    const tDate = document.getElementById('tallyDate');
+    if (tDate && !tDate.value) tDate.value = new Date().toISOString().split('T')[0];
+    const eMonth = document.getElementById('expFilterMonth');
+    if (eMonth && !eMonth.value) {
+      const now = new Date();
+      eMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
+    renderExpenses();
+    renderTally();
+  }
+  if (tab === 'history') loadHistory();
+}
 
 async function loadRevenue() {
   try {
     const data = await fetchAPI('/api/admin/revenue');
-    
-    document.getElementById('revTotal').innerText = `₹${(data.totalRevenue || 0).toFixed(2)}`;
-    document.getElementById('revToday').innerText = `₹${(data.todayRevenue || 0).toFixed(2)}`;
-    document.getElementById('revOrders').innerText = data.totalOrders || 0;
+    _revenueData = data;
 
-    // Load history when revenue tab is opened
-    loadHistory();
+    document.getElementById('revTotal').innerText = `₹${Math.round(data.totalRevenue || 0).toLocaleString('en-IN')}`;
+    document.getElementById('revToday').innerText = `₹${Math.round(data.todayRevenue || 0).toLocaleString('en-IN')}`;
+    document.getElementById('revWeek').innerText = `₹${Math.round(data.weekRevenue || 0).toLocaleString('en-IN')}`;
+    document.getElementById('revMonth').innerText = `₹${Math.round(data.monthRevenue || 0).toLocaleString('en-IN')}`;
+    document.getElementById('revOrders').innerText = data.totalOrders || 0;
+    document.getElementById('revAvg').innerText = `₹${Math.round(data.avgOrderValue || 0).toLocaleString('en-IN')}`;
+
+    // Payment breakdown
+    const pb = data.paymentBreakdown || { cash: 0, upi: 0, card: 0 };
+    document.getElementById('revCash').innerText = `₹${Math.round(pb.cash).toLocaleString('en-IN')}`;
+    document.getElementById('revUpi').innerText = `₹${Math.round(pb.upi).toLocaleString('en-IN')}`;
+    document.getElementById('revCard').innerText = `₹${Math.round(pb.card).toLocaleString('en-IN')}`;
+
+    // Payment bar
+    const total = (pb.cash + pb.upi + pb.card) || 1;
+    const bar = document.getElementById('revPaymentBar');
+    if (bar) {
+      const cashPct = (pb.cash / total * 100).toFixed(1);
+      const upiPct = (pb.upi / total * 100).toFixed(1);
+      const cardPct = (pb.card / total * 100).toFixed(1);
+      bar.innerHTML = `
+        <div style="flex:${cashPct};background:#10B981;height:100%;border-radius:4px;" title="Cash ${cashPct}%"></div>
+        <div style="flex:${upiPct};background:#3B82F6;height:100%;border-radius:4px;" title="UPI ${upiPct}%"></div>
+        <div style="flex:${cardPct};background:#8B5CF6;height:100%;border-radius:4px;" title="Card ${cardPct}%"></div>
+      `;
+    }
+
+    // 7-day bar chart
+    const days = data.revenueByDay || [];
+    const maxVal = Math.max(...days.map(d => d.revenue), 1);
+    const chart = document.getElementById('revBarChart');
+    const labels = document.getElementById('revBarLabels');
+    if (chart && labels) {
+      chart.innerHTML = days.map(d => {
+        const h = Math.max(8, (d.revenue / maxVal) * 120);
+        const isToday = d.dateString === new Date().toISOString().split('T')[0];
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="font-size:10px;color:var(--text-muted);">₹${Math.round(d.revenue)}</div>
+          <div style="width:100%;height:${h}px;background:${isToday ? 'var(--gold-primary)' : 'var(--blue)'};border-radius:4px 4px 0 0;opacity:0.85;transition:height 0.5s;"></div>
+        </div>`;
+      }).join('');
+      labels.innerHTML = days.map(d => `<div style="flex:1;text-align:center;font-size:11px;">${d.date}</div>`).join('');
+    }
+
+    // Default show overview tab
+    switchRevenueTab('overview');
 
   } catch (err) {
     console.error('Failed to load revenue', err);
   }
 }
+
+// ANALYTICS TAB
+async function loadAnalytics() {
+  try {
+    const data = await fetchAPI('/api/admin/analytics');
+
+    // Top Items
+    const topEl = document.getElementById('analyticsTopItems');
+    if (topEl) {
+      if (!data.topItems || data.topItems.length === 0) {
+        topEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
+      } else {
+        const maxQty = Math.max(...data.topItems.map(i => i.qty), 1);
+        topEl.innerHTML = data.topItems.map((item, idx) => `
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:13px;color:var(--text-primary);">${idx+1}. ${item.name}</span>
+              <span style="font-size:13px;font-weight:600;color:var(--gold-primary);">${item.qty} sold</span>
+            </div>
+            <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
+              <div style="width:${(item.qty/maxQty*100).toFixed(0)}%;height:100%;background:var(--gold-primary);border-radius:4px;"></div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Table Revenue
+    const tableEl = document.getElementById('analyticsTableRevenue');
+    if (tableEl) {
+      if (!data.tableRevenue || data.tableRevenue.length === 0) {
+        tableEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
+      } else {
+        const maxRev = Math.max(...data.tableRevenue.map(t => t.revenue), 1);
+        tableEl.innerHTML = data.tableRevenue.map(t => `
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:13px;color:var(--text-primary);">${t.table}</span>
+              <span style="font-size:13px;font-weight:600;color:#3B82F6;">₹${Math.round(t.revenue).toLocaleString('en-IN')} (${t.orders} orders)</span>
+            </div>
+            <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
+              <div style="width:${(t.revenue/maxRev*100).toFixed(0)}%;height:100%;background:#3B82F6;border-radius:4px;"></div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Hourly chart
+    const hourEl = document.getElementById('analyticsHourly');
+    const hourLbl = document.getElementById('analyticsHourlyLabels');
+    if (hourEl && data.hourlyOrders) {
+      const maxH = Math.max(...data.hourlyOrders, 1);
+      hourEl.innerHTML = data.hourlyOrders.map((count, h) => {
+        const barH = Math.max(4, (count / maxH) * 80);
+        const isPeak = count === maxH && count > 0;
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;" title="${h}:00 — ${count} orders">
+          <div style="width:100%;height:${barH}px;background:${isPeak?'#EF4444':'var(--blue)'};border-radius:2px 2px 0 0;opacity:0.8;"></div>
+        </div>`;
+      }).join('');
+      if (hourLbl) {
+        hourLbl.innerHTML = data.hourlyOrders.map((_, h) =>
+          `<div style="flex:1;text-align:center;font-size:9px;color:var(--text-muted);">${h%3===0?h+'h':''}</div>`
+        ).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load analytics', err);
+  }
+}
+
+// ---- DAILY SALES ----
+let _dailySalesData = [];
+
+async function loadDailySales() {
+  try {
+    const orders = await fetchAPI('/api/admin/history');
+    
+    // Group by Date string
+    const grouped = {};
+    orders.forEach(o => {
+      const d = new Date(o.createdAt);
+      const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      if (!grouped[dateStr]) {
+        grouped[dateStr] = {
+          date: dateStr,
+          displayDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          ordersCount: 0,
+          cash: 0,
+          upi: 0,
+          card: 0,
+          total: 0
+        };
+      }
+      
+      grouped[dateStr].total += o.total;
+      grouped[dateStr].ordersCount++;
+      
+      const pm = (o.paymentMethod || 'cash').toLowerCase();
+      if (pm.includes('cash')) grouped[dateStr].cash += o.total;
+      else if (pm.includes('upi')) grouped[dateStr].upi += o.total;
+      else if (pm.includes('card')) grouped[dateStr].card += o.total;
+      else grouped[dateStr].cash += o.total;
+    });
+
+    _dailySalesData = Object.values(grouped).sort((a,b) => new Date(b.date) - new Date(a.date));
+    renderDailySales();
+  } catch(e) {
+    console.error('Failed to load daily sales', e);
+  }
+}
+
+function renderDailySales() {
+  const tbody = document.getElementById('dailySalesTableBody');
+  if (!tbody) return;
+  
+  const filterMonth = document.getElementById('dailySalesMonth')?.value;
+  let filtered = _dailySalesData;
+  if (filterMonth) {
+    filtered = filtered.filter(d => d.date.startsWith(filterMonth));
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--text-muted);">No sales data for this month.</td></tr>';
+    return;
+  }
+  
+  let html = '';
+  let sumOrders = 0, sumCash = 0, sumUpi = 0, sumCard = 0, sumTotal = 0;
+  
+  filtered.forEach(d => {
+    sumOrders += d.ordersCount;
+    sumCash += d.cash;
+    sumUpi += d.upi;
+    sumCard += d.card;
+    sumTotal += d.total;
+    
+    html += `
+      <tr style="border-bottom:1px solid var(--border-color);">
+        <td style="padding:12px;color:var(--text-primary);">${d.displayDate}</td>
+        <td style="padding:12px;text-align:center;color:var(--text-secondary);">${d.ordersCount}</td>
+        <td style="padding:12px;text-align:right;color:#10B981;">₹${Math.round(d.cash).toLocaleString('en-IN')}</td>
+        <td style="padding:12px;text-align:right;color:#3B82F6;">₹${Math.round(d.upi).toLocaleString('en-IN')}</td>
+        <td style="padding:12px;text-align:right;color:#8B5CF6;">₹${Math.round(d.card).toLocaleString('en-IN')}</td>
+        <td style="padding:12px;text-align:right;color:var(--gold-primary);font-weight:bold;">₹${Math.round(d.total).toLocaleString('en-IN')}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+    <tr style="background:rgba(255,255,255,0.02);">
+      <td style="padding:16px 12px;font-weight:bold;color:var(--text-primary);">Total</td>
+      <td style="padding:16px 12px;text-align:center;font-weight:bold;color:var(--text-primary);">${sumOrders}</td>
+      <td style="padding:16px 12px;text-align:right;font-weight:bold;color:#10B981;">₹${Math.round(sumCash).toLocaleString('en-IN')}</td>
+      <td style="padding:16px 12px;text-align:right;font-weight:bold;color:#3B82F6;">₹${Math.round(sumUpi).toLocaleString('en-IN')}</td>
+      <td style="padding:16px 12px;text-align:right;font-weight:bold;color:#8B5CF6;">₹${Math.round(sumCard).toLocaleString('en-IN')}</td>
+      <td style="padding:16px 12px;text-align:right;font-weight:bold;color:var(--gold-primary);">₹${Math.round(sumTotal).toLocaleString('en-IN')}</td>
+    </tr>
+  `;
+  
+  tbody.innerHTML = html;
+}
+
+// ---- EXPENSES & TALLY ----
+function getExpenses() {
+  try {
+    return JSON.parse(localStorage.getItem('rk_expenses') || '[]');
+  } catch { return []; }
+}
+function saveExpenses(list) {
+  localStorage.setItem('rk_expenses', JSON.stringify(list));
+}
+
+function addExpense() {
+  const date = document.getElementById('expDate').value;
+  const cat = document.getElementById('expCategory').value;
+  const desc = document.getElementById('expDesc').value.trim();
+  const amt = parseFloat(document.getElementById('expAmount').value);
+
+  if (!date) { alert('Please select a date.'); return; }
+  if (!amt || amt <= 0) { alert('Please enter a valid amount.'); return; }
+
+  const list = getExpenses();
+  list.push({ id: Date.now(), date, category: cat, description: desc, amount: amt });
+  saveExpenses(list);
+
+  // Reset inputs
+  document.getElementById('expDesc').value = '';
+  document.getElementById('expAmount').value = '';
+
+  renderExpenses();
+  renderTally();
+  alert(`✅ Expense saved: ₹${amt} for ${cat}`);
+}
+
+function renderExpenses() {
+  const filterMonth = document.getElementById('expFilterMonth')?.value;
+  let list = getExpenses().sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  if (filterMonth) {
+    list = list.filter(e => e.date && e.date.startsWith(filterMonth));
+  }
+
+  const el = document.getElementById('expenseLog');
+  if (!el) return;
+
+  if (list.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;font-size:13px;">No expenses for this period.</div>';
+    return;
+  }
+
+  const total = list.reduce((s,e) => s + e.amount, 0);
+
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border-color);color:var(--text-muted);">
+          <th style="padding:8px;text-align:left;">Date</th>
+          <th style="padding:8px;text-align:left;">Category</th>
+          <th style="padding:8px;text-align:left;">Description</th>
+          <th style="padding:8px;text-align:right;">Amount</th>
+          <th style="padding:8px;text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${list.map(e => `
+          <tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:8px;color:var(--text-muted);">${e.date}</td>
+            <td style="padding:8px;color:var(--text-primary);">${e.category}</td>
+            <td style="padding:8px;color:var(--text-muted);">${e.description || '—'}</td>
+            <td style="padding:8px;text-align:right;color:#EF4444;font-weight:600;">₹${e.amount.toFixed(2)}</td>
+            <td style="padding:8px;text-align:right;">
+              <button onclick="deleteExpense(${e.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
+            </td>
+          </tr>
+        `).join('')}
+        <tr>
+          <td colspan="3" style="padding:10px 8px;font-weight:700;color:var(--text-primary);">Total Expenses</td>
+          <td style="padding:10px 8px;text-align:right;font-weight:700;color:#EF4444;">₹${total.toFixed(2)}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function deleteExpense(id) {
+  const list = getExpenses().filter(e => e.id !== id);
+  saveExpenses(list);
+  renderExpenses();
+  renderTally();
+}
+
+function clearAllExpenses() {
+  if (!confirm('Delete ALL expenses? This cannot be undone.')) return;
+  saveExpenses([]);
+  renderExpenses();
+  renderTally();
+}
+
+function renderTally() {
+  const date = document.getElementById('tallyDate')?.value;
+  const panel = document.getElementById('tallyPanel');
+  if (!panel) return;
+
+  const expenses = getExpenses().filter(e => e.date === date);
+  const totalExpense = expenses.reduce((s,e) => s + e.amount, 0);
+
+  // Calculate today's revenue from cached data (or 0)
+  let dayRevenue = 0;
+  if (_revenueData && _revenueData.revenueByDay) {
+    const dayData = _revenueData.revenueByDay.find(d => d.dateString === date);
+    if (dayData) dayRevenue = dayData.revenue;
+    else if (date === new Date().toISOString().split('T')[0]) dayRevenue = _revenueData.todayRevenue || 0;
+  }
+
+  const netProfit = dayRevenue - totalExpense;
+  const profitColor = netProfit >= 0 ? '#10B981' : '#EF4444';
+  const profitLabel = netProfit >= 0 ? '✅ Net Profit' : '⚠️ Net Loss';
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(59,130,246,0.1);border-radius:8px;">
+      <span style="color:var(--text-muted);">📥 Revenue</span>
+      <span style="color:#3B82F6;font-weight:700;">₹${Math.round(dayRevenue).toLocaleString('en-IN')}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;">
+      <span style="color:var(--text-muted);">📤 Expenses (${expenses.length} items)</span>
+      <span style="color:#EF4444;font-weight:700;">₹${totalExpense.toFixed(2)}</span>
+    </div>
+    <div style="border-top:1px dashed var(--border-color);padding-top:10px;display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:12px;background:rgba(0,0,0,0.05);border-radius:8px;">
+      <span style="color:var(--text-primary);">${profitLabel}</span>
+      <span style="color:${profitColor};">₹${Math.abs(Math.round(netProfit)).toLocaleString('en-IN')}</span>
+    </div>
+    ${expenses.length > 0 ? `
+    <div style="margin-top:4px;">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Expense Breakdown:</div>
+      ${expenses.map(e => `
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border-color);">
+          <span style="color:var(--text-muted);">${e.category}${e.description ? ' — '+e.description : ''}</span>
+          <span style="color:#EF4444;">₹${e.amount.toFixed(2)}</span>
+        </div>
+      `).join('')}
+    </div>` : '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px;">No expenses logged for this date.</div>'}
+  `;
+}
+
 
 // ORDER HISTORY
 let allHistorySessions = [];
