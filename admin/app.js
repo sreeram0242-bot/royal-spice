@@ -1336,7 +1336,8 @@ async function loadDailySales() {
           cash: 0,
           upi: 0,
           card: 0,
-          total: 0
+          total: 0,
+          items: {}
         };
       }
       
@@ -1348,6 +1349,16 @@ async function loadDailySales() {
       else if (pm.includes('upi')) grouped[dateStr].upi += o.total;
       else if (pm.includes('card')) grouped[dateStr].card += o.total;
       else grouped[dateStr].cash += o.total;
+      
+      if (o.items && Array.isArray(o.items)) {
+        o.items.forEach(item => {
+          if (!grouped[dateStr].items[item.name]) {
+            grouped[dateStr].items[item.name] = { qty: 0, revenue: 0 };
+          }
+          grouped[dateStr].items[item.name].qty += item.quantity;
+          grouped[dateStr].items[item.name].revenue += item.price * item.quantity;
+        });
+      }
     });
 
     _dailySalesData = Object.values(grouped).sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -1390,6 +1401,7 @@ function renderDailySales() {
         <td style="padding:12px;text-align:right;color:#3B82F6;">₹${Math.round(d.upi).toLocaleString('en-IN')}</td>
         <td style="padding:12px;text-align:right;color:#8B5CF6;">₹${Math.round(d.card).toLocaleString('en-IN')}</td>
         <td style="padding:12px;text-align:right;color:var(--gold-primary);font-weight:bold;">₹${Math.round(d.total).toLocaleString('en-IN')}</td>
+        <td style="padding:12px;text-align:center;"><button class="btn-outline" style="padding:4px 8px;font-size:11px;" onclick="showDailySalesDetails('${d.date}')">Details</button></td>
       </tr>
     `;
   });
@@ -1402,10 +1414,36 @@ function renderDailySales() {
       <td style="padding:16px 12px;text-align:right;font-weight:bold;color:#3B82F6;">₹${Math.round(sumUpi).toLocaleString('en-IN')}</td>
       <td style="padding:16px 12px;text-align:right;font-weight:bold;color:#8B5CF6;">₹${Math.round(sumCard).toLocaleString('en-IN')}</td>
       <td style="padding:16px 12px;text-align:right;font-weight:bold;color:var(--gold-primary);">₹${Math.round(sumTotal).toLocaleString('en-IN')}</td>
+      <td></td>
     </tr>
   `;
   
   tbody.innerHTML = html;
+}
+
+function showDailySalesDetails(dateStr) {
+  const dayData = _dailySalesData.find(d => d.date === dateStr);
+  if (!dayData) return;
+  
+  document.getElementById('dailySalesModalTitle').innerText = \`Sales Details - \${dayData.displayDate}\`;
+  
+  const tbody = document.getElementById('dailySalesModalBody');
+  const items = Object.entries(dayData.items).map(([name, data]) => ({ name, ...data }));
+  items.sort((a, b) => b.revenue - a.revenue);
+  
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--text-muted);">No item details available.</td></tr>';
+  } else {
+    tbody.innerHTML = items.map(i => \`
+      <tr style="border-bottom:1px solid var(--border-color);">
+        <td style="padding:8px;color:var(--text-primary);">\${i.name}</td>
+        <td style="padding:8px;text-align:center;color:var(--text-secondary);">\${i.qty}</td>
+        <td style="padding:8px;text-align:right;color:var(--gold-primary);font-weight:bold;">₹\${Math.round(i.revenue).toLocaleString('en-IN')}</td>
+      </tr>
+    \`).join('');
+  }
+  
+  document.getElementById('dailySalesModal').classList.remove('hidden');
 }
 
 // ---- EXPENSES & TALLY ----

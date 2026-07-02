@@ -360,6 +360,7 @@
                     <th style="padding:12px;text-align:right;">UPI</th>
                     <th style="padding:12px;text-align:right;">Card</th>
                     <th style="padding:12px;text-align:right;">Total Revenue</th>
+                    <th style="padding:12px;text-align:center;">Action</th>
                   </tr>
                 </thead>
                 <tbody id="dailySalesTableBody">
@@ -610,6 +611,29 @@
       <div style="display: flex; gap: 12px;">
         <button class="btn-gold" onclick="saveMenuItem()">Save</button>
         <button class="btn-gold" style="background: transparent; border: 1px solid #555; color: white;" onclick="closeModal('addMenuModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Sales Detail Modal -->
+  <div id="dailySalesModal" class="modal-overlay hidden" onclick="closeModal('dailySalesModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 id="dailySalesModalTitle">Sales Details</h3>
+        <button class="btn-gold" style="background:transparent; border:1px solid #555; color:white; padding:6px 12px; font-size:12px;" onclick="closeModal('dailySalesModal')">Close</button>
+      </div>
+      <div style="max-height: 400px; overflow-y: auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted);">
+              <th style="padding:8px;">Item Name</th>
+              <th style="padding:8px; text-align:center;">Qty Sold</th>
+              <th style="padding:8px; text-align:right;">Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="dailySalesModalBody">
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
