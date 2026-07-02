@@ -461,7 +461,56 @@ async function loadPlatformAnalytics() {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#aaa', font: { size: 12 } } } } }
       });
     }
+
+    // Render Revenue Breakdown
+    const totalEl = document.getElementById('analRevBreakdownTotal');
+    const avgEl = document.getElementById('analRevBreakdownAvg');
+    
+    if (totalEl && avgEl && stats.revenueBreakdown) {
+      const breakdown = stats.revenueBreakdown;
+      if (breakdown.length === 0) {
+        totalEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No revenue data yet.</div>';
+        avgEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No revenue data yet.</div>';
+      } else {
+        // Sort by total revenue descending
+        const byTotal = [...breakdown].sort((a,b) => b.totalRevenue - a.totalRevenue);
+        totalEl.innerHTML = byTotal.map(r => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.02);">
+            <div style="font-weight:600;color:var(--text-primary);">${r.name}</div>
+            <div style="font-weight:700;color:var(--gold);font-size:15px;">&#8377;${Math.round(r.totalRevenue).toLocaleString('en-IN')}</div>
+          </div>
+        `).join('');
+
+        // Sort by avg daily descending
+        const byAvg = [...breakdown].sort((a,b) => b.avgDaily - a.avgDaily);
+        avgEl.innerHTML = byAvg.map(r => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.02);">
+            <div style="font-weight:600;color:var(--text-primary);">${r.name}</div>
+            <div style="font-weight:700;color:#10B981;font-size:15px;">&#8377;${Math.round(r.avgDaily).toLocaleString('en-IN')} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">/ day</span></div>
+          </div>
+        `).join('');
+      }
+    }
   } catch(e) { console.error('Analytics error', e); }
+}
+
+function switchRevTab(tab) {
+  const totalBtn = document.getElementById('tabRevTotalBtn');
+  const avgBtn = document.getElementById('tabRevAvgBtn');
+  const totalEl = document.getElementById('analRevBreakdownTotal');
+  const avgEl = document.getElementById('analRevBreakdownAvg');
+  
+  if (tab === 'total') {
+    totalBtn.className = 'btn-gold';
+    avgBtn.className = 'btn-outline';
+    totalEl.classList.remove('hidden');
+    avgEl.classList.add('hidden');
+  } else {
+    avgBtn.className = 'btn-gold';
+    totalBtn.className = 'btn-outline';
+    avgEl.classList.remove('hidden');
+    totalEl.classList.add('hidden');
+  }
 }
 
 // ══════════════════════════════════════════

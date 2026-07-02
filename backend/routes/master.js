@@ -202,12 +202,41 @@ router.get('/dashboard-stats', authMaster, async (req, res) => {
       }
     });
 
+    // Group revenue by restaurant
+    const revenueByRest = {};
+    restaurants.forEach(r => {
+      revenueByRest[r.id] = { id: r.id, name: r.name, totalRevenue: 0, firstOrder: null, plan: r.plan, isActive: r.isActive };
+    });
+    
+    orders.forEach(o => {
+      if (revenueByRest[o.restaurantId]) {
+        revenueByRest[o.restaurantId].totalRevenue += o.total;
+        const oDate = new Date(o.createdAt);
+        if (!revenueByRest[o.restaurantId].firstOrder || oDate < revenueByRest[o.restaurantId].firstOrder) {
+          revenueByRest[o.restaurantId].firstOrder = oDate;
+        }
+      }
+    });
+
+    const now = new Date();
+    const revenueBreakdown = Object.values(revenueByRest).map(r => {
+      let days = 1;
+      if (r.firstOrder) {
+        days = Math.max(1, Math.ceil((now - r.firstOrder) / (1000 * 60 * 60 * 24)));
+      }
+      return {
+        ...r,
+        avgDaily: r.totalRevenue / days
+      };
+    });
+
     res.json({
       totalOrders,
       totalRevenue,
       activeRestaurants,
       pendingComplaints,
       chartData: revenueByDate,
+      revenueBreakdown,
       recentRestaurants: restaurants.slice(0, 5), // last 5
       recentComplaints: complaints.slice(0, 5) // last 5
     });
