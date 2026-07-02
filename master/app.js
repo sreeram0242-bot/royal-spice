@@ -49,17 +49,7 @@ function showView(viewId) {
     'announcements': '📢 Announcements',
     'backup': '🗄️ Backup & Export',
     'support': '🎧 Support Center',
-    'settings': '⚙️ Platform Settings',
-    'uptime': '📡 Uptime Monitor',
-    'changelog': '📝 Changelog',
-    'tasks': '✅ Task Manager',
-    'billing': '🧾 Billing Invoices',
-    'staff': '👥 Staff Directory',
-    'feedback': '⭐ User Feedback',
-    'promotions': '🏷️ Promotions',
-    'security': '🛡️ Security Audit',
-    'reports': '📄 Reports',
-    'integrations': '🔌 Integrations'
+    'settings': '⚙️ Platform Settings'
   };
   document.getElementById('currentViewTitle').innerText = titles[viewId] || viewId;
 
@@ -69,13 +59,6 @@ function showView(viewId) {
   if (viewId === 'subscriptions') loadSubscriptions();
   if (viewId === 'analytics') loadPlatformAnalytics();
   if (viewId === 'announcements') renderAnnouncements();
-  if (viewId === 'uptime') checkUptimeNow();
-  if (viewId === 'changelog') renderChangelog();
-  if (viewId === 'tasks') renderTasks();
-  if (viewId === 'billing') renderInvoices();
-  if (viewId === 'staff') renderStaff();
-  if (viewId === 'feedback') renderFeedback();
-  if (viewId === 'promotions') renderPromos();
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {
