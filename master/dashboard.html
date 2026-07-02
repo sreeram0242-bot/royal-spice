@@ -26,6 +26,19 @@
     <a class="nav-link" onclick="showView('backup')"><i data-lucide="database-backup"></i> Backup & Export</a>
     <a class="nav-link" onclick="showView('support')"><i data-lucide="headphones"></i> Support Center</a>
     <a class="nav-link" onclick="showView('settings')"><i data-lucide="settings"></i> Platform Settings</a>
+    <div style="border-top:1px solid rgba(255,255,255,0.07);margin:8px 0;padding-top:4px;">
+      <div style="font-size:10px;color:var(--text-muted);padding:4px 16px;text-transform:uppercase;letter-spacing:1px;">Advanced</div>
+    </div>
+    <a class="nav-link" onclick="showView('uptime')"><i data-lucide="radio"></i> Uptime Monitor</a>
+    <a class="nav-link" onclick="showView('changelog')"><i data-lucide="git-branch"></i> Changelog</a>
+    <a class="nav-link" onclick="showView('tasks')"><i data-lucide="check-square"></i> Task Manager</a>
+    <a class="nav-link" onclick="showView('billing')"><i data-lucide="receipt"></i> Billing Invoices</a>
+    <a class="nav-link" onclick="showView('staff')"><i data-lucide="users"></i> Staff Directory</a>
+    <a class="nav-link" onclick="showView('feedback')"><i data-lucide="star"></i> User Feedback</a>
+    <a class="nav-link" onclick="showView('promotions')"><i data-lucide="tag"></i> Promotions</a>
+    <a class="nav-link" onclick="showView('security')"><i data-lucide="shield-check"></i> Security Audit</a>
+    <a class="nav-link" onclick="showView('reports')"><i data-lucide="file-text"></i> Reports</a>
+    <a class="nav-link" onclick="showView('integrations')"><i data-lucide="plug"></i> Integrations</a>
     <a class="nav-link" style="margin-top: auto;" onclick="logout()"><i data-lucide="log-out"></i> Logout</a>
   </div>
 
@@ -297,6 +310,189 @@
               </div>
             </div>
             <button class="btn-gold" style="align-self:flex-start;" onclick="savePlatformSettings()">💾 Save Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 1. UPTIME MONITOR ─── -->
+      <div id="view-uptime" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>📡 Uptime Monitor</h3>
+            <button class="btn-gold" style="padding:8px 16px;" onclick="checkUptimeNow()">🔄 Check Now</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Live health check of all restaurant admin panels and the backend server.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
+            <div class="stat-card" style="border-left:4px solid #10B981;"><div class="title">Backend Server</div><div class="value" id="uptimeServer" style="color:#10B981;font-size:18px;">Checking...</div></div>
+            <div class="stat-card" style="border-left:4px solid #3B82F6;"><div class="title">Database</div><div class="value" id="uptimeDB" style="color:#3B82F6;font-size:18px;">Checking...</div></div>
+            <div class="stat-card" style="border-left:4px solid #F59E0B;"><div class="title">Last Checked</div><div class="value" id="uptimeLastCheck" style="color:#F59E0B;font-size:14px;">—</div></div>
+          </div>
+          <h4 style="margin-bottom:12px;color:var(--text-primary);">Restaurant Panel Status</h4>
+          <div id="uptimeRestaurantList" style="display:flex;flex-direction:column;gap:8px;"><div style="color:var(--text-muted);">Click "Check Now" to run health checks.</div></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 2. CHANGELOG ─── -->
+      <div id="view-changelog" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>📝 Changelog</h3>
+            <button class="btn-gold" onclick="openAddChangelogModal()">+ Add Entry</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Track all platform updates, bug fixes, and new features you deploy.</p>
+          <div id="changelogList"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 3. TASK MANAGER ─── -->
+      <div id="view-tasks" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>✅ Task Manager</h3>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <input type="text" id="taskInput" class="login-input" placeholder="Add a new task... (Press Enter)" style="margin-bottom:0;flex:1;" onkeydown="if(event.key==='Enter') addTask()">
+            <select id="taskPriority" class="login-input" style="margin-bottom:0;width:auto;padding:8px;">
+              <option value="high">🔴 High</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+            <button class="btn-gold" onclick="addTask()">Add</button>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:16px;">
+            <button onclick="filterTasks('all')" id="taskFilterAll" class="btn-gold" style="padding:6px 14px;font-size:12px;">All</button>
+            <button onclick="filterTasks('pending')" id="taskFilterPending" class="btn-outline" style="padding:6px 14px;font-size:12px;">Pending</button>
+            <button onclick="filterTasks('done')" id="taskFilterDone" class="btn-outline" style="padding:6px 14px;font-size:12px;">Completed</button>
+          </div>
+          <div id="taskList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 4. BILLING INVOICES ─── -->
+      <div id="view-billing" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>🧾 Billing Invoices</h3>
+            <button class="btn-gold" onclick="openAddInvoiceModal()">+ Create Invoice</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
+            <div class="stat-card" style="border-left:4px solid #10B981;"><div class="title">Total Collected</div><div class="value" id="invoiceTotal" style="color:#10B981;">₹0</div></div>
+            <div class="stat-card" style="border-left:4px solid #EF4444;"><div class="title">Pending</div><div class="value" id="invoicePending" style="color:#EF4444;">0</div></div>
+            <div class="stat-card" style="border-left:4px solid #3B82F6;"><div class="title">Paid</div><div class="value" id="invoicePaid" style="color:#3B82F6;">0</div></div>
+          </div>
+          <div id="invoiceList" style="overflow-x:auto;"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 5. STAFF DIRECTORY ─── -->
+      <div id="view-staff" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>👥 Staff Directory</h3>
+            <button class="btn-gold" onclick="openAddStaffModal()">+ Add Staff</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Track your Cloud Dine platform team members and their roles.</p>
+          <div id="staffList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 6. USER FEEDBACK ─── -->
+      <div id="view-feedback" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>⭐ User Feedback</h3>
+            <div id="feedbackAvgRating" style="font-size:20px;font-weight:bold;color:var(--gold);">— / 5</div>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Feedback submitted by restaurant admins about the Cloud Dine platform.</p>
+          <div id="feedbackList" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 7. PROMOTIONS ─── -->
+      <div id="view-promotions" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>🏷️ Promotions & Discount Codes</h3>
+            <button class="btn-gold" onclick="openAddPromoModal()">+ New Promo</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Create discount codes or trial extensions for restaurants.</p>
+          <div id="promoList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 8. SECURITY AUDIT ─── -->
+      <div id="view-security" class="view hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>🛡️ Security Audit</h3>
+            <button class="btn-gold" onclick="runSecurityAudit()">🔍 Run Audit</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Platform-level security checks and recommendations.</p>
+          <div id="securityAuditList" style="display:flex;flex-direction:column;gap:12px;">
+            <div style="color:var(--text-muted);text-align:center;padding:24px;">Click "Run Audit" to check platform security.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 9. REPORTS ─── -->
+      <div id="view-reports" class="view hidden">
+        <div class="panel">
+          <h3 style="margin-bottom:16px;">📄 Reports</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;">Generate and download detailed platform reports.</p>
+          <div style="display:flex;flex-direction:column;gap:14px;max-width:520px;">
+            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-weight:600;color:var(--text-primary);">📊 Monthly Platform Report</div><div style="font-size:12px;color:var(--text-muted);">Orders, revenue, new restaurants this month</div></div>
+              <button class="btn-gold" style="padding:8px 16px;" onclick="generateMonthlyReport()">Generate</button>
+            </div>
+            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-weight:600;color:var(--text-primary);">🏆 Top Restaurants Report</div><div style="font-size:12px;color:var(--text-muted);">Best performing restaurants ranked by activity</div></div>
+              <button class="btn-gold" style="padding:8px 16px;" onclick="generateTopRestReport()">Generate</button>
+            </div>
+            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-weight:600;color:var(--text-primary);">⚠️ Expiry Warning Report</div><div style="font-size:12px;color:var(--text-muted);">Restaurants whose trials/subscriptions expire soon</div></div>
+              <button class="btn-gold" style="padding:8px 16px;" onclick="generateExpiryReport()">Generate</button>
+            </div>
+          </div>
+          <div id="reportOutput" style="margin-top:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ─── NEW 10. INTEGRATIONS ─── -->
+      <div id="view-integrations" class="view hidden">
+        <div class="panel">
+          <h3 style="margin-bottom:8px;">🔌 Integrations</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;">Connect your platform with external tools and services.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
+            <div style="padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border-color);">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="font-size:28px;">📧</div><div><div style="font-weight:700;color:var(--text-primary);">Email (SMTP)</div><div style="font-size:11px;color:var(--text-muted);">Send emails for billing and alerts</div></div>
+              </div>
+              <input type="text" class="login-input" placeholder="SMTP Host" style="margin-bottom:8px;">
+              <input type="text" class="login-input" placeholder="SMTP Email" style="margin-bottom:8px;">
+              <button class="btn-gold" style="padding:8px 16px;width:100%;" onclick="saveIntegration('smtp')">Save Config</button>
+            </div>
+            <div style="padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border-color);">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="font-size:28px;">💬</div><div><div style="font-weight:700;color:var(--text-primary);">WhatsApp (Twilio)</div><div style="font-size:11px;color:var(--text-muted);">Send WhatsApp alerts to restaurant owners</div></div>
+              </div>
+              <input type="text" class="login-input" placeholder="Twilio Account SID" style="margin-bottom:8px;">
+              <input type="text" class="login-input" placeholder="Twilio Auth Token" style="margin-bottom:8px;">
+              <button class="btn-gold" style="padding:8px 16px;width:100%;" onclick="saveIntegration('twilio')">Save Config</button>
+            </div>
+            <div style="padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border-color);">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="font-size:28px;">📊</div><div><div style="font-weight:700;color:var(--text-primary);">Google Analytics</div><div style="font-size:11px;color:var(--text-muted);">Track page views and user behavior</div></div>
+              </div>
+              <input type="text" class="login-input" placeholder="GA Measurement ID (G-XXXXXXXX)" style="margin-bottom:8px;">
+              <button class="btn-gold" style="padding:8px 16px;width:100%;" onclick="saveIntegration('ga')">Save Config</button>
+            </div>
+            <div style="padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border-color);">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="font-size:28px;">💳</div><div><div style="font-weight:700;color:var(--text-primary);">Razorpay</div><div style="font-size:11px;color:var(--text-muted);">Accept subscription payments online</div></div>
+              </div>
+              <input type="text" class="login-input" placeholder="Razorpay Key ID" style="margin-bottom:8px;">
+              <button class="btn-gold" style="padding:8px 16px;width:100%;" onclick="saveIntegration('razorpay')">Save Config</button>
+            </div>
           </div>
         </div>
       </div>
