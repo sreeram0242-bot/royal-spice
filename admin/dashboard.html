@@ -62,7 +62,8 @@
     <a class="nav-link" onclick="showView('revenue')"><i data-lucide="indian-rupee"></i> Revenue</a>
     <a class="nav-link" onclick="showView('settings')"><i data-lucide="settings"></i> Settings</a>
     
-    <div style="margin-top: auto; padding-top: 16px; margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85;">
+    <a class="nav-link" onclick="openComplaintModal()" style="margin-top:auto;"><i data-lucide="message-circle-warning"></i> Send Complaint</a>
+    <div style="padding-top: 16px; margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85;">
       <img src="logo.png" style="height: 48px; width: auto; object-fit: contain; margin-bottom: 8px;" alt="Cloud Dine Logo">
       <div style="font-size: 11px; color: #A1A1AA; font-weight: 500;">
         Created by <br/>
@@ -85,15 +86,10 @@
         <input type="text" id="globalSearchInput" placeholder="Search here..." style="padding-left:36px;" onkeyup="handleGlobalSearch()">
       </div>
       <div style="display: flex; gap: 16px; align-items: center;">
-        <button class="theme-toggle-btn" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
-        <span style="cursor: pointer; position: relative; display: flex; align-items: center;">
-          <i data-lucide="bell"></i>
-          <span style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: var(--red); border-radius: 50%;"></span>
-        </span>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <img src="https://via.placeholder.com/32" style="border-radius: 50%; width: 32px; height: 32px;" alt="Admin">
-          <span>Admin ▾</span>
-        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" style="display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="moon" id="themeIcon" style="width:18px;height:18px;"></i>
+        </button>
+        <span style="font-weight:600;color:var(--text-primary);">Admin ▾</span>
       </div>
     </div>
 
@@ -872,6 +868,30 @@
       <div>
         <button class="btn-gold" style="width:100%;" onclick="closeModal('qrDisplayModal')">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Complaint Modal -->
+  <div id="complaintModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:480px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="color:var(--gold-primary);">📢 Send Complaint to Master</h3>
+        <button onclick="closeModal('complaintModal')" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Your message will be sent directly to the Cloud Dine Master Admin.</p>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Subject</label>
+        <input type="text" id="complaintSubject" class="login-input" placeholder="Brief subject (e.g. Billing issue, Feature request...)" style="margin-bottom:0;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Message</label>
+        <textarea id="complaintMessage" class="login-input" rows="4" placeholder="Describe your issue or feedback in detail..."></textarea>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-gold" style="flex:1;" onclick="submitComplaint()">📤 Send to Master</button>
+        <button class="btn-outline" onclick="closeModal('complaintModal')">Cancel</button>
+      </div>
+      <div id="complaintStatus" style="margin-top:12px;font-size:13px;display:none;"></div>
     </div>
   </div>
 

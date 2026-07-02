@@ -74,10 +74,11 @@ function toggleTheme() {
 }
 
 function updateThemeIcon() {
-  const btn = document.querySelector('.theme-toggle-btn i[data-lucide]');
+  const btn = document.getElementById('themeToggleBtn');
   if (!btn) return;
   const isLight = document.body.classList.contains('light-theme');
-  btn.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  const icon = btn.querySelector('i[data-lucide]');
+  if (icon) icon.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -86,7 +87,55 @@ function updateThemeIcon() {
   if (localStorage.getItem('theme') === 'light') {
     document.body.classList.add('light-theme');
   }
+  // Update icon after page loads
+  window.addEventListener('DOMContentLoaded', () => updateThemeIcon());
 })();
+
+// ── COMPLAINT MODAL ──
+function openComplaintModal() {
+  document.getElementById('complaintSubject').value = '';
+  document.getElementById('complaintMessage').value = '';
+  const status = document.getElementById('complaintStatus');
+  if (status) status.style.display = 'none';
+  document.getElementById('complaintModal').classList.remove('hidden');
+}
+
+async function submitComplaint() {
+  const subject = document.getElementById('complaintSubject').value.trim();
+  const message = document.getElementById('complaintMessage').value.trim();
+  const statusEl = document.getElementById('complaintStatus');
+
+  if (!subject || !message) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#EF4444';
+    statusEl.innerText = '⚠️ Please fill in both subject and message.';
+    return;
+  }
+
+  try {
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--text-muted)';
+    statusEl.innerText = 'Sending...';
+
+    const res = await fetchAPI('/api/admin/complaints', 'POST', {
+      message: `[${subject}] ${message}`
+    });
+
+    statusEl.style.color = '#10B981';
+    statusEl.innerText = '✅ Complaint sent successfully! The master admin will respond shortly.';
+
+    document.getElementById('complaintSubject').value = '';
+    document.getElementById('complaintMessage').value = '';
+
+    setTimeout(() => {
+      closeModal('complaintModal');
+      statusEl.style.display = 'none';
+    }, 2000);
+  } catch (err) {
+    statusEl.style.color = '#EF4444';
+    statusEl.innerText = '❌ Failed to send. Please try again.';
+  }
+}
 
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
