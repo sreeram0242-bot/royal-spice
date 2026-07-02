@@ -1425,7 +1425,7 @@ function showDailySalesDetails(dateStr) {
   const dayData = _dailySalesData.find(d => d.date === dateStr);
   if (!dayData) return;
   
-  document.getElementById('dailySalesModalTitle').innerText = \`Sales Details - \${dayData.displayDate}\`;
+  document.getElementById('dailySalesModalTitle').innerText = `Sales Details - ${dayData.displayDate}`;
   
   const tbody = document.getElementById('dailySalesModalBody');
   const items = Object.entries(dayData.items).map(([name, data]) => ({ name, ...data }));
@@ -1434,13 +1434,13 @@ function showDailySalesDetails(dateStr) {
   if (items.length === 0) {
     tbody.innerHTML = '<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--text-muted);">No item details available.</td></tr>';
   } else {
-    tbody.innerHTML = items.map(i => \`
+    tbody.innerHTML = items.map(i => `
       <tr style="border-bottom:1px solid var(--border-color);">
-        <td style="padding:8px;color:var(--text-primary);">\${i.name}</td>
-        <td style="padding:8px;text-align:center;color:var(--text-secondary);">\${i.qty}</td>
-        <td style="padding:8px;text-align:right;color:var(--gold-primary);font-weight:bold;">₹\${Math.round(i.revenue).toLocaleString('en-IN')}</td>
+        <td style="padding:8px;color:var(--text-primary);">${i.name}</td>
+        <td style="padding:8px;text-align:center;color:var(--text-secondary);">${i.qty}</td>
+        <td style="padding:8px;text-align:right;color:var(--gold-primary);font-weight:bold;">₹${Math.round(i.revenue).toLocaleString('en-IN')}</td>
       </tr>
-    \`).join('');
+    `).join('');
   }
   
   document.getElementById('dailySalesModal').classList.remove('hidden');
