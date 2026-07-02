@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master Login — Cloud Dine</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -25,7 +33,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      justify-content: center;
       padding: 60px 56px;
       background: linear-gradient(160deg, #050010 0%, #0F0020 50%, #06000F 100%);
     }
@@ -35,8 +43,8 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(139,92,246,0.22) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(167,139,250,0.10) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(139, 92, 246, 0.22) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(167, 139, 250, 0.10) 0%, transparent 60%);
     }
 
     /* Animated grid lines */
@@ -44,8 +52,8 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px);
+        linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
       background-size: 70px 70px;
     }
 
@@ -53,19 +61,52 @@
     .ring {
       position: absolute;
       border-radius: 50%;
-      border: 1px solid rgba(139,92,246,0.1);
+      border: 1px solid rgba(139, 92, 246, 0.1);
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       animation: pulse-ring 5s ease-in-out infinite;
     }
-    .ring-1 { width: 280px; height: 280px; animation-delay: 0s; }
-    .ring-2 { width: 480px; height: 480px; animation-delay: 0.7s; opacity: 0.6; }
-    .ring-3 { width: 680px; height: 680px; animation-delay: 1.4s; opacity: 0.3; }
-    .ring-4 { width: 900px; height: 900px; animation-delay: 2.1s; opacity: 0.15; }
+
+    .ring-1 {
+      width: 280px;
+      height: 280px;
+      animation-delay: 0s;
+    }
+
+    .ring-2 {
+      width: 480px;
+      height: 480px;
+      animation-delay: 0.7s;
+      opacity: 0.6;
+    }
+
+    .ring-3 {
+      width: 680px;
+      height: 680px;
+      animation-delay: 1.4s;
+      opacity: 0.3;
+    }
+
+    .ring-4 {
+      width: 900px;
+      height: 900px;
+      animation-delay: 2.1s;
+      opacity: 0.15;
+    }
+
     @keyframes pulse-ring {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
-      50% { transform: translate(-50%, -50%) scale(1.03); opacity: 1; }
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.4;
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.03);
+        opacity: 1;
+      }
     }
 
     /* Crown in center */
@@ -80,43 +121,122 @@
       user-select: none;
       pointer-events: none;
     }
+
     @keyframes breathe {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.08; }
-      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.14; }
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.08;
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.14;
+      }
     }
 
     /* Floating particles */
-    .particles { position: absolute; inset: 0; pointer-events: none; }
+    .particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
     .particle {
       position: absolute;
-      width: 3px; height: 3px;
-      background: rgba(167,139,250,0.4);
+      width: 3px;
+      height: 3px;
+      background: rgba(167, 139, 250, 0.4);
       border-radius: 50%;
       animation: particle-float linear infinite;
     }
-    .particle:nth-child(1)  { left: 10%; top: 20%; animation-duration: 6s; animation-delay: 0s; }
-    .particle:nth-child(2)  { left: 30%; top: 70%; animation-duration: 8s; animation-delay: -2s; }
-    .particle:nth-child(3)  { left: 55%; top: 15%; animation-duration: 5s; animation-delay: -4s; }
-    .particle:nth-child(4)  { left: 75%; top: 60%; animation-duration: 9s; animation-delay: -1s; }
-    .particle:nth-child(5)  { left: 85%; top: 30%; animation-duration: 7s; animation-delay: -3s; }
-    .particle:nth-child(6)  { left: 20%; top: 85%; animation-duration: 6s; animation-delay: -5s; }
-    .particle:nth-child(7)  { left: 65%; top: 85%; animation-duration: 10s; animation-delay: -6s; }
-    .particle:nth-child(8)  { left: 45%; top: 50%; animation-duration: 5.5s; animation-delay: -1.5s; }
+
+    .particle:nth-child(1) {
+      left: 10%;
+      top: 20%;
+      animation-duration: 6s;
+      animation-delay: 0s;
+    }
+
+    .particle:nth-child(2) {
+      left: 30%;
+      top: 70%;
+      animation-duration: 8s;
+      animation-delay: -2s;
+    }
+
+    .particle:nth-child(3) {
+      left: 55%;
+      top: 15%;
+      animation-duration: 5s;
+      animation-delay: -4s;
+    }
+
+    .particle:nth-child(4) {
+      left: 75%;
+      top: 60%;
+      animation-duration: 9s;
+      animation-delay: -1s;
+    }
+
+    .particle:nth-child(5) {
+      left: 85%;
+      top: 30%;
+      animation-duration: 7s;
+      animation-delay: -3s;
+    }
+
+    .particle:nth-child(6) {
+      left: 20%;
+      top: 85%;
+      animation-duration: 6s;
+      animation-delay: -5s;
+    }
+
+    .particle:nth-child(7) {
+      left: 65%;
+      top: 85%;
+      animation-duration: 10s;
+      animation-delay: -6s;
+    }
+
+    .particle:nth-child(8) {
+      left: 45%;
+      top: 50%;
+      animation-duration: 5.5s;
+      animation-delay: -1.5s;
+    }
+
     @keyframes particle-float {
-      0%   { transform: translateY(0) scale(1); opacity: 0.4; }
-      50%  { transform: translateY(-30px) scale(1.5); opacity: 0.8; }
-      100% { transform: translateY(0) scale(1); opacity: 0.4; }
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 0.4;
+      }
+
+      50% {
+        transform: translateY(-30px) scale(1.5);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.4;
+      }
     }
 
     /* Text content */
-    .panel-content { position: relative; z-index: 2; }
+    .panel-content {
+      position: relative;
+      z-index: 2;
+    }
 
     .panel-tag {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(139,92,246,0.15);
-      border: 1px solid rgba(139,92,246,0.35);
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.35);
       border-radius: 100px;
       padding: 6px 14px;
       font-size: 11px;
@@ -126,16 +246,26 @@
       letter-spacing: 1.5px;
       margin-bottom: 24px;
     }
+
     .panel-tag-dot {
-      width: 6px; height: 6px;
+      width: 6px;
+      height: 6px;
       background: #A78BFA;
       border-radius: 50%;
       animation: blink 1.5s ease-in-out infinite;
       box-shadow: 0 0 6px #A78BFA;
     }
+
     @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
     }
 
     .panel-title {
@@ -146,6 +276,7 @@
       color: #fff;
       margin-bottom: 16px;
     }
+
     .panel-title span {
       background: linear-gradient(135deg, #A78BFA, #7C3AED);
       -webkit-background-clip: text;
@@ -155,7 +286,7 @@
 
     .panel-desc {
       font-size: 15px;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255, 255, 255, 0.3);
       font-weight: 400;
       line-height: 1.7;
       max-width: 380px;
@@ -166,25 +297,28 @@
       display: flex;
       gap: 28px;
     }
+
     .stat {
       display: flex;
       flex-direction: column;
       gap: 4px;
       padding: 16px 20px;
-      background: rgba(139,92,246,0.08);
-      border: 1px solid rgba(139,92,246,0.15);
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.15);
       border-radius: 12px;
     }
+
     .stat-value {
       font-size: 20px;
       font-weight: 800;
       color: #A78BFA;
       letter-spacing: -0.5px;
     }
+
     .stat-label {
       font-size: 10px;
       font-weight: 600;
-      color: rgba(255,255,255,0.25);
+      color: rgba(255, 255, 255, 0.25);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -194,7 +328,7 @@
       width: 440px;
       flex-shrink: 0;
       background: #08080E;
-      border-left: 1px solid rgba(255,255,255,0.05);
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -210,9 +344,10 @@
       right: -200px;
       width: 500px;
       height: 500px;
-      background: radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.07) 0%, transparent 70%);
       pointer-events: none;
     }
+
     .right-panel::after {
       content: '';
       position: absolute;
@@ -220,7 +355,7 @@
       left: -100px;
       width: 300px;
       height: 300px;
-      background: radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
       pointer-events: none;
     }
 
@@ -231,6 +366,7 @@
       gap: 12px;
       margin-bottom: 52px;
     }
+
     .logo-icon {
       width: 44px;
       height: 44px;
@@ -238,21 +374,25 @@
       align-items: center;
       justify-content: center;
     }
+
     .logo-text {
       font-size: 18px;
       font-weight: 800;
       color: #fff;
       letter-spacing: -0.5px;
     }
-    .logo-text span { color: #A78BFA; }
+
+    .logo-text span {
+      color: #A78BFA;
+    }
 
     /* Access badge */
     .access-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(139,92,246,0.1);
-      border: 1px solid rgba(139,92,246,0.25);
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.25);
       border-radius: 100px;
       padding: 5px 12px;
       font-size: 11px;
@@ -262,8 +402,10 @@
       letter-spacing: 1px;
       margin-bottom: 20px;
     }
+
     .access-dot {
-      width: 5px; height: 5px;
+      width: 5px;
+      height: 5px;
       background: #A78BFA;
       border-radius: 50%;
       box-shadow: 0 0 4px #A78BFA;
@@ -276,24 +418,32 @@
       color: #fff;
       margin-bottom: 8px;
     }
+
     .form-subheading {
       font-size: 14px;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255, 255, 255, 0.3);
       margin-bottom: 40px;
       font-weight: 400;
     }
 
-    .input-group { margin-bottom: 20px; }
+    .input-group {
+      margin-bottom: 20px;
+    }
+
     .input-label {
       font-size: 11px;
       font-weight: 700;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255, 255, 255, 0.35);
       text-transform: uppercase;
       letter-spacing: 1.2px;
       display: block;
       margin-bottom: 9px;
     }
-    .input-wrap { position: relative; }
+
+    .input-wrap {
+      position: relative;
+    }
+
     .input-icon {
       position: absolute;
       left: 16px;
@@ -303,10 +453,11 @@
       opacity: 0.35;
       pointer-events: none;
     }
+
     .form-input {
       width: 100%;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
       border-radius: 12px;
       padding: 14px 16px 14px 46px;
       color: #fff;
@@ -316,12 +467,17 @@
       outline: none;
       transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
     }
-    .form-input::placeholder { color: rgba(255,255,255,0.18); }
-    .form-input:focus {
-      border-color: rgba(139,92,246,0.5);
-      background: rgba(139,92,246,0.04);
-      box-shadow: 0 0 0 3px rgba(139,92,246,0.08);
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.18);
     }
+
+    .form-input:focus {
+      border-color: rgba(139, 92, 246, 0.5);
+      background: rgba(139, 92, 246, 0.04);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08);
+    }
+
     .form-input:-webkit-autofill,
     .form-input:-webkit-autofill:hover,
     .form-input:-webkit-autofill:focus,
@@ -330,6 +486,7 @@
       -webkit-text-fill-color: #fff !important;
       transition: background-color 5000s ease-in-out 0s;
     }
+
     .eye-btn {
       position: absolute;
       right: 14px;
@@ -337,18 +494,21 @@
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: rgba(255,255,255,0.25);
+      color: rgba(255, 255, 255, 0.25);
       cursor: pointer;
       font-size: 16px;
       padding: 4px;
       transition: color 0.2s;
     }
-    .eye-btn:hover { color: #A78BFA; }
+
+    .eye-btn:hover {
+      color: #A78BFA;
+    }
 
     .error-box {
       display: none;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.2);
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
       border-radius: 10px;
       padding: 12px 16px;
       color: #FCA5A5;
@@ -358,7 +518,10 @@
       align-items: center;
       gap: 10px;
     }
-    .error-box.show { display: flex; }
+
+    .error-box.show {
+      display: flex;
+    }
 
     .btn-submit {
       width: 100%;
@@ -377,35 +540,57 @@
       position: relative;
       overflow: hidden;
     }
+
     .btn-submit::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
     }
+
     .btn-submit:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(139,92,246,0.4);
+      box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
     }
-    .btn-submit:active { transform: translateY(0); }
-    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
 
     .form-footer {
       margin-top: 36px;
       padding-top: 24px;
-      border-top: 1px solid rgba(255,255,255,0.05);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
       font-size: 12px;
-      color: rgba(255,255,255,0.15);
+      color: rgba(255, 255, 255, 0.15);
       text-align: center;
     }
 
     @media (max-width: 820px) {
-      .left-panel { display: none; }
-      body { justify-content: center; }
-      .right-panel { width: 100%; max-width: 480px; border: none; }
+      .left-panel {
+        display: none;
+      }
+
+      body {
+        justify-content: center;
+      }
+
+      .right-panel {
+        width: 100%;
+        max-width: 480px;
+        border: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <!-- LEFT PANEL -->
@@ -434,7 +619,8 @@
       </div>
       <h1 class="panel-title">Control Every<br><span>Restaurant</span><br>From One Place.</h1>
       <p class="panel-desc">
-        Master-level access to manage all restaurant accounts, view platform-wide analytics, and control subscriptions from a single powerful dashboard.
+        Master-level access to manage all restaurant accounts, view platform-wide analytics, and control subscriptions
+        from a single powerful dashboard.
       </p>
       <div class="panel-stats">
         <div class="stat">
@@ -480,15 +666,18 @@
         <label class="input-label" for="username">Username</label>
         <div class="input-wrap">
           <span class="input-icon"><i data-lucide="user" style="width:16px;height:16px;"></i></span>
-          <input id="username" type="text" class="form-input" placeholder="Enter your username" required autocomplete="off">
+          <input id="username" type="text" class="form-input" placeholder="Enter your username" required
+            autocomplete="off">
         </div>
       </div>
       <div class="input-group">
         <label class="input-label" for="password">Password</label>
         <div class="input-wrap">
           <span class="input-icon"><i data-lucide="lock" style="width:16px;height:16px;"></i></span>
-          <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="off" style="padding-right: 48px;">
-          <button type="button" class="eye-btn" onclick="togglePwd()"><i data-lucide="eye" id="eyeBtn" style="width:16px;height:16px;"></i></button>
+          <input id="password" type="password" class="form-input" placeholder="Enter your password" required
+            autocomplete="off" style="padding-right: 48px;">
+          <button type="button" class="eye-btn" onclick="togglePwd()"><i data-lucide="eye" id="eyeBtn"
+              style="width:16px;height:16px;"></i></button>
         </div>
       </div>
 
@@ -500,7 +689,7 @@
 
   <script>
     lucide.createIcons();
-    
+
     function togglePwd() {
       const inp = document.getElementById('password');
       const btn = document.getElementById('eyeBtn');
@@ -552,4 +741,5 @@
     });
   </script>
 </body>
+
 </html>
