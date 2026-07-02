@@ -47,8 +47,6 @@ function showView(viewId) {
     'subscriptions': '💳 Subscriptions',
     'analytics': '📊 Platform Analytics',
     'announcements': '📢 Announcements',
-    'activity': '📋 Activity Log',
-    'notes': '📓 Admin Notes',
     'backup': '🗄️ Backup & Export',
     'support': '🎧 Support Center',
     'settings': '⚙️ Platform Settings',
@@ -70,8 +68,6 @@ function showView(viewId) {
   if (viewId === 'complaints') loadComplaints();
   if (viewId === 'subscriptions') loadSubscriptions();
   if (viewId === 'analytics') loadPlatformAnalytics();
-  if (viewId === 'notes') renderNotes();
-  if (viewId === 'activity') renderActivityLog();
   if (viewId === 'announcements') renderAnnouncements();
   if (viewId === 'uptime') checkUptimeNow();
   if (viewId === 'changelog') renderChangelog();

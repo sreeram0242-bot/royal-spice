@@ -21,8 +21,6 @@
     <a class="nav-link" onclick="showView('subscriptions')"><i data-lucide="credit-card"></i> Subscriptions</a>
     <a class="nav-link" onclick="showView('analytics')"><i data-lucide="bar-chart-3"></i> Platform Analytics</a>
     <a class="nav-link" onclick="showView('announcements')"><i data-lucide="megaphone"></i> Announcements</a>
-    <a class="nav-link" onclick="showView('activity')"><i data-lucide="activity"></i> Activity Log</a>
-    <a class="nav-link" onclick="showView('notes')"><i data-lucide="notebook-pen"></i> Admin Notes</a>
     <a class="nav-link" onclick="showView('backup')"><i data-lucide="database-backup"></i> Backup & Export</a>
     <a class="nav-link" onclick="showView('support')"><i data-lucide="headphones"></i> Support Center</a>
     <a class="nav-link" onclick="showView('settings')"><i data-lucide="settings"></i> Platform Settings</a>
@@ -202,32 +200,7 @@
         </div>
       </div>
 
-      <!-- ─── 4. ACTIVITY LOG ─── -->
-      <div id="view-activity" class="view hidden">
-        <div class="panel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3>📋 Activity Log</h3>
-            <button class="btn-outline" onclick="clearActivityLog()">🗑 Clear Log</button>
-          </div>
-          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">All major actions you perform are logged here.</p>
-          <div id="activityLog" style="max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
-            <div style="color:var(--text-muted);text-align:center;padding:24px;">No activity recorded yet.</div>
-          </div>
-        </div>
-      </div>
 
-      <!-- ─── 5. ADMIN NOTES ─── -->
-      <div id="view-notes" class="view hidden">
-        <div class="panel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3>📓 Admin Notes</h3>
-            <button class="btn-gold" onclick="addNote()">+ Add Note</button>
-          </div>
-          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Private notes stored on this device. Useful for tasks and memos.</p>
-          <input type="text" id="noteInput" class="login-input" placeholder="Type a note and press Enter..." onkeydown="if(event.key==='Enter') addNote()">
-          <div id="notesList" style="display:flex;flex-direction:column;gap:10px;"></div>
-        </div>
-      </div>
 
       <!-- ─── 6. BACKUP & EXPORT ─── -->
       <div id="view-backup" class="view hidden">
