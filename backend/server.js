@@ -94,6 +94,11 @@ app.set('io', io);
 // Initialize Cron Jobs
 require('./cron')(io);
 
+// Health Check Route (For cron-job.org / UptimeRobot to ping)
+app.get('/', (req, res) => {
+  res.status(200).send('Royal Spice Server is Awake and Running!');
+});
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/master', require('./routes/master'));
