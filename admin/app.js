@@ -269,7 +269,7 @@ async function loadDashboard() {
   const activeTablesCount = new Set(pendingOrders.map(o => o.tableNumber)).size;
   const pendingCalls = calls.filter(c => c.status === 'pending');
 
-  document.getElementById('dashRev').innerText = `₹${totalRev}`;
+  document.getElementById('dashRev').innerText = `₹${Math.round(totalRev).toLocaleString('en-IN')}`;
   document.getElementById('dashOrders').innerText = orders.length;
   document.getElementById('dashPending').innerText = pendingOrders.length;
   document.getElementById('dashCalls').innerText = pendingCalls.length;
