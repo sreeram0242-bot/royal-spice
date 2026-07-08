@@ -55,6 +55,8 @@ async function loadRestaurantInfo() {
   try {
     const res = await fetch(`${BASE_URL}/api/customer/restaurant/${restaurantId}`);
     const data = await res.json();
+    localStorage.setItem('gstPercent', data.gstPercent || 0);
+    
     if (document.getElementById('restaurantName')) {
       document.getElementById('restaurantName').innerText = data.name;
     }
@@ -369,8 +371,14 @@ function renderCart() {
 
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const gst = Math.round(subTotal * 0.05); // Assuming 5% GST
+  
+  const gstPercent = parseFloat(localStorage.getItem('gstPercent')) || 0;
+  const gst = Math.round(subTotal * (gstPercent / 100));
   const grandTotal = subTotal + gst + selectedTip;
+
+  if (document.getElementById('gstLabel')) {
+    document.getElementById('gstLabel').innerText = `GST (${gstPercent}%)`;
+  }
 
   document.getElementById('summaryItems').innerText = totalItems;
   document.getElementById('summarySubTotal').innerText = '₹' + subTotal;
@@ -439,7 +447,8 @@ async function submitOrderWithPasscode() {
 
 async function submitOrder(passcode) {
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const gst = Math.round(subTotal * 0.05);
+  const gstPercent = parseFloat(localStorage.getItem('gstPercent')) || 0;
+  const gst = Math.round(subTotal * (gstPercent / 100));
   const total = subTotal + gst + selectedTip;
 
   let sessionId = localStorage.getItem('sessionId');
@@ -481,9 +490,7 @@ async function submitOrder(passcode) {
     }
 
     localStorage.setItem('tablePasscode', passcode);
-    if (!sessionId) {
-      localStorage.setItem('sessionId', data.order.sessionId);
-    }
+    localStorage.setItem('sessionId', data.order.sessionId);
 
     cart = [];
     localStorage.removeItem('cart');

@@ -906,6 +906,12 @@ async function renderFullTableGrid(total) {
     const tables = await res.json();
     
     grid.innerHTML = '';
+    
+    if (!tables || tables.length === 0) {
+      grid.innerHTML = '<div style="color:var(--text-muted); grid-column: 1 / -1; text-align:center; padding: 40px 20px;">No tables configured. Please update your total tables in Settings.</div>';
+      return;
+    }
+
     tables.forEach(t => {
       const isOccupied = t.status === 'occupied';
       const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : (t.passcode ? `<span style="color:var(--gold);font-weight:bold;font-size:14px;">PIN: ${t.passcode}</span>` : 'Free');
@@ -916,7 +922,7 @@ async function renderFullTableGrid(total) {
       </div>`;
     });
   } catch (err) {
-    grid.innerHTML = '<div style="color:var(--red);">Failed to load tables</div>';
+    grid.innerHTML = '<div style="color:var(--red); padding: 20px; grid-column: 1 / -1; text-align:center;">Failed to load tables. Please check your connection.</div>';
   }
 }
 
@@ -1072,11 +1078,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // QR CODES
-function loadQRCodes() {
+async function loadQRCodes() {
   const grid = document.getElementById('qrGrid');
   grid.innerHTML = '';
   
+  if (!restaurantSettings) {
+    grid.innerHTML = '<div style="color:var(--text-muted);">Loading settings...</div>';
+    await loadSettings();
+    grid.innerHTML = '';
+  }
+  
   if (!restaurantSettings) return;
+
 
   for (let i = 1; i <= restaurantSettings.totalTables; i++) {
     const card = document.createElement('div');

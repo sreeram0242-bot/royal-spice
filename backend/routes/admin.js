@@ -534,59 +534,6 @@ router.post('/complaints', authAdmin, async (req, res) => {
 });
 
 // --- Categories Management ---
-router.get('/categories', authAdmin, async (req, res) => {
-  try {
-    const menuItems = await prisma.menuItem.findMany({
-      where: { restaurantId: req.user.restaurantId },
-      select: { category: true }
-    });
-    
-    const settings = await prisma.categorySetting.findMany({
-      where: { restaurantId: req.user.restaurantId }
-    });
-    
-    const categories = [...new Set(menuItems.map(item => item.category))];
-    if (!categories.includes('All')) categories.unshift('All');
-    
-    const result = categories.map(cat => {
-      const setting = settings.find(s => s.categoryName === cat);
-      return {
-        name: cat,
-        image: setting?.image || ''
-      };
-    });
-    
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-router.post('/categories', authAdmin, async (req, res) => {
-  try {
-    const { categoryName, image } = req.body;
-    
-    const setting = await prisma.categorySetting.upsert({
-      where: {
-        restaurantId_categoryName: {
-          restaurantId: req.user.restaurantId,
-          categoryName
-        }
-      },
-      update: { image },
-      create: {
-        restaurantId: req.user.restaurantId,
-        categoryName,
-        image
-      }
-    });
-    
-    res.json({ message: 'Category image updated', setting });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
 
 // CATEGORY SETTINGS
 router.get('/categories', authAdmin, async (req, res) => {

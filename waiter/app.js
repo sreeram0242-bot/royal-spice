@@ -93,6 +93,12 @@ function renderTableGrid(tables) {
   const grid = document.getElementById('tableGrid');
   if (!grid) return;
   grid.innerHTML = '';
+  
+  if (!tables || tables.length === 0) {
+    grid.innerHTML = '<div class="loading-text" style="grid-column: 1 / -1; padding: 40px; color: var(--text-muted);">No tables configured. Please ask admin to add tables.</div>';
+    return;
+  }
+  
   tables.forEach(t => {
     const card = document.createElement('div');
     card.onclick = () => openTableModal(t.tableNumber, t.passcode);
@@ -576,7 +582,8 @@ async function loadLiveOrders() {
     if (!res.ok) throw new Error('Failed');
     allLiveOrders = await res.json();
     if (document.getElementById('activeOrdersCount')) {
-      document.getElementById('activeOrdersCount').textContent = allLiveOrders.length;
+      const activeCount = allLiveOrders.filter(o => ['new', 'preparing', 'ready'].includes(o.status)).length;
+      document.getElementById('activeOrdersCount').textContent = activeCount;
     }
     renderLiveOrders();
   } catch (e) {
@@ -682,12 +689,14 @@ function logout() {
 // ── INIT ──
 loadSettings();
 loadTables();
+loadLiveOrders();
 
 // Auto-refresh every 30 seconds
 setInterval(() => {
   const activeTab = document.querySelector('.tab-content.active')?.id;
   if (activeTab === 'tabTables') loadTables();
   if (activeTab === 'tabCalls') loadCalls();
+  loadLiveOrders();
 }, 30000);
 
 async function generatePasscode(tableNumber) {

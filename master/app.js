@@ -30,15 +30,22 @@ function updateThemeIcon() {
   if (localStorage.getItem('theme') === 'light') {
     document.body.classList.add('light-theme');
   }
+  
+  if (token) {
+    showView('dashboard');
+  }
 })();
 
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-' + viewId).classList.remove('hidden');
   
-  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-
+  // Safely set the active nav link
+  document.querySelectorAll('.nav-link').forEach(link => {
+    if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`)) {
+      link.classList.add('active');
+    }
+  });
   const titles = {
     'dashboard': 'Dashboard',
     'restaurants': 'Restaurants',
@@ -82,106 +89,127 @@ function closeModal(id) {
 // DASHBOARD & RESTAURANTS
 let platformChart = null;
 async function loadDashboard() {
-  const stats = await fetchAPI('/api/master/dashboard-stats');
-  const restaurants = await fetchAPI('/api/master/restaurants');
-  
-  const alertsDiv = document.getElementById('dashboardAlerts');
-  if (alertsDiv) {
-    alertsDiv.innerHTML = '';
-    const now = new Date();
-    restaurants.forEach(r => {
-      if (r.isActive && r.subscriptionExpiry) {
-        const expDate = new Date(r.subscriptionExpiry);
-        const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-        if (daysLeft <= 7 && daysLeft >= 0) {
-          alertsDiv.innerHTML += `<div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #F59E0B; color: #F59E0B; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
-            <i data-lucide="alert-triangle"></i>
-            <div><strong>${r.name}</strong> subscription expires in ${daysLeft} days (on ${expDate.toLocaleDateString()}).</div>
-          </div>`;
-        } else if (daysLeft < 0) {
-          alertsDiv.innerHTML += `<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #EF4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
-            <i data-lucide="alert-circle"></i>
-            <div><strong>${r.name}</strong> subscription expired ${Math.abs(daysLeft)} days ago!</div>
-          </div>`;
-        }
-      }
-    });
-    if (window.lucide) window.lucide.createIcons();
-  }
-  
-  document.getElementById('statOrders').innerText = stats.totalOrders;
-  document.getElementById('statRev').innerText = '₹' + stats.totalRevenue.toFixed(2);
-  document.getElementById('statActive').innerText = stats.activeRestaurants;
-  document.getElementById('statSuspended').innerText = stats.pendingComplaints;
-
-  const ctx = document.getElementById('platformRevenueChart');
-  if (ctx) {
-    if (platformChart) platformChart.destroy();
-    const labels = Object.keys(stats.chartData).sort();
-    const data = labels.map(l => stats.chartData[l]);
+  try {
+    const stats = await fetchAPI('/api/master/dashboard-stats');
+    const restaurants = await fetchAPI('/api/master/restaurants');
     
-    platformChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Platform Revenue',
-          data: data,
-          borderColor: '#C9A84C',
-          backgroundColor: 'rgba(201, 168, 76, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, grid: { color: '#333' } },
-          x: { grid: { display: false } }
+    const alertsDiv = document.getElementById('dashboardAlerts');
+    if (alertsDiv) {
+      alertsDiv.innerHTML = '';
+      const now = new Date();
+      restaurants.forEach(r => {
+        if (r.isActive && r.subscriptionExpiry) {
+          const expDate = new Date(r.subscriptionExpiry);
+          const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+          if (daysLeft <= 7 && daysLeft >= 0) {
+            alertsDiv.innerHTML += `<div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #F59E0B; color: #F59E0B; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="alert-triangle"></i>
+              <div><strong>${r.name}</strong> subscription expires in ${daysLeft} days (on ${expDate.toLocaleDateString()}).</div>
+            </div>`;
+          } else if (daysLeft < 0) {
+            alertsDiv.innerHTML += `<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #EF4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="alert-circle"></i>
+              <div><strong>${r.name}</strong> subscription expired ${Math.abs(daysLeft)} days ago!</div>
+            </div>`;
+          }
         }
-      }
-    });
-  }
+      });
+      if (window.lucide) window.lucide.createIcons();
+    }
+    
+    document.getElementById('statOrders').innerText = stats.totalOrders;
+    document.getElementById('statRev').innerText = '₹' + stats.totalRevenue.toFixed(2);
+    document.getElementById('statActive').innerText = stats.activeRestaurants;
+    document.getElementById('statSuspended').innerText = stats.pendingComplaints;
 
-  const tbody = document.querySelector('#recentRestaurantsTable tbody');
-  if (tbody) {
-    tbody.innerHTML = '';
-    stats.recentRestaurants.forEach(r => {
-      tbody.innerHTML += `<tr>
-        <td>${r.name}</td>
-        <td>${new Date(r.createdAt).toLocaleDateString()}</td>
-      </tr>`;
-    });
+    const ctx = document.getElementById('platformRevenueChart');
+    if (ctx) {
+      if (platformChart) platformChart.destroy();
+      const labels = Object.keys(stats.chartData).sort();
+      const data = labels.map(l => stats.chartData[l]);
+      
+      platformChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Platform Revenue',
+            data: data,
+            borderColor: '#C9A84C',
+            backgroundColor: 'rgba(201, 168, 76, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#333' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    const tbody = document.querySelector('#recentRestaurantsTable tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      stats.recentRestaurants.forEach(r => {
+        tbody.innerHTML += `<tr>
+          <td>${r.name}</td>
+          <td>${new Date(r.createdAt).toLocaleDateString()}</td>
+        </tr>`;
+      });
+    }
+  } catch (err) {
+    console.error('Error loading dashboard:', err);
+    document.getElementById('statOrders').innerText = 'Err';
+    document.getElementById('statRev').innerText = 'Err';
+    document.getElementById('statActive').innerText = 'Err';
+    document.getElementById('statSuspended').innerText = 'Err';
+    const alertsDiv = document.getElementById('dashboardAlerts');
+    if (alertsDiv) alertsDiv.innerHTML = '<div style="color:var(--red);">Failed to load dashboard stats. Please check connection.</div>';
   }
 }
 
 async function loadRestaurants() {
-  const data = await fetchAPI('/api/master/restaurants');
   const tbody = document.querySelector('#restTable tbody');
-  tbody.innerHTML = '';
-  
-  data.forEach(r => {
-    const statusLabel = r.isActive ? (r.plan === 'trial' ? 'Trial' : 'Active') : 'Suspended';
-    const statusClass = r.isActive ? (r.plan === 'trial' ? 'trial' : 'active') : 'suspended';
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Loading restaurants...</td></tr>';
+  try {
+    const data = await fetchAPI('/api/master/restaurants');
+    tbody.innerHTML = '';
     
-    tbody.innerHTML += `
-      <tr>
-        <td style="font-weight: bold;">${r.name}</td>
-        <td>${new Date(r.createdAt).toLocaleDateString()}</td>
-        <td>${r.plan.toUpperCase()}</td>
-        <td><span class="status ${statusClass}">${statusLabel}</span></td>
-        <td style="display: flex; gap: 8px;">
-          <button class="btn-gold" style="padding: 4px 8px; font-size: 12px; background: #333; color: white;" onclick="viewRestaurant('${r.id}')">View</button>
-          <button class="btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="toggleStatus('${r.id}', ${!r.isActive})">
-            ${r.isActive ? 'Suspend' : 'Restore'}
-          </button>
-          <button class="btn-gold" style="padding: 4px 8px; font-size: 12px;" onclick="openNotifyModal('${r.id}')">Notify</button>
-        </td>
-      </tr>
-    `;
-  });
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No restaurants found.</td></tr>';
+      return;
+    }
+    
+    data.forEach(r => {
+      const statusLabel = r.isActive ? (r.plan === 'trial' ? 'Trial' : 'Active') : 'Suspended';
+      const statusClass = r.isActive ? (r.plan === 'trial' ? 'trial' : 'active') : 'suspended';
+      
+      tbody.innerHTML += `
+        <tr>
+          <td style="font-weight: bold;">${r.name}</td>
+          <td>${new Date(r.createdAt).toLocaleDateString()}</td>
+          <td>${r.plan.toUpperCase()}</td>
+          <td><span class="status ${statusClass}">${statusLabel}</span></td>
+          <td style="display: flex; gap: 8px;">
+            <button class="btn-gold" style="padding: 4px 8px; font-size: 12px; background: #333; color: white;" onclick="viewRestaurant('${r.id}')">View</button>
+            <button class="btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="toggleStatus('${r.id}', ${!r.isActive})">
+              ${r.isActive ? 'Suspend' : 'Restore'}
+            </button>
+            <button class="btn-gold" style="padding: 4px 8px; font-size: 12px;" onclick="openNotifyModal('${r.id}')">Notify</button>
+          </td>
+        </tr>
+      `;
+    });
+  } catch (err) {
+    console.error('Error loading restaurants:', err);
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Failed to load restaurants. Please try again.</td></tr>';
+  }
 }
 
 function openAddRestaurantModal() {
@@ -378,49 +406,62 @@ if (window.location.pathname.includes('dashboard.html')) {
 // 1. SUBSCRIPTIONS
 // ══════════════════════════════════════════
 async function loadSubscriptions() {
-  const data = await fetchAPI('/api/master/restaurants');
-  const now = new Date();
-  const in7 = new Date(); in7.setDate(now.getDate() + 7);
-
-  let monthly = 0, trial = 0, expiring = 0, suspended = 0;
-  const filter = document.getElementById('subFilterPlan')?.value;
-
   const tbody = document.querySelector('#subscriptionTable tbody');
-  tbody.innerHTML = '';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Loading subscriptions...</td></tr>';
 
-  data.forEach(r => {
-    if (filter && r.plan !== filter) return;
-    if (!r.isActive) suspended++;
-    else if (r.plan === 'trial') trial++;
-    else monthly++;
+  try {
+    const data = await fetchAPI('/api/master/restaurants');
+    const now = new Date();
+    const in7 = new Date(); in7.setDate(now.getDate() + 7);
 
-    if (r.subscriptionExpiry) {
-      const exp = new Date(r.subscriptionExpiry);
-      if (exp > now && exp <= in7) expiring++;
+    let monthly = 0, trial = 0, expiring = 0, suspended = 0;
+    const filter = document.getElementById('subFilterPlan')?.value;
+
+    if (tbody) tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No subscriptions found.</td></tr>';
+    } else {
+      data.forEach(r => {
+        if (filter && r.plan !== filter) return;
+        if (!r.isActive) suspended++;
+        else if (r.plan === 'trial') trial++;
+        else monthly++;
+
+        if (r.subscriptionExpiry) {
+          const exp = new Date(r.subscriptionExpiry);
+          if (exp > now && exp <= in7) expiring++;
+        }
+
+        const expText = r.subscriptionExpiry
+          ? new Date(r.subscriptionExpiry).toLocaleDateString()
+          : r.plan === 'trial' ? `Trial (${r.trialDays || 14} days)` : 'No Expiry';
+
+        const statusLabel = r.isActive ? (r.plan === 'trial' ? 'Trial' : 'Active') : 'Suspended';
+        const statusClass = r.isActive ? (r.plan === 'trial' ? 'trial' : 'active') : 'suspended';
+
+        if (tbody) {
+          tbody.innerHTML += `
+            <tr>
+              <td style="font-weight:600;">${r.name}</td>
+              <td>${r.plan.toUpperCase()}</td>
+              <td><span class="status ${statusClass}">${statusLabel}</span></td>
+              <td style="color:var(--text-muted);">${expText}</td>
+              <td><button class="btn-gold" style="padding:4px 8px;font-size:12px;" onclick="viewRestaurant('${r.id}')">Manage</button></td>
+            </tr>
+          `;
+        }
+      });
     }
 
-    const expText = r.subscriptionExpiry
-      ? new Date(r.subscriptionExpiry).toLocaleDateString()
-      : r.plan === 'trial' ? `Trial (${r.trialDays || 14} days)` : 'No Expiry';
-
-    const statusLabel = r.isActive ? (r.plan === 'trial' ? 'Trial' : 'Active') : 'Suspended';
-    const statusClass = r.isActive ? (r.plan === 'trial' ? 'trial' : 'active') : 'suspended';
-
-    tbody.innerHTML += `
-      <tr>
-        <td style="font-weight:600;">${r.name}</td>
-        <td>${r.plan.toUpperCase()}</td>
-        <td><span class="status ${statusClass}">${statusLabel}</span></td>
-        <td style="color:var(--text-muted);">${expText}</td>
-        <td><button class="btn-gold" style="padding:4px 8px;font-size:12px;" onclick="viewRestaurant('${r.id}')">Manage</button></td>
-      </tr>
-    `;
-  });
-
-  document.getElementById('subCountMonthly').innerText = monthly;
-  document.getElementById('subCountTrial').innerText = trial;
-  document.getElementById('subCountExpiring').innerText = expiring;
-  document.getElementById('subCountSuspended').innerText = suspended;
+    if (document.getElementById('subCountMonthly')) document.getElementById('subCountMonthly').innerText = monthly;
+    if (document.getElementById('subCountTrial')) document.getElementById('subCountTrial').innerText = trial;
+    if (document.getElementById('subCountExpiring')) document.getElementById('subCountExpiring').innerText = expiring;
+    if (document.getElementById('subCountSuspended')) document.getElementById('subCountSuspended').innerText = suspended;
+  } catch (err) {
+    console.error('Error loading subscriptions:', err);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Failed to load subscriptions. Please check connection.</td></tr>';
+  }
 }
 
 // ══════════════════════════════════════════

@@ -38,10 +38,10 @@
   </style>
   <script>
     window.addEventListener('error', function(e) {
-      alert('JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+      console.error('JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
     });
     window.addEventListener('unhandledrejection', function(e) {
-      alert('Promise Error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      console.error('Promise Error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
     });
   </script>
 
