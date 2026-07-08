@@ -1,0 +1,29 @@
+# Redirecting...
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Extract parameters and redirect to menu
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get('r');
+    const t = params.get('t');
+    if (r && t) {
+      if (localStorage.getItem('restaurantId') !== r) {
+        localStorage.removeItem('cart');
+        localStorage.removeItem('sessionId');
+      }
+      localStorage.setItem('restaurantId', r);
+      localStorage.setItem('tableNumber', t);
+      window.location.href = `menu.html`;
+    } else {
+      document.write('Invalid QR Code. Missing restaurant or table info.');
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>

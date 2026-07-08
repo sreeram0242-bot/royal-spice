@@ -5,7 +5,7 @@ async function createFakeOrder() {
   const restaurantId = 'cmqz7hr5f0000e50ij793tpvu';
   const tableNumber = 1;
   const sessionId = 'session-' + Date.now();
-  
+
   const order = await prisma.order.create({
     data: {
       restaurantId,
