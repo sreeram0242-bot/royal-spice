@@ -42,6 +42,7 @@ function showView(viewId) {
   
   // Safely set the active nav link
   document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
     if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`)) {
       link.classList.add('active');
     }
@@ -102,12 +103,12 @@ async function loadDashboard() {
           const expDate = new Date(r.subscriptionExpiry);
           const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
           if (daysLeft <= 7 && daysLeft >= 0) {
-            alertsDiv.innerHTML += `<div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #F59E0B; color: #F59E0B; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            alertsDiv.innerHTML += `<div style="background: var(--orange); border: 1px solid var(--orange); color: var(--orange); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
               <i data-lucide="alert-triangle"></i>
               <div><strong>${r.name}</strong> subscription expires in ${daysLeft} days (on ${expDate.toLocaleDateString()}).</div>
             </div>`;
           } else if (daysLeft < 0) {
-            alertsDiv.innerHTML += `<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #EF4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            alertsDiv.innerHTML += `<div style="background: var(--red); border: 1px solid var(--red); color: var(--red); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
               <i data-lucide="alert-circle"></i>
               <div><strong>${r.name}</strong> subscription expired ${Math.abs(daysLeft)} days ago!</div>
             </div>`;
@@ -135,7 +136,7 @@ async function loadDashboard() {
           datasets: [{
             label: 'Platform Revenue',
             data: data,
-            borderColor: '#C9A84C',
+            borderColor: 'var(--gold)',
             backgroundColor: 'rgba(201, 168, 76, 0.1)',
             fill: true,
             tension: 0.4
@@ -509,7 +510,7 @@ async function loadPlatformAnalytics() {
         type: 'doughnut',
         data: {
           labels: ['Trial', 'Monthly', 'Premium', 'Enterprise'],
-          datasets: [{ data: [planCounts.trial, planCounts.monthly, planCounts.premium, planCounts.enterprise], backgroundColor: ['#F59E0B','#3B82F6','#8B5CF6','#10B981'], borderWidth: 0 }]
+          datasets: [{ data: [planCounts.trial, planCounts.monthly, planCounts.premium, planCounts.enterprise], backgroundColor: ['var(--orange)','var(--blue)','var(--purple)','var(--green)'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#aaa', font: { size: 12 } } } } }
       });
@@ -539,7 +540,7 @@ async function loadPlatformAnalytics() {
         avgEl.innerHTML = byAvg.map(r => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.02);">
             <div style="font-weight:600;color:var(--text-primary);">${r.name}</div>
-            <div style="font-weight:700;color:#10B981;font-size:15px;">&#8377;${Math.round(r.avgDaily).toLocaleString('en-IN')} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">/ day</span></div>
+            <div style="font-weight:700;color:var(--green);font-size:15px;">&#8377;${Math.round(r.avgDaily).toLocaleString('en-IN')} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">/ day</span></div>
           </div>
         `).join('');
       }
@@ -607,12 +608,12 @@ function renderAnnouncements() {
     return;
   }
   el.innerHTML = list.map(a => `
-    <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);margin-bottom:10px;">
+    <div style="padding:16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <span style="font-weight:700;color:var(--text-primary);">${a.title}</span>
         <div style="display:flex;gap:8px;align-items:center;">
           <span style="font-size:11px;color:var(--text-muted);">${a.date}</span>
-          <button onclick="deleteAnnouncement(${a.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">Delete</button>
+          <button onclick="deleteAnnouncement(${a.id})" style="background:var(--red);color:var(--red);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">Delete</button>
         </div>
       </div>
       <div style="color:var(--text-muted);font-size:13px;">${a.body}</div>
@@ -643,7 +644,7 @@ function renderActivityLog() {
     return;
   }
   el.innerHTML = log.map(l => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--gold);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-subtle);border-radius:8px;border-left:3px solid var(--gold);">
       <span style="color:var(--text-primary);font-size:13px;">${l.text}</span>
       <span style="color:var(--text-muted);font-size:11px;white-space:nowrap;margin-left:12px;">${l.time}</span>
     </div>
@@ -686,12 +687,12 @@ function renderNotes() {
     return;
   }
   el.innerHTML = notes.map(n => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--gold);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-subtle);border-radius:8px;border-left:3px solid var(--gold);">
       <div>
         <div style="color:var(--text-primary);font-size:13px;">${n.text}</div>
         <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">${n.date}</div>
       </div>
-      <button onclick="deleteNote(${n.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;margin-left:12px;">Delete</button>
+      <button onclick="deleteNote(${n.id})" style="background:var(--red);color:var(--red);border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;margin-left:12px;">Delete</button>
     </div>
   `).join('');
 }
@@ -803,24 +804,24 @@ async function checkUptimeNow() {
     const stats = await fetchAPI('/api/master/dashboard-stats');
     const ms = Date.now() - start;
     serverEl.innerText = `✅ Online (${ms}ms)`;
-    serverEl.style.color = '#10B981';
+    serverEl.style.color = 'var(--green)';
     dbEl.innerText = stats.totalOrders >= 0 ? '✅ Connected' : '⚠️ Unknown';
-    dbEl.style.color = '#10B981';
+    dbEl.style.color = 'var(--green)';
     lastEl.innerText = new Date().toLocaleTimeString();
 
     // Show restaurant count as a live ping
     const restaurants = await fetchAPI('/api/master/restaurants');
     listEl.innerHTML = restaurants.slice(0, 10).map(r => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid ${r.isActive ? '#10B981' : '#EF4444'};">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-subtle);border-radius:8px;border-left:3px solid ${r.isActive ? 'var(--green)' : 'var(--red)'};">
         <span style="font-weight:600;">${r.name}</span>
-        <span style="font-size:12px;color:${r.isActive ? '#10B981' : '#EF4444'};">${r.isActive ? '✅ Active' : '🚫 Suspended'}</span>
+        <span style="font-size:12px;color:${r.isActive ? 'var(--green)' : 'var(--red)'};">${r.isActive ? '✅ Active' : '🚫 Suspended'}</span>
       </div>
     `).join('');
   } catch(e) {
     serverEl.innerText = '❌ Offline';
-    serverEl.style.color = '#EF4444';
+    serverEl.style.color = 'var(--red)';
     dbEl.innerText = '❌ Unreachable';
-    dbEl.style.color = '#EF4444';
+    dbEl.style.color = 'var(--red)';
   }
 }
 
@@ -844,11 +845,11 @@ function renderChangelog() {
   const cl = JSON.parse(localStorage.getItem('master_changelog') || '[]');
   const el = document.getElementById('changelogList');
   if (!el) return;
-  const typeColors = { feature: '#10B981', fix: '#EF4444', improvement: '#3B82F6' };
+  const typeColors = { feature: 'var(--green)', fix: 'var(--red)', improvement: 'var(--blue)' };
   const typeEmoji = { feature: '✨', fix: '🐞', improvement: '🔧' };
   if (cl.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No changelog entries yet. Click “+ Add Entry” to start.</div>'; return; }
   el.innerHTML = cl.map(c => `
-    <div style="display:flex;gap:16px;padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);margin-bottom:10px;">
+    <div style="display:flex;gap:16px;padding:16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);margin-bottom:10px;">
       <div style="min-width:80px;font-weight:800;color:var(--gold);">${c.version}</div>
       <div style="flex:1;">
         <span style="display:inline-block;background:${typeColors[c.type]||'#666'};color:white;font-size:10px;padding:2px 8px;border-radius:100px;margin-bottom:6px;">${typeEmoji[c.type]||''} ${c.type?.toUpperCase()}</span>
@@ -903,16 +904,16 @@ function renderTasks() {
   if (taskFilter === 'done') tasks = tasks.filter(t => t.done);
   const el = document.getElementById('taskList');
   if (!el) return;
-  const pColors = { high: '#EF4444', medium: '#F59E0B', low: '#10B981' };
+  const pColors = { high: 'var(--red)', medium: 'var(--orange)', low: 'var(--green)' };
   if (tasks.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:16px;">No tasks here.</div>'; return; }
   el.innerHTML = tasks.map(t => `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid ${pColors[t.priority]};opacity:${t.done?'0.5':'1'};">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-subtle);border-radius:8px;border-left:3px solid ${pColors[t.priority]};opacity:${t.done?'0.5':'1'};">
       <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id})" style="width:16px;height:16px;cursor:pointer;">
       <div style="flex:1;">
         <div style="color:var(--text-primary);font-size:13px;text-decoration:${t.done?'line-through':'none'};">${t.text}</div>
         <div style="font-size:11px;color:var(--text-muted);">${t.date} &bull; <span style="color:${pColors[t.priority]};">${t.priority.toUpperCase()}</span></div>
       </div>
-      <button onclick="deleteTask(${t.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
+      <button onclick="deleteTask(${t.id})" style="background:var(--red);color:var(--red);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
     </div>
   `).join('');
 }
@@ -977,10 +978,10 @@ function renderInvoices() {
           <td style="padding:10px;font-weight:600;">${i.name}</td>
           <td style="padding:10px;">${i.plan}</td>
           <td style="padding:10px;text-align:right;font-weight:700;color:var(--gold);">&#8377;${i.amount}</td>
-          <td style="padding:10px;text-align:center;"><span style="background:${i.status==='paid'?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)'};color:${i.status==='paid'?'#10B981':'#EF4444'};padding:3px 10px;border-radius:100px;font-size:11px;">${i.status.toUpperCase()}</span></td>
+          <td style="padding:10px;text-align:center;"><span style="background:${i.status==='paid'?'var(--green)':'var(--red)'};color:${i.status==='paid'?'var(--green)':'var(--red)'};padding:3px 10px;border-radius:100px;font-size:11px;">${i.status.toUpperCase()}</span></td>
           <td style="padding:10px;display:flex;gap:6px;">
-            ${i.status==='pending' ? `<button onclick="markInvoicePaid(${i.id})" style="background:rgba(16,185,129,0.15);color:#10B981;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Mark Paid</button>` : ''}
-            <button onclick="deleteInvoice(${i.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
+            ${i.status==='pending' ? `<button onclick="markInvoicePaid(${i.id})" style="background:var(--green);color:var(--green);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Mark Paid</button>` : ''}
+            <button onclick="deleteInvoice(${i.id})" style="background:var(--red);color:var(--red);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
           </td>
         </tr>
       `).join('')}</tbody>
@@ -1017,15 +1018,15 @@ function renderStaff() {
   const el = document.getElementById('staffList');
   if (!el) return;
   if (staff.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);padding:24px;">No staff added yet.</div>'; return; }
-  const colors = ['#C9A84C','#3B82F6','#10B981','#8B5CF6','#EF4444'];
+  const colors = ['var(--gold)','var(--blue)','var(--green)','var(--purple)','var(--red)'];
   el.innerHTML = staff.map((s,i) => `
-    <div style="padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border-color);position:relative;">
+    <div style="padding:20px;background:var(--bg-subtle);border-radius:12px;border:1px solid var(--border-color);position:relative;">
       <div style="width:44px;height:44px;border-radius:50%;background:${colors[i%5]};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:white;margin-bottom:12px;">${s.name.charAt(0).toUpperCase()}</div>
       <div style="font-weight:700;color:var(--text-primary);">${s.name}</div>
       <div style="font-size:12px;color:var(--gold);margin:2px 0;">${s.role}</div>
       <div style="font-size:12px;color:var(--text-muted);">&#128231; ${s.email}</div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Joined: ${s.joined}</div>
-      <button onclick="removeStaff(${s.id})" style="position:absolute;top:12px;right:12px;background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Remove</button>
+      <button onclick="removeStaff(${s.id})" style="position:absolute;top:12px;right:12px;background:var(--red);color:var(--red);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Remove</button>
     </div>
   `).join('');
 }
@@ -1051,7 +1052,7 @@ function renderFeedback() {
     return;
   }
   el.innerHTML = list.map(f => `
-    <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);">
+    <div style="padding:16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
         <span style="font-weight:700;color:var(--text-primary);">${f.restaurant}</span>
         <div style="display:flex;gap:4px;">${'⭐'.repeat(f.rating)}${'&#x2606;'.repeat(5-f.rating)}</div>
@@ -1097,7 +1098,7 @@ function renderPromos() {
   if (!el) return;
   if (promos.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No promotions yet.</div>'; return; }
   el.innerHTML = promos.map(p => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);">
       <div style="display:flex;align-items:center;gap:16px;">
         <code style="background:rgba(201,168,76,0.15);color:var(--gold);padding:6px 12px;border-radius:6px;font-size:14px;font-weight:800;">${p.code}</code>
         <div>
@@ -1106,9 +1107,9 @@ function renderPromos() {
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span style="background:${p.active?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)'};color:${p.active?'#10B981':'#EF4444'};padding:3px 10px;border-radius:100px;font-size:11px;">${p.active ? 'ACTIVE' : 'DISABLED'}</span>
-        <button onclick="togglePromo(${p.id})" style="background:rgba(59,130,246,0.15);color:#3B82F6;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">${p.active?'Disable':'Enable'}</button>
-        <button onclick="deletePromo(${p.id})" style="background:rgba(239,68,68,0.15);color:#EF4444;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
+        <span style="background:${p.active?'var(--green)':'var(--red)'};color:${p.active?'var(--green)':'var(--red)'};padding:3px 10px;border-radius:100px;font-size:11px;">${p.active ? 'ACTIVE' : 'DISABLED'}</span>
+        <button onclick="togglePromo(${p.id})" style="background:var(--blue);color:var(--blue);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">${p.active?'Disable':'Enable'}</button>
+        <button onclick="deletePromo(${p.id})" style="background:var(--red);color:var(--red);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;">Delete</button>
       </div>
     </div>
   `).join('');
@@ -1133,7 +1134,7 @@ function runSecurityAudit() {
   ];
 
   el.innerHTML = checks.map(c => `
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(255,255,255,0.03);border-radius:10px;border-left:4px solid ${c.pass?'#10B981':'#EF4444'};">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--bg-subtle);border-radius:10px;border-left:4px solid ${c.pass?'var(--green)':'var(--red)'};">
       <span style="font-size:18px;">${c.pass?'✅':'❌'}</span>
       <div>
         <div style="font-weight:700;color:var(--text-primary);">${c.label}</div>
@@ -1161,7 +1162,7 @@ ACTIVE RESTAURANTS: ${restaurants.filter(r => r.isActive).length}
 ON TRIAL: ${restaurants.filter(r => r.plan==='trial').length}
 TOTAL PLATFORM ORDERS: ${stats.totalOrders}
 TOTAL PLATFORM REVENUE: ₹${Math.round(stats.totalRevenue)}`;
-  if (el) el.innerHTML = `<pre style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;font-size:13px;color:var(--text-primary);white-space:pre-wrap;">${report}</pre><button class="btn-gold" style="margin-top:8px;" onclick="downloadReport('monthly_report.txt', \`${report}\`)">Download TXT</button>`;
+  if (el) el.innerHTML = `<pre style="background:var(--bg-subtle);padding:16px;border-radius:8px;font-size:13px;color:var(--text-primary);white-space:pre-wrap;">${report}</pre><button class="btn-gold" style="margin-top:8px;" onclick="downloadReport('monthly_report.txt', \`${report}\`)">Download TXT</button>`;
 }
 
 async function generateTopRestReport() {
@@ -1169,7 +1170,7 @@ async function generateTopRestReport() {
   const restaurants = await fetchAPI('/api/master/restaurants');
   const rows = restaurants.map((r,i) => `${i+1}. ${r.name} | Plan: ${r.plan.toUpperCase()} | Status: ${r.isActive?'Active':'Suspended'}`).join('\n');
   const report = `TOP RESTAURANTS REPORT\nGenerated: ${new Date().toLocaleString()}\n\n${rows}`;
-  if (el) el.innerHTML = `<pre style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;font-size:13px;color:var(--text-primary);white-space:pre-wrap;">${report}</pre><button class="btn-gold" style="margin-top:8px;" onclick="downloadReport('top_restaurants.txt', \`${report}\`)">Download TXT</button>`;
+  if (el) el.innerHTML = `<pre style="background:var(--bg-subtle);padding:16px;border-radius:8px;font-size:13px;color:var(--text-primary);white-space:pre-wrap;">${report}</pre><button class="btn-gold" style="margin-top:8px;" onclick="downloadReport('top_restaurants.txt', \`${report}\`)">Download TXT</button>`;
 }
 
 async function generateExpiryReport() {
@@ -1180,7 +1181,7 @@ async function generateExpiryReport() {
   const expiring = restaurants.filter(r => r.subscriptionExpiry && new Date(r.subscriptionExpiry) <= in30);
   const rows = expiring.length === 0 ? 'No subscriptions expiring in the next 30 days.' : expiring.map(r => `${r.name} | Expires: ${new Date(r.subscriptionExpiry).toLocaleDateString()}`).join('\n');
   const report = `EXPIRY WARNING REPORT (Next 30 Days)\nGenerated: ${new Date().toLocaleString()}\n\n${rows}`;
-  if (el) el.innerHTML = `<pre style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;font-size:13px;color:var(--text-primary);white-space:pre-wrap;">${report}</pre><button class="btn-gold" style="margin-top:8px;" onclick="downloadReport('expiry_report.txt', \`${report}\`)">Download TXT</button>`;
+  if (el) el.innerHTML = `<pre style="background:var(--bg-subtle);padding:16px;border-radius:8px;font-size:13px;color:var(--text-primary);white-space:pre-wrap;">${report}</pre><button class="btn-gold" style="margin-top:8px;" onclick="downloadReport('expiry_report.txt', \`${report}\`)">Download TXT</button>`;
 }
 
 function downloadReport(filename, content) {

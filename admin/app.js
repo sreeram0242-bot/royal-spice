@@ -1167,7 +1167,7 @@ function switchRevenueTab(tab) {
     const sec = document.getElementById(`rev-section-${t}`);
     if (!btn || !sec) return;
     if (t === tab) {
-      btn.style.background = 'var(--blue)';
+      btn.style.background = 'var(--primary)';
       btn.style.color = 'white';
       sec.style.display = '';
     } else {

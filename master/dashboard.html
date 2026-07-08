@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master Dashboard - Cloud Dine</title>
   <link rel="stylesheet" href="style.css?v=4">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
+<body class="light-theme">
   <div class="sidebar">
     <div class="brand">
       <h2><i data-lucide="crown" style="width:28px;height:28px;margin-bottom:-4px;"></i> Master Panel</h2>
@@ -144,10 +144,10 @@
             </select>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
-            <div class="stat-card" style="border-left:4px solid #10B981;"><div class="title">Active Monthly</div><div class="value" id="subCountMonthly" style="color:#10B981;">0</div></div>
-            <div class="stat-card" style="border-left:4px solid #F59E0B;"><div class="title">On Trial</div><div class="value" id="subCountTrial" style="color:#F59E0B;">0</div></div>
-            <div class="stat-card" style="border-left:4px solid #EF4444;"><div class="title">Expiring in 7 Days</div><div class="value" id="subCountExpiring" style="color:#EF4444;">0</div></div>
-            <div class="stat-card" style="border-left:4px solid #8B5CF6;"><div class="title">Suspended</div><div class="value" id="subCountSuspended" style="color:#8B5CF6;">0</div></div>
+            <div class="stat-card" style="border-left:4px solid var(--green);"><div class="title">Active Monthly</div><div class="value" id="subCountMonthly" style="color:var(--green);">0</div></div>
+            <div class="stat-card" style="border-left:4px solid var(--orange);"><div class="title">On Trial</div><div class="value" id="subCountTrial" style="color:var(--orange);">0</div></div>
+            <div class="stat-card" style="border-left:4px solid var(--red);"><div class="title">Expiring in 7 Days</div><div class="value" id="subCountExpiring" style="color:var(--red);">0</div></div>
+            <div class="stat-card" style="border-left:4px solid var(--purple);"><div class="title">Suspended</div><div class="value" id="subCountSuspended" style="color:var(--purple);">0</div></div>
           </div>
           <table id="subscriptionTable">
             <thead><tr><th>Restaurant</th><th>Plan</th><th>Status</th><th>Expiry</th><th>Action</th></tr></thead>
@@ -160,9 +160,9 @@
       <div id="view-analytics" class="view hidden">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
           <div class="stat-card" style="border-left:4px solid var(--gold);"><div class="title">Total Restaurants</div><div class="value" id="analTotal">0</div></div>
-          <div class="stat-card" style="border-left:4px solid #10B981;"><div class="title">Total Orders (All Time)</div><div class="value" id="analOrders">0</div></div>
-          <div class="stat-card" style="border-left:4px solid #3B82F6;"><div class="title">Avg Orders/Restaurant</div><div class="value" id="analAvg">0</div></div>
-          <div class="stat-card" style="border-left:4px solid #8B5CF6;"><div class="title">Total Revenue (All)</div><div class="value" id="analRev">₹0</div></div>
+          <div class="stat-card" style="border-left:4px solid var(--green);"><div class="title">Total Orders (All Time)</div><div class="value" id="analOrders">0</div></div>
+          <div class="stat-card" style="border-left:4px solid var(--blue);"><div class="title">Avg Orders/Restaurant</div><div class="value" id="analAvg">0</div></div>
+          <div class="stat-card" style="border-left:4px solid var(--purple);"><div class="title">Total Revenue (All)</div><div class="value" id="analRev">₹0</div></div>
         </div>
         <div class="panels-grid">
           <div class="panel">
@@ -212,15 +212,15 @@
           <h3 style="margin-bottom:8px;">🗄️ Backup & Export</h3>
           <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;">Download snapshots of your platform data.</p>
           <div style="display:flex;flex-direction:column;gap:16px;max-width:520px;">
-            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+            <div style="padding:16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
               <div><div style="font-weight:600;color:var(--text-primary);">📋 All Restaurants CSV</div><div style="font-size:12px;color:var(--text-muted);">Name, Plan, Status, Date Added</div></div>
               <button class="btn-gold" style="padding:8px 16px;" onclick="exportRestaurantsCSV()">Download</button>
             </div>
-            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+            <div style="padding:16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
               <div><div style="font-weight:600;color:var(--text-primary);">📊 Platform Summary JSON</div><div style="font-size:12px;color:var(--text-muted);">Dashboard stats snapshot in JSON format</div></div>
               <button class="btn-gold" style="padding:8px 16px;" onclick="exportSummaryJSON()">Download</button>
             </div>
-            <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+            <div style="padding:16px;background:var(--bg-subtle);border-radius:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
               <div><div style="font-weight:600;color:var(--text-primary);">📝 Admin Notes TXT</div><div style="font-size:12px;color:var(--text-muted);">Download all saved admin notes as plain text</div></div>
               <button class="btn-gold" style="padding:8px 16px;" onclick="exportNotesTXT()">Download</button>
             </div>
@@ -244,19 +244,19 @@
               <div style="font-size:28px;margin-bottom:8px;">⏰</div>
               <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Extend Trial</div>
               <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Give a restaurant extra trial days.</div>
-              <button class="btn-gold" style="padding:8px 16px;width:100%;background:#10B981;border:none;color:white;" onclick="showView('subscriptions')">Manage Subscriptions</button>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;background:var(--green);border:none;color:white;" onclick="showView('subscriptions')">Manage Subscriptions</button>
             </div>
             <div style="padding:20px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;">
               <div style="font-size:28px;margin-bottom:8px;">📧</div>
               <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Send Support Message</div>
               <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Send a direct notification to a restaurant.</div>
-              <button class="btn-gold" style="padding:8px 16px;width:100%;background:#F59E0B;border:none;color:white;" onclick="showView('restaurants')">Select Restaurant</button>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;background:var(--orange);border:none;color:white;" onclick="showView('restaurants')">Select Restaurant</button>
             </div>
             <div style="padding:20px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;">
               <div style="font-size:28px;margin-bottom:8px;">📖</div>
               <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">Platform Docs</div>
               <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Quick reference for how the platform works.</div>
-              <button class="btn-gold" style="padding:8px 16px;width:100%;background:#8B5CF6;border:none;color:white;" onclick="openDocsModal()">View Docs</button>
+              <button class="btn-gold" style="padding:8px 16px;width:100%;background:var(--purple);border:none;color:white;" onclick="openDocsModal()">View Docs</button>
             </div>
           </div>
         </div>
@@ -279,7 +279,7 @@
               <label style="color:var(--text-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;">Support Email</label>
               <input type="email" id="settingSupportEmail" class="login-input" placeholder="support@clouddine.com" style="margin-bottom:0;">
             </div>
-            <div style="display:flex;align-items:center;gap:12px;padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--border-color);">
+            <div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--bg-subtle);border-radius:8px;border:1px solid var(--border-color);">
               <input type="checkbox" id="settingMaintenanceMode" style="width:18px;height:18px;cursor:pointer;">
               <div>
                 <div style="font-weight:600;color:var(--text-primary);">Maintenance Mode</div>
@@ -418,20 +418,20 @@
         <button class="btn-outline" style="padding:6px 12px;" onclick="closeModal('docsModal')">Close</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;font-size:14px;line-height:1.7;">
-        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid var(--gold);">
+        <div style="padding:16px;background:var(--bg-subtle);border-radius:8px;border-left:4px solid var(--gold);">
           <div style="font-weight:700;color:var(--gold);margin-bottom:8px;">🏢 Creating a Restaurant</div>
           <div style="color:var(--text-muted);">Go to Restaurants → Click "+ Create Restaurant" → Fill in name, address, plan, and admin credentials. The restaurant gets its own admin login and QR codes automatically.</div>
         </div>
-        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid #3B82F6;">
-          <div style="font-weight:700;color:#3B82F6;margin-bottom:8px;">💳 Managing Subscriptions</div>
+        <div style="padding:16px;background:var(--bg-subtle);border-radius:8px;border-left:4px solid var(--blue);">
+          <div style="font-weight:700;color:var(--blue);margin-bottom:8px;">💳 Managing Subscriptions</div>
           <div style="color:var(--text-muted);">Go to Subscriptions → See all trial, active, and expiring restaurants. Click "View" to update their plan or expiry date.</div>
         </div>
-        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid #10B981;">
-          <div style="font-weight:700;color:#10B981;margin-bottom:8px;">📢 Sending Broadcasts</div>
+        <div style="padding:16px;background:var(--bg-subtle);border-radius:8px;border-left:4px solid var(--green);">
+          <div style="font-weight:700;color:var(--green);margin-bottom:8px;">📢 Sending Broadcasts</div>
           <div style="color:var(--text-muted);">Use the red "Broadcast" button in the header for global alerts. Use the "Notify" button in Restaurants for targeted messages.</div>
         </div>
-        <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:4px solid #EF4444;">
-          <div style="font-weight:700;color:#EF4444;margin-bottom:8px;">🚫 Suspending a Restaurant</div>
+        <div style="padding:16px;background:var(--bg-subtle);border-radius:8px;border-left:4px solid var(--red);">
+          <div style="font-weight:700;color:var(--red);margin-bottom:8px;">🚫 Suspending a Restaurant</div>
           <div style="color:var(--text-muted);">Go to Restaurants → Click "Suspend". This immediately blocks their admin login. Click "Restore" to reactivate.</div>
         </div>
       </div>
