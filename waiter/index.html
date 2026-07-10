@@ -92,6 +92,7 @@
           localStorage.setItem('waiterToken', data.token);
           localStorage.setItem('waiterRestaurantId', data.restaurantId);
           localStorage.setItem('waiterName', data.waiterName);
+          localStorage.setItem('waiterPin', data.pin);
           btn.textContent = 'Success!';
           setTimeout(() => window.location.href = 'dashboard.html', 400);
         } else {

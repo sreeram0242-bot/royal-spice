@@ -481,7 +481,7 @@ async function submitOrder(passcode) {
       if (res.status === 401) {
         localStorage.removeItem('tablePasscode');
         localStorage.removeItem('sessionId');
-        alert('Passcode expired or invalid. Please ask waiter for the new PIN.');
+        alert('Waiter PIN expired or invalid. Please ask waiter for their PIN.');
         placeOrder(); // Trigger prompt again
       } else {
         alert(data.message || 'Failed to place order');

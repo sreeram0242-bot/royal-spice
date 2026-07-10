@@ -54,6 +54,10 @@ async function loadSettings() {
     if (!res || !res.ok) return;
     const data = await res.json();
     document.getElementById('restaurantNameTop').textContent = data.name;
+    const waiterPin = localStorage.getItem('waiterPin');
+    if (waiterPin) {
+      document.getElementById('waiterPinDisplay').textContent = `My PIN: ${waiterPin}`;
+    }
     window._gstPercent = data.gstPercent;
     window._totalTables = data.totalTables;
     window._paymentQrCode = data.paymentQrCode;
@@ -101,7 +105,7 @@ function renderTableGrid(tables) {
   
   tables.forEach(t => {
     const card = document.createElement('div');
-    card.onclick = () => openTableModal(t.tableNumber, t.passcode);
+    card.onclick = () => openTableModal(t.tableNumber);
     
     const statusMap = {
       available: 'free',
@@ -130,7 +134,6 @@ function renderTableGrid(tables) {
         ${bellHtml}
       </div>
       <div class="table-name">T${String(t.tableNumber).padStart(2,'0')}</div>
-      <div class="table-pin">PIN: ${t.passcode || '----'}</div>
       <div class="status-text">${t.total > 0 ? '₹'+t.total.toFixed(2) + ' <br>' : ''}${statusLabel}</div>
     `;
     grid.appendChild(card);
@@ -139,14 +142,14 @@ function renderTableGrid(tables) {
 }
 
 // ── TABLE MODAL ──
-async function openTableModal(tableNumber, passcode = null) {
+async function openTableModal(tableNumber) {
   const modal = document.getElementById('tableModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
   const body = document.getElementById('modalBody');
 
   title.textContent = `Table ${tableNumber}`;
-  sub.textContent = `PIN: ${passcode || '----'}`;
+  sub.textContent = ``;
   body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
   modal.classList.add('open');
 
@@ -159,7 +162,7 @@ async function openTableModal(tableNumber, passcode = null) {
           <i data-lucide="info" style="width:48px;height:48px;color:var(--text-muted);opacity:0.5;margin-bottom:16px;"></i>
           <div style="color:var(--text-muted);">Table is currently empty.</div>
         </div>
-        <button class="action-btn btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber}, '')">
+        <button class="action-btn btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber})">
           <i data-lucide="plus" style="width:18px;"></i> Place Order
         </button>
       `;
@@ -709,18 +712,7 @@ setInterval(() => {
   loadLiveOrders();
 }, 30000);
 
-async function generatePasscode(tableNumber) {
-  try {
-    const res = await api('/api/waiter/table/' + tableNumber + '/generate-code', 'POST');
-    if (res && res.ok) {
-      loadTables();
-      const data = await res.json();
-      openTableModal(tableNumber, data.passcode);
-    }
-  } catch(e) {
-    console.error(e);
-  }
-}
+
 
 // ── SOCKET IO ──
 const socket = io();

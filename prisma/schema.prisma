@@ -67,21 +67,11 @@ model Order {
   sessionId    String
   sessionNumber Int?
   paymentMethod String?
-  closedByWaiter String?
+  waiterName   String?
   createdAt    DateTime    @default(now())
 
   restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   items        OrderItem[]
-}
-
-model TablePasscode {
-  id           String     @id @default(cuid())
-  restaurantId String
-  tableNumber  Int
-  passcode     String
-  createdAt    DateTime   @default(now())
-
-  @@unique([restaurantId, tableNumber])
 }
 
 model OrderItem {
@@ -157,6 +147,7 @@ model Waiter {
   name         String
   username     String     @unique
   passwordHash String
+  pin          String     @default("1234")
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
 

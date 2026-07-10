@@ -937,9 +937,9 @@ async function renderFullTableGrid(total) {
 
     tables.forEach(t => {
       const isOccupied = t.status === 'occupied';
-      const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : (t.passcode ? `<span style="color:var(--gold);font-weight:bold;font-size:14px;">PIN: ${t.passcode}</span>` : 'Free');
-      const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber}, '${t.passcode || ''}')" style="cursor:pointer;"` : '';
-      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'occupied' : (t.passcode ? 'status-new' : 'available')}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
+      const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : 'Free';
+      const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber})"` : '';
+      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
         <div style="font-size: 24px; font-weight: bold; margin-bottom: 4px;">T${t.tableNumber.toString().padStart(2, '0')}</div>
         <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
       </div>`;
@@ -950,7 +950,7 @@ async function renderFullTableGrid(total) {
 }
 
 // ── TABLE SESSION MANAGEMENT (Admin) ──
-async function openTableModal(tableNumber, passcode = null) {
+async function openTableModal(tableNumber) {
   const modal = document.getElementById('tableModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
@@ -958,7 +958,7 @@ async function openTableModal(tableNumber, passcode = null) {
   const headerAction = document.getElementById('modalHeaderAction');
 
   title.textContent = `Table ${tableNumber}`;
-  sub.textContent = `PIN: ${passcode || '----'}`;
+  sub.textContent = ``;
   body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
   
   if (headerAction) {
@@ -1889,13 +1889,14 @@ async function loadWaiters() {
   try {
     const waiters = await fetchAPI('/api/admin/waiters');
     if (!waiters || !Array.isArray(waiters) || waiters.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No waiters yet. Click "+ Add Waiter" to create one.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No waiters yet. Click "+ Add Waiter" to create one.</td></tr>';
       return;
     }
     tbody.innerHTML = waiters.map(w => `
       <tr style="border-bottom:1px solid #1f1f1f;">
         <td style="padding:12px 12px; font-weight:600;">${w.name}</td>
         <td style="padding:12px 12px; font-family:monospace; color:var(--gold); font-size:13px;">@${w.username}</td>
+        <td style="padding:12px 12px; font-family:monospace; font-size:14px; color:var(--primary); font-weight:bold;">${w.pin || '----'}</td>
         <td style="padding:12px 12px;"><span style="font-size:11px; padding:3px 9px; border-radius:100px; background:${w.isActive ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}; color:${w.isActive ? '#22C55E' : '#EF4444'};">${w.isActive ? 'Active' : 'Disabled'}</span></td>
         <td style="padding:12px 12px; color:var(--text-muted); font-size:13px;">${new Date(w.createdAt).toLocaleDateString()}</td>
         <td style="padding:12px 12px; text-align:right;">

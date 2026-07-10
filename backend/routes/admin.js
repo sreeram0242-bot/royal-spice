@@ -213,11 +213,6 @@ router.get('/tables', authAdmin, async (req, res) => {
     const activeOrders = await prisma.order.findMany({
       where: { restaurantId, status: { not: 'completed' } }
     });
-
-    const passcodes = await prisma.tablePasscode.findMany({
-      where: { restaurantId }
-    });
-
     const tables = [];
     for (let i = 1; i <= restaurant.totalTables; i++) {
       const tableOrders = activeOrders.filter(o => o.tableNumber === i);
@@ -228,22 +223,9 @@ router.get('/tables', authAdmin, async (req, res) => {
       const tip = tableOrders.reduce((sum, o) => sum + (o.tip || 0), 0);
       const total = Math.round(subtotal + gstAmount + tip);
 
-      let passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
-      
-      if (!passcode) {
-        passcode = Math.floor(1000 + Math.random() * 9000).toString();
-        // Fire and forget upsert, or await it. We await it to ensure consistency.
-        await prisma.tablePasscode.upsert({
-          where: { restaurantId_tableNumber: { restaurantId, tableNumber: i } },
-          update: { passcode },
-          create: { restaurantId, tableNumber: i, passcode }
-        });
-      }
-
       tables.push({
         tableNumber: i,
         status: isOccupied ? 'occupied' : 'available',
-        passcode,
         total
       });
     }
@@ -322,19 +304,11 @@ router.post('/table/:num/close-session', authAdmin, async (req, res) => {
       data: { 
         status: 'completed', 
         paymentMethod: paymentMethod || 'cash',
-        closedByWaiter: 'Admin' 
+        waiterName: 'Admin' 
       }
     });
 
-    const newPasscode = Math.floor(1000 + Math.random() * 9000).toString();
-    await prisma.tablePasscode.upsert({
-      where: { restaurantId_tableNumber: { restaurantId, tableNumber } },
-      update: { passcode: newPasscode },
-      create: { restaurantId, tableNumber, passcode: newPasscode }
-    });
-
     const io = req.app.get('io');
-    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode: newPasscode });
     io.to(restaurantId).emit('session_closed', { tableNumber, sessionId: latestOrder.sessionId });
 
     res.json({ message: 'Session closed successfully' });
@@ -585,7 +559,7 @@ router.get('/waiters', authAdmin, async (req, res) => {
   try {
     const waiters = await prisma.waiter.findMany({
       where: { restaurantId: req.user.restaurantId },
-      select: { id: true, name: true, username: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, username: true, pin: true, isActive: true, createdAt: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(waiters);
@@ -608,14 +582,16 @@ router.post('/waiters', authAdmin, async (req, res) => {
     if (existing) return res.status(409).json({ message: 'Username already exists globally. Please choose another username.' });
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const pin = Math.floor(1000 + Math.random() * 9000).toString();
     const waiter = await prisma.waiter.create({
       data: {
         restaurantId: req.user.restaurantId,
         name,
         username,
-        passwordHash
+        passwordHash,
+        pin
       },
-      select: { id: true, name: true, username: true, isActive: true, createdAt: true }
+      select: { id: true, name: true, username: true, pin: true, isActive: true, createdAt: true }
     });
     res.status(201).json(waiter);
   } catch (err) {

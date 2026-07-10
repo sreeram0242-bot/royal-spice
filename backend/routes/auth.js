@@ -72,7 +72,7 @@ router.post('/waiter/login', async (req, res) => {
       { expiresIn: '12h' }
     );
 
-    res.json({ token, restaurantId: waiter.restaurantId, waiterName: waiter.name, message: 'Login successful' });
+    res.json({ token, restaurantId: waiter.restaurantId, waiterName: waiter.name, pin: waiter.pin, message: 'Login successful' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
