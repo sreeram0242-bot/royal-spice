@@ -52,15 +52,15 @@ router.post('/order', async (req, res) => {
   try {
     const { restaurantId, tableNumber, items, subtotal, gst, tip = 0, total, sessionId, passcode } = req.body;
     
-    // Validate Waiter PIN
-    const matchingWaiter = await prisma.waiter.findFirst({
-      where: { restaurantId, pin: passcode }
+    // Validate Table Passcode
+    const validPasscode = await prisma.tablePasscode.findUnique({
+      where: { restaurantId_tableNumber: { restaurantId, tableNumber: parseInt(tableNumber) } }
     });
     
-    if (!matchingWaiter) {
-      return res.status(401).json({ message: 'Invalid Waiter PIN. Please ask the waiter for their PIN.' });
+    if (!validPasscode || validPasscode.passcode !== passcode) {
+      return res.status(401).json({ message: 'Invalid or missing 4-digit passcode. Please ask the waiter.' });
     }
-    const waiterName = matchingWaiter.name;
+    const waiterName = validPasscode.waiterName || 'Waiter';
 
     // Generate simple order number
     const count = await prisma.order.count({ where: { restaurantId } });

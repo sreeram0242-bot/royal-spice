@@ -54,10 +54,6 @@ async function loadSettings() {
     if (!res || !res.ok) return;
     const data = await res.json();
     document.getElementById('restaurantNameTop').textContent = data.name;
-    const waiterPin = localStorage.getItem('waiterPin');
-    if (waiterPin) {
-      document.getElementById('waiterPinDisplay').textContent = `My PIN: ${waiterPin}`;
-    }
     window._gstPercent = data.gstPercent;
     window._totalTables = data.totalTables;
     window._paymentQrCode = data.paymentQrCode;
@@ -105,7 +101,7 @@ function renderTableGrid(tables) {
   
   tables.forEach(t => {
     const card = document.createElement('div');
-    card.onclick = () => openTableModal(t.tableNumber);
+    card.onclick = () => openTableModal(t.tableNumber, t.passcode);
     
     const statusMap = {
       available: 'free',
@@ -134,6 +130,7 @@ function renderTableGrid(tables) {
         ${bellHtml}
       </div>
       <div class="table-name">T${String(t.tableNumber).padStart(2,'0')}</div>
+      <div class="table-pin">PIN: ${t.passcode || '----'}</div>
       <div class="status-text">${t.total > 0 ? '₹'+t.total.toFixed(2) + ' <br>' : ''}${statusLabel}</div>
     `;
     grid.appendChild(card);
@@ -142,14 +139,14 @@ function renderTableGrid(tables) {
 }
 
 // ── TABLE MODAL ──
-async function openTableModal(tableNumber) {
+async function openTableModal(tableNumber, passcode = null) {
   const modal = document.getElementById('tableModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
   const body = document.getElementById('modalBody');
 
   title.textContent = `Table ${tableNumber}`;
-  sub.textContent = ``;
+  sub.textContent = `PIN: ${passcode || '----'}`;
   body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
   modal.classList.add('open');
 
@@ -162,8 +159,11 @@ async function openTableModal(tableNumber) {
           <i data-lucide="info" style="width:48px;height:48px;color:var(--text-muted);opacity:0.5;margin-bottom:16px;"></i>
           <div style="color:var(--text-muted);">Table is currently empty.</div>
         </div>
-        <button class="action-btn btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber})">
+        <button class="action-btn btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber}, '')">
           <i data-lucide="plus" style="width:18px;"></i> Place Order
+        </button>
+        <button class="action-btn btn-secondary" onclick="generatePasscode(${tableNumber})" style="margin-top:8px;">
+          <i data-lucide="key" style="width:18px;"></i> Generate Passcode
         </button>
       `;
       if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -202,7 +202,7 @@ async function openTableModal(tableNumber) {
       
       <div class="section-title" style="padding:0; margin-bottom:12px;">ACTIONS</div>
       <button class="action-btn btn-secondary" onclick="printBill(${tableNumber})"><i data-lucide="file-text" style="width:18px;"></i> View Bill</button>
-      <button class="action-btn btn-secondary" style="color:var(--text); border-color:var(--border);" onclick="closeTableModal(); startOrderForTable(${tableNumber})"><i data-lucide="plus" style="width:18px;"></i> Add More Items</button>
+      <button class="action-btn btn-secondary" style="color:var(--text); border-color:var(--border);" onclick="closeTableModal(); startOrderForTable(${tableNumber}, '${passcode}')"><i data-lucide="plus" style="width:18px;"></i> Add More Items</button>
       <button class="action-btn btn-danger" onclick="closeSession(${tableNumber})"><i data-lucide="x-circle" style="width:18px;"></i> Close Table Session</button>
     `;
 
@@ -713,6 +713,18 @@ setInterval(() => {
 }, 30000);
 
 
+async function generatePasscode(tableNumber) {
+  try {
+    const res = await api('/api/waiter/table/' + tableNumber + '/generate-code', 'POST');
+    if (res && res.ok) {
+      loadTables();
+      const data = await res.json();
+      openTableModal(tableNumber, data.passcode);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
 
 // ── SOCKET IO ──
 const socket = io();

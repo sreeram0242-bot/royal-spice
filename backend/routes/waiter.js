@@ -151,6 +151,34 @@ router.get('/table/:num/bill', authWaiter, async (req, res) => {
 });
 
 
+// POST /api/waiter/table/:num/generate-code - generate passcode for table
+router.post('/table/:num/generate-code', authWaiter, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurantId = req.user.restaurantId;
+    
+    const passcode = Math.floor(1000 + Math.random() * 9000).toString();
+    const waiterName = req.user.waiterName || 'Waiter';
+    
+    const record = await prisma.tablePasscode.upsert({
+      where: {
+        restaurantId_tableNumber: { restaurantId, tableNumber }
+      },
+      update: { passcode, waiterName },
+      create: { restaurantId, tableNumber, passcode, waiterName }
+    });
+    
+    // notify clients
+    const io = req.app.get('io');
+    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode });
+    
+    res.json({ message: 'Passcode generated', passcode });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // POST /api/waiter/order — place a new order for a table
 router.post('/order', authWaiter, async (req, res) => {
   try {

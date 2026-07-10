@@ -35,6 +35,7 @@ model Restaurant {
   complaints         Complaint[]
   categorySettings   CategorySetting[]
   waiters            Waiter[]
+  tablePasscodes     TablePasscode[]
 }
 
 model MenuItem {
@@ -147,9 +148,20 @@ model Waiter {
   name         String
   username     String     @unique
   passwordHash String
-  pin          String     @default("1234")
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
 
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+
+model TablePasscode {
+  id           String     @id @default(cuid())
+  restaurantId String
+  tableNumber  Int
+  passcode     String
+  waiterName   String?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, tableNumber])
 }

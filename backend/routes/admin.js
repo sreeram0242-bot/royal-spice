@@ -559,7 +559,7 @@ router.get('/waiters', authAdmin, async (req, res) => {
   try {
     const waiters = await prisma.waiter.findMany({
       where: { restaurantId: req.user.restaurantId },
-      select: { id: true, name: true, username: true, pin: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, username: true, isActive: true, createdAt: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(waiters);
@@ -582,16 +582,14 @@ router.post('/waiters', authAdmin, async (req, res) => {
     if (existing) return res.status(409).json({ message: 'Username already exists globally. Please choose another username.' });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
     const waiter = await prisma.waiter.create({
       data: {
         restaurantId: req.user.restaurantId,
         name,
         username,
-        passwordHash,
-        pin
+        passwordHash
       },
-      select: { id: true, name: true, username: true, pin: true, isActive: true, createdAt: true }
+      select: { id: true, name: true, username: true, isActive: true, createdAt: true }
     });
     res.status(201).json(waiter);
   } catch (err) {

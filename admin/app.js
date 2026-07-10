@@ -1889,14 +1889,13 @@ async function loadWaiters() {
   try {
     const waiters = await fetchAPI('/api/admin/waiters');
     if (!waiters || !Array.isArray(waiters) || waiters.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No waiters yet. Click "+ Add Waiter" to create one.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No waiters yet. Click "+ Add Waiter" to create one.</td></tr>';
       return;
     }
     tbody.innerHTML = waiters.map(w => `
       <tr style="border-bottom:1px solid #1f1f1f;">
         <td style="padding:12px 12px; font-weight:600;">${w.name}</td>
         <td style="padding:12px 12px; font-family:monospace; color:var(--gold); font-size:13px;">@${w.username}</td>
-        <td style="padding:12px 12px; font-family:monospace; font-size:14px; color:var(--primary); font-weight:bold;">${w.pin || '----'}</td>
         <td style="padding:12px 12px;"><span style="font-size:11px; padding:3px 9px; border-radius:100px; background:${w.isActive ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}; color:${w.isActive ? '#22C55E' : '#EF4444'};">${w.isActive ? 'Active' : 'Disabled'}</span></td>
         <td style="padding:12px 12px; color:var(--text-muted); font-size:13px;">${new Date(w.createdAt).toLocaleDateString()}</td>
         <td style="padding:12px 12px; text-align:right;">
