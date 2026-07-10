@@ -230,6 +230,27 @@ async function loadSettings(onlyTables = false) {
     }
   }
 }
+async function handleAutoPrintToggle(el) {
+  if (el.checked) {
+    try {
+      if (navigator.usb) {
+        await navigator.usb.requestDevice({ filters: [] });
+      } else if (navigator.bluetooth) {
+        await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
+      } else {
+        alert("Your browser doesn't support Web USB or Bluetooth direct printer connection. Auto KOT will fallback to system print dialog.");
+      }
+      localStorage.setItem('autoPrint', 'true');
+    } catch (e) {
+      console.log('Printer connection cancelled or failed', e);
+      // Revert the toggle if user cancels connection
+      el.checked = false;
+      localStorage.setItem('autoPrint', 'false');
+    }
+  } else {
+    localStorage.setItem('autoPrint', 'false');
+  }
+}
 
 async function saveSettings() {
   const name = document.getElementById('setRestName').value;
