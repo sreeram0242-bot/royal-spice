@@ -291,7 +291,7 @@ async function loadDashboard() {
   } else {
     pendingOrders.slice(0, 5).forEach(o => {
       tbody.innerHTML += `
-        <tr onclick="showView('orders');" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='transparent'">
+        <tr onclick="showView('orders');" style="cursor: pointer;">
           <td><div class="table-pill" style="padding: 4px; border-radius: 0; width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">Table ${o.tableNumber}</div></td>
           <td>#${o.orderNumber}</td>
           <td>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
