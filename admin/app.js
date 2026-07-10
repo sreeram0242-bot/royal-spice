@@ -942,6 +942,7 @@ async function renderFullTableGrid(total) {
       grid.innerHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
         <div style="font-size: 24px; font-weight: bold; margin-bottom: 4px;">T${t.tableNumber.toString().padStart(2, '0')}</div>
         <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
+        ${isOccupied && t.waiterName ? `<div style="font-size: 11px; color: var(--gold-secondary); margin-top: 4px; text-transform: capitalize;">${t.waiterName}</div>` : ''}
       </div>`;
     });
   } catch (err) {
@@ -975,7 +976,8 @@ async function openTableModal(tableNumber) {
 
     let bodyHTML = `
       ${statusPill}
-      <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Session Started: ${timeStr}</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">Session Started: ${timeStr}</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Waiter: <span style="text-transform:capitalize; color:var(--text-primary); font-weight:bold;">${res.orders[0].waiterName || 'Waiter'}</span></div>
       
       <div style="background:var(--panel-bg); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:12px;">
@@ -1646,6 +1648,7 @@ async function loadHistory() {
           tableNumber: o.tableNumber,
           createdAt: o.createdAt,
           paymentMethod: o.paymentMethod || 'cash',
+          waiterName: o.waiterName || 'Waiter',
           total: 0,
           subtotal: 0,
           gst: 0,
@@ -1706,6 +1709,7 @@ function renderHistory() {
         <td style="padding: 12px; color: var(--text-primary);">Table ${session.tableNumber}</td>
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
         <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
+        <td style="padding: 12px; color: var(--text-primary); text-transform: capitalize;">${session.waiterName || 'Waiter'}</td>
         <td style="padding: 12px; display: flex; gap: 8px;">
           <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails('${session.sessionId}')">View Items</button>
           <button class="btn-gold" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding: 6px 8px; display:flex; align-items:center;" onclick="printHistoryBill('${session.sessionId}')" title="Print Bill"><i data-lucide="printer" style="width:14px;height:14px;"></i></button>
@@ -2098,6 +2102,7 @@ function printHistoryBill(sessionId) {
           <div style="display:flex;justify-content:space-between;"><span>Date:</span><span>${dateStr}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Time:</span><span>${timeStr}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Table:</span><span>No. ${session.tableNumber}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Waiter:</span><span style="text-transform:capitalize;">${session.waiterName || 'Waiter'}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Session:</span><span>#${session.sessionNumber}</span></div>
           <div style="display:flex;justify-content:space-between;text-transform:capitalize;"><span>Payment:</span><span>${session.paymentMethod}</span></div>
         </div>

@@ -226,7 +226,8 @@ router.get('/tables', authAdmin, async (req, res) => {
       tables.push({
         tableNumber: i,
         status: isOccupied ? 'occupied' : 'available',
-        total
+        total,
+        waiterName: isOccupied ? tableOrders[0].waiterName : null
       });
     }
 
