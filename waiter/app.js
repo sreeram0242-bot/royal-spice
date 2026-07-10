@@ -121,9 +121,13 @@ function renderTableGrid(tables) {
       occupied: 'Occupied'
     }[t.status] || t.status;
 
+    const hasCall = window._activeCalls && window._activeCalls.find(c => c.tableNumber === t.tableNumber);
+    const bellHtml = hasCall ? `<i data-lucide="bell-ring" style="width:24px;height:24px;color:#EF4444;animation: bell-ring 2s infinite; margin-left: auto;"></i>` : '';
+
     card.innerHTML = `
-      <div class="icon-row">
+      <div class="icon-row" style="display:flex; justify-content:space-between; align-items:center;">
         <i data-lucide="armchair" style="width:24px;height:24px;"></i>
+        ${bellHtml}
       </div>
       <div class="table-name">T${String(t.tableNumber).padStart(2,'0')}</div>
       <div class="table-pin">PIN: ${t.passcode || '----'}</div>
@@ -368,6 +372,7 @@ async function loadCalls() {
     const res = await api('/api/waiter/calls');
     if (!res || !res.ok) { list.innerHTML = '<div class="loading-text">Failed to load calls.</div>'; return; }
     const calls = await res.json();
+    window._activeCalls = calls;
 
     const badge = document.getElementById('callBadge');
     if (badge) badge.style.display = calls.length > 0 ? 'flex' : 'none';
@@ -399,7 +404,10 @@ async function attendCall(id) {
   try {
     await api(`/api/waiter/calls/${id}/attend`, 'PUT');
     document.getElementById(`call-${id}`)?.remove();
-    loadCalls();
+    await loadCalls();
+    if (document.getElementById('tabTables').classList.contains('active')) {
+      renderTableGrid(window._allTablesData);
+    }
   } catch (e) { alert('Error'); }
 }
 
@@ -688,6 +696,7 @@ function logout() {
 
 // ── INIT ──
 loadSettings();
+loadCalls();
 loadTables();
 loadLiveOrders();
 
@@ -711,3 +720,27 @@ async function generatePasscode(tableNumber) {
     console.error(e);
   }
 }
+
+// ── SOCKET IO ──
+const socket = io();
+if (restaurantId) {
+  socket.emit('join_restaurant', restaurantId);
+}
+
+socket.on('waiter_call', (call) => {
+  const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+  audio.play().catch(e => console.log('Audio play failed', e));
+
+  loadCalls().then(() => {
+    if (document.getElementById('tabTables').classList.contains('active')) {
+      renderTableGrid(window._allTablesData);
+    }
+  });
+});
+
+socket.on('new_order', (order) => {
+  loadLiveOrders();
+  if (document.getElementById('tabTables').classList.contains('active')) {
+    loadTables();
+  }
+});
