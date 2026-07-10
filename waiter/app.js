@@ -192,6 +192,7 @@ async function openTableModal(tableNumber, passcode = null) {
         <div class="summary-totals">
           <div class="summary-total-row"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
           <div class="summary-total-row"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
+          ${bill.totalTip > 0 ? `<div class="summary-total-row"><span>Tip</span><span>₹${bill.totalTip.toFixed(2)}</span></div>` : ''}
           <div class="summary-grand"><span>Grand Total</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
         </div>
       </div>

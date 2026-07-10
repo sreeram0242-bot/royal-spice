@@ -1649,12 +1649,14 @@ async function loadHistory() {
           total: 0,
           subtotal: 0,
           gst: 0,
+          tip: 0,
           items: []
         };
       }
       grouped[sid].total += o.total;
       grouped[sid].subtotal += o.subtotal;
-      grouped[sid].gst += (o.total - o.subtotal);
+      grouped[sid].gst += o.gst;
+      grouped[sid].tip += (o.tip || 0);
       
       o.items.forEach(i => {
         const existing = grouped[sid].items.find(xi => xi.name === i.name && xi.price === i.price);
@@ -1744,8 +1746,12 @@ function viewHistoryDetails(sessionId) {
       <div style="color: var(--text-primary);">₹${session.subtotal.toFixed(2)}</div>
     </div>
     <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-      <div style="color: var(--text-secondary);">Tip / Other Charges</div>
+      <div style="color: var(--text-secondary);">GST</div>
       <div style="color: var(--text-secondary);">₹${session.gst.toFixed(2)}</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+      <div style="color: var(--text-secondary);">Tip</div>
+      <div style="color: var(--text-secondary);">₹${session.tip.toFixed(2)}</div>
     </div>
     <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold; font-size: 18px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
       <div style="color: var(--gold-primary);">Total Paid</div>
@@ -2011,6 +2017,7 @@ async function adminPrintBill(tableNumber) {
       <hr style="border-top:1px dashed #aaa;margin:10px 0;">
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Subtotal</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>GST (${bill.gstPercent}%)</span><span>₹${bill.gstAmount.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Tip</span><span>₹${(bill.totalTip || 0).toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:bold;border-top:2px solid #111;border-bottom:2px solid #111;padding:6px 0;margin-top:4px;"><span>GRAND TOTAL</span><span>₹${bill.grandTotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;"><span>Payment Mode:</span><span style="font-weight:bold;">${paymentText}</span></div>
       <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">
@@ -2103,7 +2110,8 @@ function printHistoryBill(sessionId) {
         
         <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; font-size:12px;">
           <div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span>₹${session.subtotal.toFixed(2)}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span>GST / Tip:</span><span>₹${session.gst.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>GST:</span><span>₹${session.gst.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Tip:</span><span>₹${session.tip.toFixed(2)}</span></div>
           <div style="display:flex;justify-content:space-between; font-weight:bold; font-size:16px; margin-top:8px;"><span>TOTAL:</span><span>₹${session.total.toFixed(2)}</span></div>
         </div>
         

@@ -381,9 +381,10 @@ function renderCart() {
   }
 
   document.getElementById('summaryItems').innerText = totalItems;
-  document.getElementById('summarySubTotal').innerText = '₹' + subTotal;
-  document.getElementById('summaryGST').innerText = '₹' + gst;
-  document.getElementById('summaryTotal').innerText = '₹' + grandTotal;
+  document.getElementById('summarySubTotal').innerText = '₹' + subTotal.toFixed(2);
+  document.getElementById('summaryGST').innerText = '₹' + gst.toFixed(2);
+  if (document.getElementById('summaryTip')) document.getElementById('summaryTip').innerText = '₹' + selectedTip.toFixed(2);
+  document.getElementById('summaryTotal').innerText = '₹' + grandTotal.toFixed(2);
 
   summary.style.display = 'block';
 }
