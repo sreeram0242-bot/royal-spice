@@ -1683,14 +1683,16 @@ function renderHistory() {
         <td style="padding: 12px; color: var(--text-primary);">Table ${session.tableNumber}</td>
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
         <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
-        <td style="padding: 12px;">
+        <td style="padding: 12px; display: flex; gap: 8px;">
           <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails('${session.sessionId}')">View Items</button>
+          <button class="btn-gold" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding: 6px 8px; display:flex; align-items:center;" onclick="printHistoryBill('${session.sessionId}')" title="Print Bill"><i data-lucide="printer" style="width:14px;height:14px;"></i></button>
         </td>
       </tr>
     `;
   });
   
   tbody.innerHTML = html;
+  setTimeout(() => lucide.createIcons(), 100);
 }
 
 function filterHistory() {
@@ -2037,8 +2039,61 @@ function showAdminQr() {
     document.getElementById('qrDisplayImage').src = restaurantSettings.paymentQrCode;
     document.getElementById('qrDisplayModal').classList.remove('hidden');
   } else {
-    alert("No Payment QR Code set! You can upload it in the Settings tab.");
+    alert('No QR Code configured in settings.');
   }
+}
+
+// ── PRINT PAST BILL ──
+function printHistoryBill(sessionId) {
+  const session = allHistorySessions.find(s => s.sessionId === sessionId);
+  if (!session) return;
+  
+  const printWindow = window.open('', '_blank', 'width=350,height=600');
+  
+  const d = new Date(session.createdAt);
+  const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  
+  let itemsHtml = session.items.map(item => `
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+      <span style="flex:1;">${item.qty}x ${item.name}</span>
+      <span style="width:70px;text-align:right;">₹${(item.price * item.qty).toFixed(2)}</span>
+    </div>
+    ${item.specialNote ? `<div style="font-size:11px;font-style:italic;margin-left:20px;">Note: ${item.specialNote}</div>` : ''}
+  `).join('');
+  
+  printWindow.document.write(`
+    <html>
+      <body style="font-family:'Courier New', monospace; padding:20px; color:#000;">
+        <h2 style="text-align:center; margin:0 0 10px 0;">PAST BILL</h2>
+        <div style="border-bottom:1px dashed #000; margin-bottom:10px; padding-bottom:10px; font-size:12px;">
+          <div style="display:flex;justify-content:space-between;"><span>Date:</span><span>${dateStr}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Time:</span><span>${timeStr}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Table:</span><span>No. ${session.tableNumber}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Session:</span><span>#${session.sessionNumber}</span></div>
+          <div style="display:flex;justify-content:space-between;text-transform:capitalize;"><span>Payment:</span><span>${session.paymentMethod}</span></div>
+        </div>
+        
+        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:8px;">
+          <span style="flex:1;">Item</span><span style="width:70px;text-align:right;">Amount</span>
+        </div>
+        
+        ${itemsHtml}
+        
+        <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; font-size:12px;">
+          <div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span>₹${session.subtotal.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>GST / Tip:</span><span>₹${session.gst.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between; font-weight:bold; font-size:16px; margin-top:8px;"><span>TOTAL:</span><span>₹${session.total.toFixed(2)}</span></div>
+        </div>
+        
+        <div style="text-align:center; margin-top:20px; font-size:11px; color:#555;">
+          *** END OF BILL ***
+        </div>
+      </body>
+    </html>
+  `);
+  
+  setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
 }
 
 // GLOBAL SEARCH
