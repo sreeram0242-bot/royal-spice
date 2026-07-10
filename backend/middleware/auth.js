@@ -41,10 +41,13 @@ const authWaiter = (req, res, next) => {
     if (verified.role !== 'waiter') {
       return res.status(403).json({ message: 'Access Denied: Waiter privileges required' });
     }
+    if (!verified.waiterId) {
+      return res.status(401).json({ message: 'Session expired. Please log in again.' });
+    }
     req.user = verified;
     next();
   } catch (err) {
-    res.status(400).json({ message: 'Invalid Token' });
+    res.status(401).json({ message: 'Invalid Token' });
   }
 };
 

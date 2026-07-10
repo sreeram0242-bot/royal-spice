@@ -96,7 +96,7 @@ router.get('/tables', authWaiter, async (req, res) => {
         orderCount: tableOrders.length,
         total,
         sessionId: tableOrders.length > 0 ? tableOrders[0].sessionId : null,
-        passcode: passcodeStr
+        passcode: isOccupied ? null : passcode
       });
     }
 
