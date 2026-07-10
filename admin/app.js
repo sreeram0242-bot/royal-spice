@@ -24,9 +24,11 @@ if (socket && restaurantId) {
     // Auto Print if enabled
     if (localStorage.getItem('autoPrint') === 'true') {
       setTimeout(() => {
-        const row = document.querySelector(`.order-card[data-order-id="${order.id}"] button[onclick*="printKOT"]`);
-        if (row) row.click();
-        else window.print(); // fallback
+        if (typeof printKOT === 'function' && order && order.id) {
+          printKOT(order.id);
+        } else {
+          window.print(); // fallback
+        }
       }, 500);
     }
 
