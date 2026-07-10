@@ -53,34 +53,39 @@ router.get('/tables', authWaiter, async (req, res) => {
       where: { restaurantId: req.user.restaurantId, status: 'pending' }
     });
 
-    // Get active passcodes
+    // Get active passcodes for THIS waiter
     const passcodes = await prisma.tablePasscode.findMany({
-      where: { restaurantId: req.user.restaurantId }
+      where: { restaurantId: req.user.restaurantId, waiterId: req.user.waiterId }
     });
 
     const tables = [];
+    const waiterName = req.user.waiterName || 'Waiter';
     for (let i = 1; i <= restaurant.totalTables; i++) {
       const tableOrders = activeOrders.filter(o => o.tableNumber === i);
       const hasCall = calls.some(c => c.tableNumber === i);
       const total = tableOrders.reduce((sum, o) => sum + o.total, 0);
       const statuses = tableOrders.map(o => o.status);
       let status = 'available';
-      if (tableOrders.length > 0) {
+      const isOccupied = tableOrders.length > 0;
+      if (isOccupied) {
         if (statuses.includes('new')) status = 'new';
         else if (statuses.includes('preparing')) status = 'preparing';
         else if (statuses.includes('ready')) status = 'ready';
         else status = 'occupied';
       }
 
-      let passcodeStr = passcodes.find(p => p.tableNumber === i)?.passcode || null;
-      if (!passcodeStr) {
-        passcodeStr = Math.floor(1000 + Math.random() * 9000).toString();
-        // Since this is just a quick UI fetch, we won't await the DB save to block the UI, 
-        // we can just fire and forget or await it. We'll await it for consistency.
-        await prisma.tablePasscode.upsert({
-          where: { restaurantId_tableNumber: { restaurantId: req.user.restaurantId, tableNumber: i } },
-          update: { passcode: passcodeStr },
-          create: { restaurantId: req.user.restaurantId, tableNumber: i, passcode: passcodeStr }
+      let passcode = passcodes.find(p => p.tableNumber === i)?.passcode || null;
+      
+      if (!isOccupied && !passcode) {
+        passcode = Math.floor(1000 + Math.random() * 9000).toString();
+        await prisma.tablePasscode.create({
+          data: {
+            restaurantId: req.user.restaurantId,
+            tableNumber: i,
+            waiterId: req.user.waiterId,
+            passcode,
+            waiterName
+          }
         });
       }
 
@@ -151,33 +156,7 @@ router.get('/table/:num/bill', authWaiter, async (req, res) => {
 });
 
 
-// POST /api/waiter/table/:num/generate-code - generate passcode for table
-router.post('/table/:num/generate-code', authWaiter, async (req, res) => {
-  try {
-    const tableNumber = parseInt(req.params.num);
-    const restaurantId = req.user.restaurantId;
-    
-    const passcode = Math.floor(1000 + Math.random() * 9000).toString();
-    const waiterName = req.user.waiterName || 'Waiter';
-    
-    const record = await prisma.tablePasscode.upsert({
-      where: {
-        restaurantId_tableNumber: { restaurantId, tableNumber }
-      },
-      update: { passcode, waiterName },
-      create: { restaurantId, tableNumber, passcode, waiterName }
-    });
-    
-    // notify clients
-    const io = req.app.get('io');
-    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode });
-    
-    res.json({ message: 'Passcode generated', passcode });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+
 
 // POST /api/waiter/order — place a new order for a table
 router.post('/order', authWaiter, async (req, res) => {
@@ -270,16 +249,11 @@ router.post('/table/:num/close-session', authWaiter, async (req, res) => {
       }
     });
 
-    // Generate new passcode for the next session
-    const newPasscode = Math.floor(1000 + Math.random() * 9000).toString();
-    await prisma.tablePasscode.upsert({
-      where: { restaurantId_tableNumber: { restaurantId, tableNumber } },
-      update: { passcode: newPasscode },
-      create: { restaurantId, tableNumber, passcode: newPasscode }
+    await prisma.tablePasscode.deleteMany({
+      where: { restaurantId, tableNumber }
     });
 
     const io = req.app.get('io');
-    io.to(restaurantId).emit('table_passcode_updated', { tableNumber, passcode: newPasscode });
     io.to(restaurantId).emit('session_closed', { tableNumber, sessionId: latestOrder.sessionId });
 
     res.json({ message: 'Session closed successfully' });

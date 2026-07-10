@@ -162,9 +162,6 @@ async function openTableModal(tableNumber, passcode = null) {
         <button class="action-btn btn-primary" onclick="closeTableModal(); startOrderForTable(${tableNumber}, '')">
           <i data-lucide="plus" style="width:18px;"></i> Place Order
         </button>
-        <button class="action-btn btn-secondary" onclick="generatePasscode(${tableNumber})" style="margin-top:8px;">
-          <i data-lucide="key" style="width:18px;"></i> Generate Passcode
-        </button>
       `;
       if (typeof lucide !== 'undefined') lucide.createIcons();
       return;
@@ -712,19 +709,6 @@ setInterval(() => {
   loadLiveOrders();
 }, 30000);
 
-
-async function generatePasscode(tableNumber) {
-  try {
-    const res = await api('/api/waiter/table/' + tableNumber + '/generate-code', 'POST');
-    if (res && res.ok) {
-      loadTables();
-      const data = await res.json();
-      openTableModal(tableNumber, data.passcode);
-    }
-  } catch(e) {
-    console.error(e);
-  }
-}
 
 // ── SOCKET IO ──
 const socket = io();

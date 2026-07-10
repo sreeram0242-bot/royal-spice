@@ -151,7 +151,8 @@ model Waiter {
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tablePasscodes TablePasscode[]
 }
 
 
@@ -159,9 +160,12 @@ model TablePasscode {
   id           String     @id @default(cuid())
   restaurantId String
   tableNumber  Int
+  waiterId     String
   passcode     String
   waiterName   String?
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  waiter       Waiter     @relation(fields: [waiterId], references: [id], onDelete: Cascade)
 
-  @@unique([restaurantId, tableNumber])
+  @@unique([restaurantId, tableNumber, waiterId])
+  @@unique([restaurantId, tableNumber, passcode])
 }

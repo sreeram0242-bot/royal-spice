@@ -308,6 +308,10 @@ router.post('/table/:num/close-session', authAdmin, async (req, res) => {
       }
     });
 
+    await prisma.tablePasscode.deleteMany({
+      where: { restaurantId, tableNumber }
+    });
+
     const io = req.app.get('io');
     io.to(restaurantId).emit('session_closed', { tableNumber, sessionId: latestOrder.sessionId });
 

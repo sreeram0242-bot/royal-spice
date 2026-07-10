@@ -53,11 +53,11 @@ router.post('/order', async (req, res) => {
     const { restaurantId, tableNumber, items, subtotal, gst, tip = 0, total, sessionId, passcode } = req.body;
     
     // Validate Table Passcode
-    const validPasscode = await prisma.tablePasscode.findUnique({
-      where: { restaurantId_tableNumber: { restaurantId, tableNumber: parseInt(tableNumber) } }
+    const validPasscode = await prisma.tablePasscode.findFirst({
+      where: { restaurantId, tableNumber: parseInt(tableNumber), passcode }
     });
     
-    if (!validPasscode || validPasscode.passcode !== passcode) {
+    if (!validPasscode) {
       return res.status(401).json({ message: 'Invalid or missing 4-digit passcode. Please ask the waiter.' });
     }
     const waiterName = validPasscode.waiterName || 'Waiter';
