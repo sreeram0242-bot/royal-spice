@@ -304,8 +304,7 @@ router.post('/table/:num/close-session', authAdmin, async (req, res) => {
       where: { sessionId: latestOrder.sessionId },
       data: { 
         status: 'completed', 
-        paymentMethod: paymentMethod || 'cash',
-        waiterName: 'Admin' 
+        paymentMethod: paymentMethod || 'cash'
       }
     });
 

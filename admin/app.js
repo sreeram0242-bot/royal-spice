@@ -482,7 +482,7 @@ async function loadOrders() {
           </div>
           <div style="display:flex; justify-content:space-between;">
             <span style="color:var(--text-muted);">Closed By Waiter:</span>
-            <strong style="color:var(--text-primary);">${o.closedByWaiter || 'Unknown'}</strong>
+            <strong style="color:var(--text-primary); text-transform:capitalize;">${o.waiterName || 'Admin'}</strong>
           </div>
         </div>
         ` : ''}
@@ -1648,7 +1648,7 @@ async function loadHistory() {
           tableNumber: o.tableNumber,
           createdAt: o.createdAt,
           paymentMethod: o.paymentMethod || 'cash',
-          waiterName: o.waiterName || 'Waiter',
+          waiterName: o.waiterName || 'Admin',
           total: 0,
           subtotal: 0,
           gst: 0,
@@ -1709,7 +1709,7 @@ function renderHistory() {
         <td style="padding: 12px; color: var(--text-primary);">Table ${session.tableNumber}</td>
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
         <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
-        <td style="padding: 12px; color: var(--text-primary); text-transform: capitalize;">${session.waiterName || 'Waiter'}</td>
+        <td style="padding: 12px; color: var(--text-primary); text-transform: capitalize;">${session.waiterName || 'Admin'}</td>
         <td style="padding: 12px; display: flex; gap: 8px;">
           <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="viewHistoryDetails('${session.sessionId}')">View Items</button>
           <button class="btn-gold" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding: 6px 8px; display:flex; align-items:center;" onclick="printHistoryBill('${session.sessionId}')" title="Print Bill"><i data-lucide="printer" style="width:14px;height:14px;"></i></button>
@@ -1813,7 +1813,7 @@ async function generatePDF(range) {
           tableNumber: o.tableNumber,
           createdAt: o.createdAt,
           paymentMethod: o.paymentMethod || 'cash',
-          closedByWaiter: o.closedByWaiter || 'Admin',
+          waiterName: o.waiterName || 'Admin',
           total: 0
         };
       }
@@ -1849,7 +1849,7 @@ async function generatePDF(range) {
         session.sessionNumber,
         session.tableNumber,
         session.paymentMethod,
-        session.closedByWaiter,
+        session.waiterName,
         session.total.toFixed(2)
       ];
       tableRows.push(rowData);

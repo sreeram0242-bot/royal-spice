@@ -199,6 +199,7 @@ router.post('/order', authWaiter, async (req, res) => {
         status: 'new',
         sessionId: currentSessionId,
         sessionNumber: currentSessionNumber,
+        waiterName: req.user.waiterName || req.user.name || 'Waiter',
         items: {
           create: items.map(item => ({
             menuItemId: item.menuItemId,
@@ -244,8 +245,7 @@ router.post('/table/:num/close-session', authWaiter, async (req, res) => {
       where: { sessionId: latestOrder.sessionId },
       data: { 
         status: 'completed', 
-        paymentMethod: paymentMethod || 'cash',
-        closedByWaiter: req.user.name || 'Unknown' 
+        paymentMethod: paymentMethod || 'cash'
       }
     });
 
