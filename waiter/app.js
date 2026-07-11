@@ -61,11 +61,13 @@ async function loadSettings() {
 }
 
 // ── TABLES ──
+let _currentZone = 'all';
+
 async function loadTables() {
   const grid = document.getElementById('tableGrid');
   grid.innerHTML = '<div class="loading-text">Loading tables...</div>';
   try {
-    const res = await api('/api/waiter/tables');
+    const res = await api('/api/waiter/dashboard');
     if (!res || !res.ok) { grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>'; return; }
     const tables = await res.json();
     window._allTablesData = tables;
@@ -76,30 +78,56 @@ async function loadTables() {
       document.getElementById('activeTablesCount').textContent = tables.filter(t => t.status !== 'available').length;
     }
 
-    renderTableGrid(tables);
+    renderTableGrid();
   } catch (e) {
     grid.innerHTML = '<div class="loading-text">Error loading tables.</div>';
   }
 }
 
 function filterTables() {
-  if (!window._allTablesData) return;
-  const q = document.getElementById('tableSearch').value.toLowerCase();
-  const filtered = window._allTablesData.filter(t => String(t.tableNumber).includes(q));
-  renderTableGrid(filtered);
+  renderTableGrid();
 }
 
-function renderTableGrid(tables) {
+function setZone(zone) {
+  _currentZone = zone;
+  renderTableGrid();
+}
+
+function renderTableGrid() {
   const grid = document.getElementById('tableGrid');
-  if (!grid) return;
+  const zoneFilters = document.getElementById('zoneFilters');
+  if (!grid || !window._allTablesData) return;
+  
+  const allTables = window._allTablesData;
+  const q = (document.getElementById('tableSearch')?.value || '').toLowerCase();
+  
+  // Build Zone Filters
+  if (zoneFilters) {
+    const zones = ['all', ...new Set(allTables.map(t => t.categoryName || 'Main'))];
+    zoneFilters.innerHTML = zones.map(z => `
+      <div onclick="setZone('${z}')" style="cursor:pointer; flex-shrink:0; border-radius:20px; padding:6px 16px; font-size:13px; font-weight:600; border: 1px solid var(--border-color); ${z === _currentZone ? 'background:var(--gold-primary); color:#000; border-color:var(--gold-primary);' : 'background:transparent; color:var(--text-secondary);'}">
+        ${z === 'all' ? 'All Tables' : z}
+      </div>
+    `).join('');
+  }
+
+  // Filter
+  let filtered = allTables;
+  if (_currentZone !== 'all') {
+    filtered = filtered.filter(t => (t.categoryName || 'Main') === _currentZone);
+  }
+  if (q) {
+    filtered = filtered.filter(t => (t.name || String(t.tableNumber)).toLowerCase().includes(q));
+  }
+  
   grid.innerHTML = '';
   
-  if (!tables || tables.length === 0) {
-    grid.innerHTML = '<div class="loading-text" style="grid-column: 1 / -1; padding: 40px; color: var(--text-muted);">No tables configured. Please ask admin to add tables.</div>';
+  if (!filtered || filtered.length === 0) {
+    grid.innerHTML = '<div class="loading-text" style="grid-column: 1 / -1; padding: 40px; color: var(--text-muted);">No tables found.</div>';
     return;
   }
   
-  tables.forEach(t => {
+  filtered.forEach(t => {
     const card = document.createElement('div');
     card.onclick = () => openTableModal(t.tableNumber, t.passcode);
     
@@ -129,7 +157,7 @@ function renderTableGrid(tables) {
         <i data-lucide="armchair" style="width:24px;height:24px;"></i>
         ${bellHtml}
       </div>
-      <div class="table-name">T${String(t.tableNumber).padStart(2,'0')}</div>
+      <div class="table-name" style="font-size:18px;">${t.name || ('T' + String(t.tableNumber).padStart(2,'0'))}</div>
       <div class="table-pin">PIN: ${t.passcode || '----'}</div>
       <div class="status-text">${t.total > 0 ? '₹'+t.total.toFixed(2) + ' <br>' : ''}${statusLabel}</div>
     `;
@@ -221,6 +249,12 @@ async function cancelWaiterOrder() {
   closeModal('waiterAddOrderModal');
 }
 
+function getTableNameWaiter(num) {
+  if (!window._allTablesData) return `Table ${num}`;
+  const t = window._allTablesData.find(x => x.tableNumber == num);
+  return t ? t.name : `Table ${num}`;
+}
+
 // ── QR DISPLAY LOGIC ──
 function showWaiterQr() {
   if (window._paymentQrCode) {
@@ -272,7 +306,7 @@ function renderBillContent(bill, container) {
     <div class="bill-dashed"></div>
     <div class="bill-meta"><span>Date:</span><span>${dateStr}</span></div>
     <div class="bill-meta"><span>Time:</span><span>${timeStr}</span></div>
-    <div class="bill-meta"><span>Table:</span><span>No. ${bill.tableNumber}</span></div>
+    <div class="bill-meta"><span>Table:</span><span>${getTableNameWaiter(bill.tableNumber)}</span></div>
     <div class="bill-meta"><span>Session:</span><span>#${bill.orders[0].sessionNumber || bill.orders[0].orderNumber}</span></div>
     <div class="bill-meta"><span>Orders:</span><span>${bill.orders.map(o => '#' + o.orderNumber).join(', ')}</span></div>
     <div class="bill-dashed"></div>
@@ -318,7 +352,7 @@ let tableToClose = null;
 
 function closeSession(tableNumber) {
   tableToClose = tableNumber;
-  document.getElementById('confirmTableNum').innerText = tableNumber;
+  document.getElementById('confirmTableNum').innerText = getTableNameWaiter(tableNumber);
   document.getElementById('confirmCloseModal').classList.add('open');
 }
 

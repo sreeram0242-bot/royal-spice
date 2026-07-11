@@ -58,6 +58,11 @@ router.get('/tables', authWaiter, async (req, res) => {
       where: { restaurantId: req.user.restaurantId, waiterId: req.user.waiterId }
     });
 
+    const tableMappings = await prisma.table.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      include: { category: true }
+    });
+
     const tables = [];
     const waiterName = req.user.waiterName || 'Waiter';
     for (let i = 1; i <= restaurant.totalTables; i++) {
@@ -89,8 +94,13 @@ router.get('/tables', authWaiter, async (req, res) => {
         });
       }
 
+      const tMap = tableMappings.find(t => t.tableNumber === i);
+
       tables.push({
         tableNumber: i,
+        name: tMap ? tMap.name : `Table ${i}`,
+        categoryName: tMap && tMap.category ? tMap.category.name : 'Main',
+        categoryId: tMap ? tMap.categoryId : null,
         status,
         hasCall,
         orderCount: tableOrders.length,

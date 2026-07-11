@@ -200,6 +200,20 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
 
 let restaurantSettings = null;
 let revenueChartInstance = null;
+let _globalTablesData = [];
+
+async function getGlobalTables() {
+  if (_globalTablesData.length === 0) {
+    try {
+      _globalTablesData = await fetchAPI('/api/admin/tables');
+    } catch(e) {}
+  }
+  return _globalTablesData;
+}
+function getTableName(num) {
+  const t = _globalTablesData.find(x => x.tableNumber == num);
+  return t ? t.name : `Table ${num}`;
+}
 
 async function loadSettings(onlyTables = false) {
   restaurantSettings = await fetchAPI('/api/admin/settings');
@@ -277,7 +291,15 @@ async function updateTablesCount() {
   const totalTables = parseInt(document.getElementById('settingsTotalTables').value);
   await fetchAPI('/api/admin/settings', 'PUT', { totalTables });
   alert('Tables updated');
+  _globalTablesData = [];
   loadSettings(true);
+}
+
+function toggleTableSettings() {
+  const container = document.getElementById('tableSettingsContainer');
+  if (container) {
+    container.classList.toggle('hidden');
+  }
 }
 
 // DASHBOARD
@@ -305,6 +327,8 @@ async function loadDashboard() {
     document.getElementById('waiterBadge').style.display = 'none';
   }
 
+  const tablesData = await fetchAPI('/api/admin/tables');
+
   // Live orders table
   const tbody = document.getElementById('liveOrdersTable');
   tbody.innerHTML = '';
@@ -313,9 +337,11 @@ async function loadDashboard() {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">Currently no live orders</td></tr>';
   } else {
     pendingOrders.slice(0, 5).forEach(o => {
+      const tableInfo = tablesData.find(t => t.tableNumber === o.tableNumber);
+      const tableName = tableInfo ? tableInfo.name : `T${o.tableNumber}`;
       tbody.innerHTML += `
         <tr onclick="showView('orders');" style="cursor: pointer;">
-          <td><div class="table-pill" style="padding: 4px; border-radius: 0; width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">Table ${o.tableNumber}</div></td>
+          <td><div class="table-pill" style="padding: 4px; border-radius: 0; width: auto; min-width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">${tableName}</div></td>
           <td>#${o.orderNumber}</td>
           <td>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
           <td>${o.items.length} items</td>
@@ -329,16 +355,17 @@ async function loadDashboard() {
   // Table Grid
   const grid = document.getElementById('dashTableGrid');
   grid.innerHTML = '';
-  for (let i = 1; i <= restaurantSettings.totalTables; i++) {
+  
+  tablesData.forEach(t => {
     let statusClass = 'available';
-    const tableOrder = pendingOrders.find(o => o.tableNumber === i);
+    const tableOrder = pendingOrders.find(o => o.tableNumber === t.tableNumber);
     if (tableOrder) {
       if (tableOrder.status === 'new') statusClass = 'ordered';
       else if (tableOrder.status === 'preparing') statusClass = 'preparing';
       else if (tableOrder.status === 'ready') statusClass = 'served';
     }
-    grid.innerHTML += `<div class="table-pill ${statusClass}">T${i.toString().padStart(2, '0')}</div>`;
-  }
+    grid.innerHTML += `<div class="table-pill ${statusClass}">${t.name}</div>`;
+  });
 
   // Revenue Chart
   try {
@@ -399,100 +426,102 @@ async function loadDashboard() {
 
 // ORDERS
 async function loadOrders() {
-  const orders = await fetchAPI('/api/admin/orders');
-  const grid = document.getElementById('ordersGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  
-  const filter = document.getElementById('orderFilterStatus') ? document.getElementById('orderFilterStatus').value : 'all';
-  
-  const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
-  
-  // Sort by status priority: new > preparing > ready > served
-  const statusWeight = { 'new': 1, 'preparing': 2, 'ready': 3, 'served': 4 };
-  filteredOrders.sort((a, b) => {
-    if (statusWeight[a.status] !== statusWeight[b.status]) {
-      return statusWeight[a.status] - statusWeight[b.status];
+  try {
+    const orders = await fetchAPI('/api/admin/orders');
+    await getGlobalTables();
+    const grid = document.getElementById('ordersGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    const filter = document.getElementById('orderFilterStatus') ? document.getElementById('orderFilterStatus').value : 'all';
+    
+    const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+    
+    // Sort by status priority: new > preparing > ready > served
+    const statusWeight = { 'new': 1, 'preparing': 2, 'ready': 3, 'served': 4 };
+    filteredOrders.sort((a, b) => {
+      if (statusWeight[a.status] !== statusWeight[b.status]) {
+        return statusWeight[a.status] - statusWeight[b.status];
+      }
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    
+    if (filteredOrders.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">Currently no orders</div>';
+      return;
     }
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
+    
+    filteredOrders.forEach(o => {
+      let actionBtn = '';
+      if (o.status === 'new') {
+        actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing', this)">Receive (Start Preparing)</button>`;
+      } else if (o.status === 'preparing') {
+        actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready', this)">Mark Ready</button>`;
+      } else if (o.status === 'ready') {
+        actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served', this)">Mark Served</button>`;
+      } else if (o.status === 'served') {
+        actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" disabled>Completed</button>`;
+      }
   
-  if (filteredOrders.length === 0) {
-    grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">Currently no orders</div>';
-    return;
+      let itemsHtml = o.items.map(i => `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+          <div>
+            <span style="color: var(--gold); font-weight: bold; margin-right: 8px;">${i.qty}x</span>${i.name}
+            ${i.specialNote ? `<div style="font-size: 11px; color: #ff9800; margin-top: 2px; margin-left: 24px; font-style: italic;">Note: ${i.specialNote}</div>` : ''}
+          </div>
+          <div style="color: var(--text-muted);">₹${i.price * i.qty}</div>
+        </div>
+      `).join('');
+  
+      const timeStr = new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  
+      grid.innerHTML += `
+        <div class="panel" style="padding: 20px; border: 1px solid #333; position: relative; border-radius: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+            <div>
+              <div style="font-size: 24px; font-weight: bold; color: var(--gold); margin-bottom: 6px;">${getTableName(o.tableNumber)}</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Order #${o.orderNumber} &bull; ${timeStr}</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="status ${o.status}">${o.status.toUpperCase()}</span>
+              <button onclick="printKOT('${o.id}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; display:block; margin-top:8px;"><i data-lucide="printer" style="width:20px; height:20px;"></i></button>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 16px; max-height: 200px; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: #555 #222;">
+            ${itemsHtml}
+          </div>
+          
+          <div style="border-top: 1px dashed #444; padding-top: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 12px; color: var(--text-muted);">Total Amount</div>
+              <div style="font-weight: bold; font-size: 18px; color: var(--gold);">₹${o.total.toFixed(2)}</div>
+            </div>
+          </div>
+          
+          ${o.status === 'completed' ? `
+          <div style="background: var(--bg-alpha-green); border: 1px solid var(--green); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="color:var(--text-muted);">Payment Method:</span>
+              <strong style="color:var(--text-primary); text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Closed By Waiter:</span>
+              <strong style="color:var(--text-primary); text-transform:capitalize;">${o.waiterName || 'Admin'}</strong>
+            </div>
+          </div>
+          ` : ''}
+          
+          <div>
+            ${actionBtn}
+          </div>
+        </div>
+      `;
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  } catch (e) {
+    console.error(e);
   }
-  
-  filteredOrders.forEach(o => {
-    let actionBtn = '';
-    if (o.status === 'new') {
-      actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing', this)">Receive (Start Preparing)</button>`;
-    } else if (o.status === 'preparing') {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready', this)">Mark Ready</button>`;
-    } else if (o.status === 'ready') {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served', this)">Mark Served</button>`;
-    } else if (o.status === 'served') {
-      actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" disabled>Completed</button>`;
-    }
-
-    let itemsHtml = o.items.map(i => `
-      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
-        <div>
-          <span style="color: var(--gold); font-weight: bold; margin-right: 8px;">${i.qty}x</span>${i.name}
-          ${i.specialNote ? `<div style="font-size: 11px; color: #ff9800; margin-top: 2px; margin-left: 24px; font-style: italic;">Note: ${i.specialNote}</div>` : ''}
-        </div>
-        <div style="color: var(--text-muted);">₹${i.price * i.qty}</div>
-      </div>
-    `).join('');
-
-    grid.innerHTML += `
-      <div class="panel" style="padding: 20px; border: 1px solid #333; position: relative; border-radius: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #333; padding-bottom: 16px;">
-          <div>
-            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Order Number</div>
-            <div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">#${o.orderNumber} <span style="font-size:12px; font-weight:normal; color:#888;">(Session #${o.sessionNumber || o.orderNumber})</span></div>
-            <span class="status ${o.status}">${o.status.toUpperCase()}</span>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Table</div>
-            <div style="font-size: 24px; font-weight: bold; color: var(--gold); margin-bottom: 6px;">${o.tableNumber}</div>
-            <button onclick="printKOT('${o.id}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;"><i data-lucide="printer" style="width:20px; height:20px;"></i></button>
-          </div>
-        </div>
-        
-        <div style="margin-bottom: 16px; max-height: 200px; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: #555 #222;">
-          ${itemsHtml}
-        </div>
-        
-        <div style="border-top: 1px dashed #444; padding-top: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <div style="font-size: 12px; color: var(--text-muted);">Total Amount</div>
-            <div style="font-weight: bold; font-size: 18px; color: var(--gold);">₹${o.total.toFixed(2)}</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 12px; color: var(--text-muted);">Time</div>
-            <div style="font-weight: bold; font-size: 14px;">${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-          </div>
-        </div>
-        
-        ${o.status === 'completed' ? `
-        <div style="background: var(--bg-alpha-green); border: 1px solid var(--green); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
-          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-            <span style="color:var(--text-muted);">Payment Method:</span>
-            <strong style="color:var(--text-primary); text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</strong>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Closed By Waiter:</span>
-            <strong style="color:var(--text-primary); text-transform:capitalize;">${o.waiterName || 'Admin'}</strong>
-          </div>
-        </div>
-        ` : ''}
-        
-        <div>
-          ${actionBtn}
-        </div>
-      </div>
-    `;
-  });
 }
 
 function updateOrderStatus(id, status, btn) {
@@ -515,22 +544,28 @@ function updateOrderStatus(id, status, btn) {
 
 // WAITER CALLS
 async function loadWaiterCalls() {
-  const calls = await fetchAPI('/api/admin/waiter-calls');
-  const tbody = document.querySelector('#waiterTable tbody');
-  tbody.innerHTML = '';
-  
-  calls.forEach(c => {
-    tbody.innerHTML += `
-      <tr>
-        <td>Table ${c.tableNumber}</td>
-        <td>${new Date(c.createdAt).toLocaleTimeString()}</td>
-        <td>${c.status === 'pending' ? '<span class="status new">Pending</span>' : '<span class="status served">Attended</span>'}</td>
-        <td>
-          ${c.status === 'pending' ? `<button class="btn-gold" style="padding: 4px 12px; font-size: 12px;" onclick="attendWaiterCall('${c.id}')">Mark Attended</button>` : '—'}
-        </td>
-      </tr>
-    `;
-  });
+  try {
+    const calls = await fetchAPI('/api/admin/waiter-calls');
+    await getGlobalTables();
+    const tbody = document.getElementById('waiterCallsBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    calls.forEach(c => {
+      const timeStr = new Date(c.createdAt).toLocaleTimeString();
+      tbody.innerHTML += `
+        <tr>
+          <td>${getTableName(c.tableNumber)}</td>
+          <td style="text-transform:capitalize;">${c.waiterName || 'Waiter'}</td>
+          <td>${timeStr}</td>
+          <td>${c.status === 'pending' ? '<span class="status new">Pending</span>' : '<span class="status served">Attended</span>'}</td>
+          <td>
+            ${c.status === 'pending' ? `<button class="btn-gold" style="padding: 4px 12px; font-size: 12px;" onclick="attendWaiterCall('${c.id}')">Mark Attended</button>` : '—'}
+          </td>
+        </tr>
+      `;
+    });
+  } catch (e) { console.error(e); }
 }
 
 async function attendWaiterCall(id) {
@@ -919,34 +954,112 @@ async function loadCategories() {
   });
 }
 
-// TABLES Overview
-async function renderFullTableGrid(total) {
-  const grid = document.getElementById('fullTableGrid');
-  grid.innerHTML = '<div style="color:var(--text-muted);">Loading tables...</div>';
+// TABLES Overview & Categories
+async function loadTableCategories() {
+  try {
+    const categories = await fetchAPI('/api/admin/table-categories');
+    
+    // Update the categories list UI
+    const list = document.getElementById('tableCategoriesList');
+    if (list) {
+      list.innerHTML = categories.map(c => `
+        <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); padding:6px 12px; border-radius:16px; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:14px;">${c.name}</span>
+          <button onclick="deleteTableCategory('${c.id}')" style="background:transparent; border:none; color:var(--red); cursor:pointer;">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    // Update the bulk assign dropdown
+    const select = document.getElementById('bulkAssignCatId');
+    if (select) {
+      select.innerHTML = '<option value="">None (Main)</option>' + 
+        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+    return categories;
+  } catch (err) {
+    console.error('Failed to load table categories', err);
+  }
+}
+
+async function addTableCategory() {
+  const name = document.getElementById('newCategoryName').value.trim();
+  if (!name) return alert('Enter a category name');
+  
+  await fetchAPI('/api/admin/table-categories', 'POST', { name });
+  document.getElementById('newCategoryName').value = '';
+  await loadTableCategories();
+}
+
+async function deleteTableCategory(id) {
+  if (!confirm('Are you sure you want to delete this category? Tables in it will revert to Main.')) return;
+  await fetchAPI(`/api/admin/table-categories/${id}`, 'DELETE');
+  _globalTablesData = [];
+  await loadTableCategories();
+  renderFullTableGrid();
+}
+
+async function bulkAssignTables() {
+  const categoryId = document.getElementById('bulkAssignCatId').value || null;
+  const prefix = document.getElementById('bulkPrefix').value;
+  const count = parseInt(document.getElementById('bulkCount').value);
+  const startNumber = parseInt(document.getElementById('bulkStartNum').value);
+  
+  if (!prefix || !count || !startNumber) return alert('Please fill in prefix, count, and start #');
+  
+  await fetchAPI('/api/admin/tables/bulk', 'POST', { categoryId, prefix, count, startNumber });
+  alert('Tables assigned successfully');
+  _globalTablesData = [];
+  renderFullTableGrid();
+}
+
+async function renderFullTableGrid() {
+  const gridContainer = document.getElementById('fullTableGridContainer');
+  if (!gridContainer) return;
+  gridContainer.innerHTML = '<div style="color:var(--text-muted);">Loading tables...</div>';
+
+  await loadTableCategories();
 
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/tables`, { headers: { 'Authorization': `Bearer ${token}` } });
-    const tables = await res.json();
+    const tables = await fetchAPI('/api/admin/tables');
     
-    grid.innerHTML = '';
+    gridContainer.innerHTML = '';
     
     if (!tables || tables.length === 0) {
-      grid.innerHTML = '<div style="color:var(--text-muted); grid-column: 1 / -1; text-align:center; padding: 40px 20px;">No tables configured. Please update your total tables in Settings.</div>';
+      gridContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 40px 20px;">No tables configured. Please update your total tables in Settings.</div>';
       return;
     }
 
-    tables.forEach(t => {
-      const isOccupied = t.status === 'occupied';
-      const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : 'Free';
-      const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber})"` : '';
-      grid.innerHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
-        <div style="font-size: 24px; font-weight: bold; margin-bottom: 4px;">T${t.tableNumber.toString().padStart(2, '0')}</div>
-        <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
-        ${isOccupied && t.waiterName ? `<div style="font-size: 11px; color: var(--gold-secondary); margin-top: 4px; text-transform: capitalize;">${t.waiterName}</div>` : ''}
-      </div>`;
-    });
+    // Group tables by categoryName
+    const grouped = tables.reduce((acc, table) => {
+      acc[table.categoryName] = acc[table.categoryName] || [];
+      acc[table.categoryName].push(table);
+      return acc;
+    }, {});
+
+    for (const [catName, catTables] of Object.entries(grouped)) {
+      gridContainer.innerHTML += `<div style="font-size: 14px; font-weight: bold; margin: 24px 0 12px; color: var(--gold-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">${catName} Zone</div>`;
+      
+      let catGridHTML = '<div class="table-grid">';
+      
+      catTables.forEach(t => {
+        const isOccupied = t.status === 'occupied';
+        const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : 'Free';
+        const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber})"` : '';
+        
+        catGridHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
+          <div style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">${t.name}</div>
+          <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
+          ${isOccupied && t.waiterName ? `<div style="font-size: 11px; color: var(--gold-secondary); margin-top: 4px; text-transform: capitalize;">${t.waiterName}</div>` : ''}
+        </div>`;
+      });
+      
+      catGridHTML += '</div>';
+      gridContainer.innerHTML += catGridHTML;
+    }
+
   } catch (err) {
-    grid.innerHTML = '<div style="color:var(--red); padding: 20px; grid-column: 1 / -1; text-align:center;">Failed to load tables. Please check your connection.</div>';
+    gridContainer.innerHTML = '<div style="color:var(--red); padding: 20px; text-align:center;">Failed to load tables. Please check your connection.</div>';
   }
 }
 
@@ -958,7 +1071,8 @@ async function openTableModal(tableNumber) {
   const body = document.getElementById('modalBody');
   const headerAction = document.getElementById('modalHeaderAction');
 
-  title.textContent = `Table ${tableNumber}`;
+  await getGlobalTables();
+  title.textContent = getTableName(tableNumber);
   sub.textContent = ``;
   body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
   
@@ -1018,7 +1132,7 @@ let tableToClose = null;
 
 function closeSession(tableNumber) {
   tableToClose = tableNumber;
-  document.getElementById('confirmTableNum').innerText = tableNumber;
+  document.getElementById('confirmTableNum').innerText = getTableName(tableNumber);
   
   // Setup change calculator
   const calcTotal = document.getElementById('calcBillTotal');
@@ -1115,8 +1229,11 @@ async function loadQRCodes() {
   
   if (!restaurantSettings) return;
 
+  await getGlobalTables();
 
   for (let i = 1; i <= restaurantSettings.totalTables; i++) {
+    const tableName = getTableName(i);
+
     const card = document.createElement('div');
     card.style.background = 'var(--panel-bg)';
     card.style.padding = '16px';
@@ -1124,7 +1241,7 @@ async function loadQRCodes() {
     card.style.textAlign = 'center';
 
     const title = document.createElement('h4');
-    title.innerText = `Table ${i}`;
+    title.innerText = tableName;
     title.style.marginBottom = '12px';
 
     const qrContainer = document.createElement('div');
@@ -1704,9 +1821,8 @@ function renderHistory() {
     
     html += `
       <tr style="border-bottom: 1px solid var(--border-color);">
-        <td style="padding: 12px; color: var(--text-primary);">${dateStr}</td>
-        <td style="padding: 12px; color: var(--text-primary);">#${session.sessionNumber}</td>
-        <td style="padding: 12px; color: var(--text-primary);">Table ${session.tableNumber}</td>
+        <td style="padding: 12px; font-weight: bold; font-size: 14px;">#${session.sessionNumber}</td>
+        <td style="padding: 12px; color: var(--text-primary);">${getTableName(session.tableNumber)}</td>
         <td style="padding: 12px; color: var(--gold-primary); font-weight: bold;">₹${session.total.toFixed(2)}</td>
         <td style="padding: 12px; color: var(--text-secondary); text-transform: capitalize;">${session.paymentMethod || 'cash'}</td>
         <td style="padding: 12px; color: var(--text-primary); text-transform: capitalize;">${session.waiterName || 'Admin'}</td>
@@ -1730,7 +1846,7 @@ function viewHistoryDetails(sessionId) {
   const session = allHistorySessions.find(s => s.sessionId === sessionId);
   if (!session) return;
 
-  document.getElementById('historyModalTitle').innerText = `Session #${session.sessionNumber} - Table ${session.tableNumber}`;
+  document.getElementById('historyModalTitle').innerText = `Session #${session.sessionNumber} - ${getTableName(session.tableNumber)}`;
   
   const container = document.getElementById('historyModalItems');
   let html = '';
@@ -1814,7 +1930,8 @@ async function generatePDF(range) {
           createdAt: o.createdAt,
           paymentMethod: o.paymentMethod || 'cash',
           waiterName: o.waiterName || 'Admin',
-          total: 0
+          total: 0,
+          orders: [o]
         };
       }
       grouped[sid].total += o.total;
@@ -1838,18 +1955,15 @@ async function generatePDF(range) {
     const totalRev = sessions.reduce((sum, s) => sum + s.total, 0);
     doc.text(`Total Sessions: ${sessions.length} | Total Revenue: Rs. ${totalRev.toFixed(2)}`, 14, 36);
 
-    const tableColumn = ["Date", "Session #", "Table", "Payment", "Waiter", "Amount (Rs.)"];
+    const tableColumn = ["Session #", "Table", "Date", "Payment", "Amount (Rs.)"];
     const tableRows = [];
 
     sessions.forEach(session => {
-      const sessionDate = new Date(session.createdAt);
-      const dateStr = sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const rowData = [
-        dateStr,
         session.sessionNumber,
-        session.tableNumber,
-        session.paymentMethod,
-        session.waiterName,
+        getTableName(session.tableNumber),
+        new Date(session.orders[0]?.createdAt || session.createdAt).toLocaleDateString(),
+        session.paymentMethod || 'cash',
         session.total.toFixed(2)
       ];
       tableRows.push(rowData);
@@ -2005,7 +2119,8 @@ async function adminPrintBill(tableNumber) {
       <hr style="border-top:1px dashed #aaa;margin:10px 0;">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Date:</span><span>${dateStr}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Time:</span><span>${timeStr}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Table:</span><span>No. ${bill.tableNumber}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Table:</span><span>${getTableName(bill.tableNumber)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Session:</span><span>#${bill.sessionNumber || 'Pending'}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Orders:</span><span>${bill.orders.map(o => '#' + o.orderNumber).join(', ')}</span></div>
       <hr style="border-top:1px dashed #aaa;margin:10px 0;">
       <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:4px 0;margin:8px 0;">
@@ -2051,10 +2166,9 @@ function printKOT(orderId) {
     
     printWindow.document.body.innerHTML = `
         <h2 style="text-align:center; margin:0 0 10px 0;">KITCHEN TICKET</h2>
-        <div style="border-bottom:1px dashed #000; margin-bottom:10px; padding-bottom:10px; font-family:monospace;">
-          <div><b>Table: ${o.tableNumber}</b></div>
-          <div>Order: #${o.orderNumber}</div>
-          <div>Time: ${new Date(o.createdAt).toLocaleTimeString()}</div>
+        <div style="font-size: 10px; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 4px;">
+          <div><b>Order #${o.orderNumber}</b></div>
+          <div><b>${getTableName(o.tableNumber)}</b></div>
         </div>
         <div style="font-family:monospace;">${itemsHtml}</div>
         <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; text-align:center; font-family:monospace;">
@@ -2101,7 +2215,7 @@ function printHistoryBill(sessionId) {
         <div style="border-bottom:1px dashed #000; margin-bottom:10px; padding-bottom:10px; font-size:12px;">
           <div style="display:flex;justify-content:space-between;"><span>Date:</span><span>${dateStr}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Time:</span><span>${timeStr}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span>Table:</span><span>No. ${session.tableNumber}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Table:</span><span>${getTableName(session.tableNumber)}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Waiter:</span><span style="text-transform:capitalize;">${session.waiterName || 'Waiter'}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Session:</span><span>#${session.sessionNumber}</span></div>
           <div style="display:flex;justify-content:space-between;text-transform:capitalize;"><span>Payment:</span><span>${session.paymentMethod}</span></div>

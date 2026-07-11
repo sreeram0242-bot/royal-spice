@@ -213,6 +213,12 @@ router.get('/tables', authAdmin, async (req, res) => {
     const activeOrders = await prisma.order.findMany({
       where: { restaurantId, status: { not: 'completed' } }
     });
+
+    const tableMappings = await prisma.table.findMany({
+      where: { restaurantId },
+      include: { category: true }
+    });
+
     const tables = [];
     for (let i = 1; i <= restaurant.totalTables; i++) {
       const tableOrders = activeOrders.filter(o => o.tableNumber === i);
@@ -223,8 +229,13 @@ router.get('/tables', authAdmin, async (req, res) => {
       const tip = tableOrders.reduce((sum, o) => sum + (o.tip || 0), 0);
       const total = Math.round(subtotal + gstAmount + tip);
 
+      const tMap = tableMappings.find(t => t.tableNumber === i);
+
       tables.push({
         tableNumber: i,
+        name: tMap ? tMap.name : `Table ${i}`,
+        categoryName: tMap && tMap.category ? tMap.category.name : 'Main',
+        categoryId: tMap ? tMap.categoryId : null,
         status: isOccupied ? 'occupied' : 'available',
         total,
         waiterName: isOccupied ? tableOrders[0].waiterName : null
@@ -438,6 +449,93 @@ router.get('/analytics', authAdmin, async (req, res) => {
     res.json({ topItems, tableRevenue, hourlyOrders: hourMap });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Table Categories ---
+router.get('/table-categories', authAdmin, async (req, res) => {
+  try {
+    const categories = await prisma.tableCategory.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      include: { tables: true }
+    });
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/table-categories', authAdmin, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: 'Name is required' });
+    
+    const cat = await prisma.tableCategory.create({
+      data: { restaurantId: req.user.restaurantId, name }
+    });
+    res.json(cat);
+  } catch (err) {
+    if (err.code === 'P2002') return res.status(400).json({ message: 'Category already exists' });
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/table-categories/:id', authAdmin, async (req, res) => {
+  try {
+    await prisma.tableCategory.delete({
+      where: { id: req.params.id }
+    });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Table Mapping (Bulk Update/Create) ---
+router.post('/tables/bulk', authAdmin, async (req, res) => {
+  try {
+    const { categoryId, prefix, count, startNumber } = req.body;
+    // Prefix e.g. "AC-", count e.g. 5, startNumber e.g. 1
+    const restaurantId = req.user.restaurantId;
+    
+    const newTables = [];
+    for(let i = 0; i < count; i++) {
+      const internalTableNum = startNumber + i;
+      const customName = prefix + (i + 1);
+      
+      const existing = await prisma.table.findUnique({
+        where: { restaurantId_tableNumber: { restaurantId, tableNumber: internalTableNum } }
+      });
+      
+      if (existing) {
+        await prisma.table.update({
+          where: { id: existing.id },
+          data: { name: customName, categoryId }
+        });
+      } else {
+        await prisma.table.create({
+          data: { restaurantId, tableNumber: internalTableNum, name: customName, categoryId }
+        });
+      }
+      newTables.push({ tableNumber: internalTableNum, name: customName });
+    }
+    
+    res.json({ message: 'Tables mapped successfully', tables: newTables });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/tables/mapping/:number', authAdmin, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.number);
+    await prisma.table.delete({
+      where: { restaurantId_tableNumber: { restaurantId: req.user.restaurantId, tableNumber } }
+    });
+    res.json({ message: 'Mapping removed' });
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });

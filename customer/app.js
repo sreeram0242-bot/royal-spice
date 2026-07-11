@@ -53,15 +53,19 @@ function hideLoader() {
 async function loadRestaurantInfo() {
   if (!restaurantId) return;
   try {
-    const res = await fetch(`${BASE_URL}/api/customer/restaurant/${restaurantId}`);
+    const res = await fetch(`${BASE_URL}/api/customer/restaurant/${restaurantId}?tableNumber=${tableNumber || ''}`);
     const data = await res.json();
     localStorage.setItem('gstPercent', data.gstPercent || 0);
     
+    if (data.tableName) {
+      localStorage.setItem('tableName', data.tableName);
+    }
+
     if (document.getElementById('restaurantName')) {
       document.getElementById('restaurantName').innerText = data.name;
     }
     if (document.getElementById('tableBadge')) {
-      document.getElementById('tableBadge').innerText = `TABLE ${tableNumber}`;
+      document.getElementById('tableBadge').innerText = (data.tableName || `TABLE ${tableNumber}`).toUpperCase();
     }
   } catch (err) {
     console.error(err);
@@ -530,7 +534,7 @@ async function loadOrders() {
     let htmlString = `
       <div style="background:var(--panel-color); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:20px; text-align:center;">
         <h3 style="color:var(--gold-primary); margin:0 0 8px; font-size:18px;">Session #${orders[orders.length - 1].orderNumber}</h3>
-        <div style="font-size:14px; color:var(--text-secondary);">Table ${orders[0].tableNumber}</div>
+        <div style="font-size:14px; color:var(--text-secondary);">${localStorage.getItem('tableName') || 'Table ' + orders[0].tableNumber}</div>
       </div>
     `;
 

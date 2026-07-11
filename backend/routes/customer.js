@@ -14,7 +14,20 @@ router.get('/restaurant/:id', async (req, res) => {
     if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
     if (!restaurant.isActive) return res.status(403).json({ message: 'Restaurant is currently unavailable' });
     
-    res.json(restaurant);
+    let tableName = null;
+    if (req.query.tableNumber) {
+      const table = await prisma.table.findUnique({
+        where: {
+          restaurantId_tableNumber: {
+            restaurantId: req.params.id,
+            tableNumber: parseInt(req.query.tableNumber)
+          }
+        }
+      });
+      if (table) tableName = table.name;
+    }
+    
+    res.json({ ...restaurant, tableName });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
