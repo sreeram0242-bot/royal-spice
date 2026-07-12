@@ -14,8 +14,35 @@ function showLoader() {
   if (!loader) {
     loader = document.createElement('div');
     loader.id = 'globalLoader';
-    loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(18,18,18,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px);';
-    loader.innerHTML = '<div style="width:50px;height:50px;border:4px solid var(--gold-secondary);border-top-color:var(--gold-primary);border-radius:50%;animation:spin 1s linear infinite;"></div><style>@keyframes spin{to{transform:rotate(360deg);}}</style>';
+    loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-color, #121212);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    loader.innerHTML = `
+      <style>
+        .loader-container { display: flex; justify-content: center; align-items: center; }
+        .loader-icon { width: 100px; height: 100px; }
+        .loader-icon svg { width: 100%; height: 100%; }
+        .steam { animation: steamRise 1.5s ease-out infinite; }
+        .steam-1 { animation-delay: 0s; }
+        .steam-2 { animation-delay: 0.5s; }
+        .steam-3 { animation-delay: 1.0s; }
+        @keyframes steamRise {
+          0% { opacity: 0; transform: translateY(10px) scaleY(0.8); }
+          50% { opacity: 1; transform: translateY(0px) scaleY(1); }
+          100% { opacity: 0; transform: translateY(-10px) scaleY(1.1); }
+        }
+      </style>
+      <div class="loader-container">
+        <div class="loader-icon">
+          <svg viewBox="0 0 100 100" fill="rgba(226, 97, 54, 1)">
+            <path d="M15 75h70v5H15z" />
+            <path d="M25 70 C 25 40, 75 40, 75 70 Z" />
+            <circle cx="50" cy="40" r="4" />
+            <path class="steam steam-1" d="M 35 35 Q 30 30 35 25 T 35 15" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="steam steam-2" d="M 50 30 Q 45 25 50 20 T 50 10" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="steam steam-3" d="M 65 35 Q 60 30 65 25 T 65 15" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    `;
     document.body.appendChild(loader);
   }
   loader.style.display = 'flex';
