@@ -63,12 +63,17 @@ async function loadSettings() {
 // ── TABLES ──
 let _currentZone = 'all';
 
-async function loadTables() {
+async function loadTables(showLoader = true) {
   const grid = document.getElementById('tableGrid');
-  grid.innerHTML = '<div class="loading-text">Loading tables...</div>';
+  if (showLoader) {
+    grid.innerHTML = '<div class="loading-text">Loading tables...</div>';
+  }
   try {
     const res = await api('/api/waiter/tables');
-    if (!res || !res.ok) { grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>'; return; }
+    if (!res || !res.ok) { 
+      if (showLoader) grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>'; 
+      return; 
+    }
     const tables = await res.json();
     window._allTablesData = tables;
     
@@ -80,7 +85,7 @@ async function loadTables() {
 
     renderTableGrid();
   } catch (e) {
-    grid.innerHTML = '<div class="loading-text">Error loading tables.</div>';
+    if (showLoader) grid.innerHTML = '<div class="loading-text">Error loading tables.</div>';
   }
 }
 
@@ -400,12 +405,17 @@ if (confirmBtn) {
 }
 
 // ── WAITER CALLS ──
-async function loadCalls() {
+async function loadCalls(showLoader = true) {
   const list = document.getElementById('callsList');
-  list.innerHTML = '<div class="loading-text">Loading calls...</div>';
+  if (showLoader) {
+    list.innerHTML = '<div class="loading-text">Loading calls...</div>';
+  }
   try {
     const res = await api('/api/waiter/calls');
-    if (!res || !res.ok) { list.innerHTML = '<div class="loading-text">Failed to load calls.</div>'; return; }
+    if (!res || !res.ok) { 
+      if (showLoader) list.innerHTML = '<div class="loading-text">Failed to load calls.</div>'; 
+      return; 
+    }
     const calls = await res.json();
     window._activeCalls = calls;
 
@@ -431,7 +441,7 @@ async function loadCalls() {
     `).join('');
     setTimeout(() => lucide.createIcons(), 10);
   } catch (e) {
-    list.innerHTML = '<div class="loading-text">Error loading calls.</div>';
+    if (showLoader) list.innerHTML = '<div class="loading-text">Error loading calls.</div>';
   }
 }
 
@@ -736,10 +746,10 @@ loadTables();
 loadLiveOrders();
 
 // Auto-refresh every 30 seconds
-setInterval(() => {
+setInterval(async () => {
   const activeTab = document.querySelector('.tab-content.active')?.id;
-  if (activeTab === 'tabTables') loadTables();
-  if (activeTab === 'tabCalls') loadCalls();
+  await loadCalls(false); // ALWAYS update active calls silently first
+  if (activeTab === 'tabTables') loadTables(false);
   loadLiveOrders();
 }, 30000);
 
