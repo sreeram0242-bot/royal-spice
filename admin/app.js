@@ -1,6 +1,16 @@
+window.onerror = function(msg, url, line, col, error) {
+  alert("Global Error: " + msg + "\nLine: " + line);
+};
+window.onunhandledrejection = function(event) {
+  alert("Unhandled Promise: " + (event.reason && event.reason.message ? event.reason.message : event.reason));
+};
 const BASE_URL = '';
 const token = localStorage.getItem('adminToken');
 const restaurantId = localStorage.getItem('adminRestaurantId');
+
+// Prevent ReferenceErrors across all views
+function showLoader() {}
+function hideLoader() {}
 
 if (!token && !window.location.pathname.includes('index.html')) {
   window.location.href = 'index.html';
