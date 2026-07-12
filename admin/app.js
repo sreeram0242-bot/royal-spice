@@ -1542,7 +1542,25 @@ function renderRevenue(data) {
 // ANALYTICS TAB
 async function loadAnalytics() {
   try {
-    const data = await fetchAPI('/api/admin/analytics');
+    showLoader();
+    const periodSelect = document.getElementById('analyticsPeriod');
+    const dateInput = document.getElementById('analyticsDate');
+    
+    let period = periodSelect ? periodSelect.value : 'all';
+    let date = dateInput ? dateInput.value : '';
+    
+    if (period === 'day') {
+      if (dateInput) dateInput.style.display = 'block';
+      if (!date) {
+        date = new Date().toISOString().split('T')[0];
+        if (dateInput) dateInput.value = date;
+      }
+    } else {
+      if (dateInput) dateInput.style.display = 'none';
+    }
+    
+    const url = `/api/admin/analytics?period=${period}&date=${date}`;
+    const data = await fetchAPI(url);
 
     // Top Items
     const topEl = document.getElementById('analyticsTopItems');
@@ -1555,7 +1573,7 @@ async function loadAnalytics() {
           <div>
             <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
               <span style="font-size:13px;color:var(--text-primary);">${idx+1}. ${item.name}</span>
-              <span style="font-size:13px;font-weight:600;color:var(--gold-primary);">${item.qty} sold</span>
+              <span style="font-size:13px;font-weight:600;color:var(--gold-primary);">${item.qty} sold (₹${Math.round(item.revenue).toLocaleString('en-IN')})</span>
             </div>
             <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
               <div style="width:${(item.qty/maxQty*100).toFixed(0)}%;height:100%;background:var(--gold-primary);border-radius:4px;"></div>
@@ -1606,6 +1624,8 @@ async function loadAnalytics() {
     }
   } catch (err) {
     console.error('Failed to load analytics', err);
+  } finally {
+    hideLoader();
   }
 }
 

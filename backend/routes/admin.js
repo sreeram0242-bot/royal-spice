@@ -408,11 +408,38 @@ router.get('/revenue', [authAdmin, checkSubscription], async (req, res) => {
 // --- Analytics ---
 router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
   try {
+    const { period, date } = req.query;
+    
+    // Determine the date filter
+    let dateFilter = {};
+    const now = new Date();
+    
+    if (period === 'day' && date) {
+      // Custom one day
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      dateFilter = { gte: startOfDay, lte: endOfDay };
+    } else if (period === 'month') {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: startOfMonth };
+    } else if (period === 'year') {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      dateFilter = { gte: startOfYear };
+    } // 'all' or default means no dateFilter
+
+    const whereClause = {
+      restaurantId: req.user.restaurantId,
+      status: { in: ['served', 'completed'] }
+    };
+    
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.createdAt = dateFilter;
+    }
+
     const orders = await prisma.order.findMany({
-      where: {
-        restaurantId: req.user.restaurantId,
-        status: { in: ['served', 'completed'] }
-      },
+      where: whereClause,
       include: { items: true }
     });
 
@@ -427,7 +454,8 @@ router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
         itemMap[item.name].revenue += item.price * item.qty;
       });
     });
-    const topItems = Object.values(itemMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+    // Sort primarily by quantity, secondarily by revenue
+    const topItems = Object.values(itemMap).sort((a, b) => b.qty - a.qty || b.revenue - a.revenue).slice(0, 10);
 
     // Revenue by table
     const tableMap = {};
@@ -439,6 +467,19 @@ router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
     });
     const tableRevenue = Object.values(tableMap).sort((a, b) => b.revenue - a.revenue);
 
+    // Waiter Ranking
+    const waiterMap = {};
+    orders.forEach(o => {
+      const waiterName = o.waiterName || 'Self Order / Unknown';
+      if (!waiterMap[waiterName]) {
+        waiterMap[waiterName] = { name: waiterName, orders: 0, revenue: 0 };
+      }
+      waiterMap[waiterName].orders++;
+      waiterMap[waiterName].revenue += o.total;
+    });
+    // Sort by number of orders
+    const waiterRanking = Object.values(waiterMap).sort((a, b) => b.orders - a.orders);
+
     // Hourly breakdown (orders by hour of day)
     const hourMap = Array(24).fill(0);
     orders.forEach(o => {
@@ -446,7 +487,7 @@ router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
       hourMap[hour]++;
     });
 
-    res.json({ topItems, tableRevenue, hourlyOrders: hourMap });
+    res.json({ topItems, tableRevenue, waiterRanking, hourlyOrders: hourMap });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
