@@ -936,11 +936,11 @@
     };
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
   <script>
     lucide.createIcons();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
-    showView('dashboard');
+    if (typeof bootApp === 'function') bootApp(); else showView('dashboard');
   </script>
   <!-- QR Display Modal -->
   <div id="qrDisplayModal" class="modal-overlay hidden" onclick="closeModal('qrDisplayModal')">
