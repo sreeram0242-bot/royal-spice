@@ -304,10 +304,18 @@ function toggleTableSettings() {
 
 // DASHBOARD
 async function loadDashboard() {
-  const orders = await fetchAPI('/api/admin/orders?date=today');
-  const calls = await fetchAPI('/api/admin/waiter-calls');
+  const promises = [
+    fetchAPI('/api/admin/orders?date=today'),
+    fetchAPI('/api/admin/waiter-calls'),
+    fetchAPI('/api/admin/tables')
+  ];
+  if (!restaurantSettings) promises.push(loadSettings());
   
-  if (!restaurantSettings) await loadSettings();
+  const results = await Promise.all(promises);
+  const orders = results[0];
+  const calls = results[1];
+  const tablesData = results[2];
+
 
   const totalRev = orders.reduce((sum, o) => sum + o.total, 0);
   const pendingOrders = orders.filter(o => o.status === 'new' || o.status === 'preparing');
@@ -327,7 +335,7 @@ async function loadDashboard() {
     document.getElementById('waiterBadge').style.display = 'none';
   }
 
-  const tablesData = await fetchAPI('/api/admin/tables');
+  // tablesData fetched in parallel above
 
   // Live orders table
   const tbody = document.getElementById('liveOrdersTable');
@@ -576,7 +584,12 @@ async function attendWaiterCall(id) {
 // MENU
 let currentMenuData = [];
 async function loadMenu() {
-  currentMenuData = await fetchAPI('/api/admin/menu');
+  const [menuRes, catRes] = await Promise.all([
+    fetchAPI('/api/admin/menu'),
+    fetchAPI('/api/admin/categories').catch(e => { console.error(e); return []; })
+  ]);
+  currentMenuData = menuRes;
+  let catSettings = catRes;
 
   const container = document.getElementById('menuContainer');
   if (!container) return;
@@ -588,13 +601,6 @@ async function loadMenu() {
   const datalist = document.getElementById('categoryOptions');
   if (datalist) {
     datalist.innerHTML = categories.map(c => `<option value="${c}">`).join('');
-  }
-
-  let catSettings = [];
-  try {
-    catSettings = await fetchAPI('/api/admin/categories');
-  } catch (err) {
-    console.error('ERROR fetching catSettings: ', err);
   }
 
   categories.forEach(cat => {
@@ -858,8 +864,10 @@ async function deleteMenuItem(id) {
 
 // CATEGORIES
 async function loadCategories() {
-  const catSettings = await fetchAPI('/api/admin/categories');
-  const menuData = await fetchAPI('/api/admin/menu');
+  const [catSettings, menuData] = await Promise.all([
+    fetchAPI('/api/admin/categories'),
+    fetchAPI('/api/admin/menu')
+  ]);
   
   // Get unique categories from menu
   const uniqueCats = [...new Set(menuData.map(m => m.category))];
