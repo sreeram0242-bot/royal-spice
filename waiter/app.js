@@ -67,7 +67,7 @@ async function loadTables() {
   const grid = document.getElementById('tableGrid');
   grid.innerHTML = '<div class="loading-text">Loading tables...</div>';
   try {
-    const res = await api('/api/waiter/dashboard');
+    const res = await api('/api/waiter/tables');
     if (!res || !res.ok) { grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>'; return; }
     const tables = await res.json();
     window._allTablesData = tables;
