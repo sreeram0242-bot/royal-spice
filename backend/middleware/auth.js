@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../db');
 
 const authMaster = (req, res, next) => {
   const token = req.header('Authorization')?.split(' ')[1];
@@ -51,4 +52,32 @@ const authWaiter = (req, res, next) => {
   }
 };
 
-module.exports = { authMaster, authAdmin, authWaiter };
+const checkSubscription = async (req, res, next) => {
+  try {
+    const restaurantId = req.user?.restaurantId || req.query.restaurantId || req.body.restaurantId;
+    if (!restaurantId) return res.status(400).json({ message: 'Restaurant ID required' });
+
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    if (!restaurant || !restaurant.isActive) {
+      return res.status(402).json({ message: 'Restaurant account is suspended or not found.' });
+    }
+
+    const now = new Date();
+    if (restaurant.plan === 'trial') {
+      if (restaurant.subscriptionExpiry && new Date(restaurant.subscriptionExpiry) < now) {
+         return res.status(402).json({ message: 'Trial has expired. Please upgrade your plan.' });
+      }
+    } else if (restaurant.paymentStatus !== 'active') {
+      if (restaurant.subscriptionExpiry && new Date(restaurant.subscriptionExpiry) < now) {
+        return res.status(402).json({ message: 'Subscription has expired. Please renew.' });
+      }
+    }
+
+    next();
+  } catch (err) {
+    console.error('Subscription Check Error:', err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+module.exports = { authMaster, authAdmin, authWaiter, checkSubscription };

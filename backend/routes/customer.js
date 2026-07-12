@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { checkSubscription } = require('../middleware/auth');
 const prisma = require('../db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -61,7 +62,7 @@ router.get('/categories/:restaurantId', async (req, res) => {
 });
 
 // Place an order
-router.post('/order', async (req, res) => {
+router.post('/order', checkSubscription, async (req, res) => {
   try {
     const { restaurantId, tableNumber, items, subtotal, gst, tip = 0, total, sessionId, passcode } = req.body;
     

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { authAdmin } = require('../middleware/auth');
+const { authAdmin, checkSubscription } = require('../middleware/auth');
 const prisma = require('../db');
 
 // --- Dashboard & Restaurant Settings ---
-router.get('/settings', authAdmin, async (req, res) => {
+router.get('/settings', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: req.user.restaurantId },
@@ -20,7 +20,7 @@ router.get('/settings', authAdmin, async (req, res) => {
   }
 });
 
-router.put('/settings', authAdmin, async (req, res) => {
+router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { name, address, gstPercent, totalTables, paymentQrCode } = req.body;
     
@@ -47,7 +47,7 @@ router.put('/settings', authAdmin, async (req, res) => {
 });
 
 // --- Menu Management ---
-router.get('/menu', authAdmin, async (req, res) => {
+router.get('/menu', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const menu = await prisma.menuItem.findMany({
       where: { restaurantId: req.user.restaurantId }
@@ -58,7 +58,7 @@ router.get('/menu', authAdmin, async (req, res) => {
   }
 });
 
-router.post('/menu', authAdmin, async (req, res) => {
+router.post('/menu', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { name, description, price, image, category, isVeg, isBestSeller, isAvailable } = req.body;
     const newItem = await prisma.menuItem.create({
@@ -80,7 +80,7 @@ router.post('/menu', authAdmin, async (req, res) => {
   }
 });
 
-router.put('/menu/:id', authAdmin, async (req, res) => {
+router.put('/menu/:id', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { name, description, price, image, category, isVeg, isBestSeller, isAvailable } = req.body;
     const updatedItem = await prisma.menuItem.update({
@@ -102,7 +102,7 @@ router.put('/menu/:id', authAdmin, async (req, res) => {
   }
 });
 
-router.delete('/menu/:id', authAdmin, async (req, res) => {
+router.delete('/menu/:id', [authAdmin, checkSubscription], async (req, res) => {
   try {
     await prisma.menuItem.delete({
       where: { id: req.params.id }
@@ -114,7 +114,7 @@ router.delete('/menu/:id', authAdmin, async (req, res) => {
 });
 
 // --- Orders Management ---
-router.get('/orders', authAdmin, async (req, res) => {
+router.get('/orders', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const where = { restaurantId: req.user.restaurantId };
     
@@ -136,7 +136,7 @@ router.get('/orders', authAdmin, async (req, res) => {
   }
 });
 
-router.put('/orders/:id/status', authAdmin, async (req, res) => {
+router.put('/orders/:id/status', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { status } = req.body;
     const order = await prisma.order.update({
@@ -155,7 +155,7 @@ router.put('/orders/:id/status', authAdmin, async (req, res) => {
 });
 
 // --- Waiter Calls ---
-router.get('/waiter-calls', authAdmin, async (req, res) => {
+router.get('/waiter-calls', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const calls = await prisma.waiterCall.findMany({
       where: { restaurantId: req.user.restaurantId },
@@ -167,7 +167,7 @@ router.get('/waiter-calls', authAdmin, async (req, res) => {
   }
 });
 
-router.put('/waiter-calls/:id', authAdmin, async (req, res) => {
+router.put('/waiter-calls/:id', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const call = await prisma.waiterCall.update({
       where: { id: req.params.id },
@@ -180,7 +180,7 @@ router.put('/waiter-calls/:id', authAdmin, async (req, res) => {
 });
 
 // --- Notifications ---
-router.get('/notifications', authAdmin, async (req, res) => {
+router.get('/notifications', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const notifs = await prisma.masterNotification.findMany({
       where: { restaurantId: req.user.restaurantId },
@@ -192,7 +192,7 @@ router.get('/notifications', authAdmin, async (req, res) => {
   }
 });
 
-router.put('/notifications/:id/read', authAdmin, async (req, res) => {
+router.put('/notifications/:id/read', [authAdmin, checkSubscription], async (req, res) => {
   try {
     await prisma.masterNotification.update({
       where: { id: req.params.id },
@@ -205,7 +205,7 @@ router.put('/notifications/:id/read', authAdmin, async (req, res) => {
 });
 
 // GET /api/admin/tables
-router.get('/tables', authAdmin, async (req, res) => {
+router.get('/tables', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const restaurantId = req.user.restaurantId;
     const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
@@ -249,7 +249,7 @@ router.get('/tables', authAdmin, async (req, res) => {
 });
 
 // GET /api/admin/table/:num/bill — full bill for a table
-router.get('/table/:num/bill', authAdmin, async (req, res) => {
+router.get('/table/:num/bill', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const tableNumber = parseInt(req.params.num);
     const restaurant = await prisma.restaurant.findUnique({
@@ -296,7 +296,7 @@ router.get('/table/:num/bill', authAdmin, async (req, res) => {
 });
 
 // POST /api/admin/table/:num/close-session — close a table session
-router.post('/table/:num/close-session', authAdmin, async (req, res) => {
+router.post('/table/:num/close-session', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const tableNumber = parseInt(req.params.num);
     const restaurantId = req.user.restaurantId;
@@ -334,7 +334,7 @@ router.post('/table/:num/close-session', authAdmin, async (req, res) => {
 });
 
 // --- Revenue ---
-router.get('/revenue', authAdmin, async (req, res) => {
+router.get('/revenue', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: {
@@ -406,7 +406,7 @@ router.get('/revenue', authAdmin, async (req, res) => {
 });
 
 // --- Analytics ---
-router.get('/analytics', authAdmin, async (req, res) => {
+router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: {
@@ -454,7 +454,7 @@ router.get('/analytics', authAdmin, async (req, res) => {
 });
 
 // --- Table Categories ---
-router.get('/table-categories', authAdmin, async (req, res) => {
+router.get('/table-categories', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const categories = await prisma.tableCategory.findMany({
       where: { restaurantId: req.user.restaurantId },
@@ -466,7 +466,7 @@ router.get('/table-categories', authAdmin, async (req, res) => {
   }
 });
 
-router.post('/table-categories', authAdmin, async (req, res) => {
+router.post('/table-categories', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) return res.status(400).json({ message: 'Name is required' });
@@ -481,7 +481,7 @@ router.post('/table-categories', authAdmin, async (req, res) => {
   }
 });
 
-router.delete('/table-categories/:id', authAdmin, async (req, res) => {
+router.delete('/table-categories/:id', [authAdmin, checkSubscription], async (req, res) => {
   try {
     await prisma.tableCategory.delete({
       where: { id: req.params.id }
@@ -493,7 +493,7 @@ router.delete('/table-categories/:id', authAdmin, async (req, res) => {
 });
 
 // --- Table Mapping (Bulk Update/Create) ---
-router.post('/tables/bulk', authAdmin, async (req, res) => {
+router.post('/tables/bulk', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { categoryId, prefix, count, startNumber } = req.body;
     // Prefix e.g. "AC-", count e.g. 5, startNumber e.g. 1
@@ -528,7 +528,7 @@ router.post('/tables/bulk', authAdmin, async (req, res) => {
   }
 });
 
-router.delete('/tables/mapping/:number', authAdmin, async (req, res) => {
+router.delete('/tables/mapping/:number', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const tableNumber = parseInt(req.params.number);
     await prisma.table.delete({
@@ -541,7 +541,7 @@ router.delete('/tables/mapping/:number', authAdmin, async (req, res) => {
 });
 
 // --- Order History ---
-router.get('/history', authAdmin, async (req, res) => {
+router.get('/history', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
@@ -582,7 +582,7 @@ router.get('/history', authAdmin, async (req, res) => {
 });
 
 // --- Complaints ---
-router.get('/complaints', authAdmin, async (req, res) => {
+router.get('/complaints', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const complaints = await prisma.complaint.findMany({
       where: { restaurantId: req.user.restaurantId },
@@ -594,7 +594,7 @@ router.get('/complaints', authAdmin, async (req, res) => {
   }
 });
 
-router.post('/complaints', authAdmin, async (req, res) => {
+router.post('/complaints', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { message } = req.body;
     const complaint = await prisma.complaint.create({
@@ -612,7 +612,7 @@ router.post('/complaints', authAdmin, async (req, res) => {
 // --- Categories Management ---
 
 // CATEGORY SETTINGS
-router.get('/categories', authAdmin, async (req, res) => {
+router.get('/categories', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const settings = await prisma.categorySetting.findMany({
       where: { restaurantId: req.user.restaurantId }
@@ -623,7 +623,7 @@ router.get('/categories', authAdmin, async (req, res) => {
   }
 });
 
-router.post('/categories', authAdmin, async (req, res) => {
+router.post('/categories', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { categoryName, image } = req.body;
     const existing = await prisma.categorySetting.findFirst({
@@ -657,7 +657,7 @@ module.exports = router;
 // --- Waiter Management ---
 const bcrypt = require('bcryptjs');
 
-router.get('/waiters', authAdmin, async (req, res) => {
+router.get('/waiters', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const waiters = await prisma.waiter.findMany({
       where: { restaurantId: req.user.restaurantId },
@@ -670,7 +670,7 @@ router.get('/waiters', authAdmin, async (req, res) => {
   }
 });
 
-router.post('/waiters', authAdmin, async (req, res) => {
+router.post('/waiters', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { name, username, password } = req.body;
     if (!name || !username || !password) {
@@ -700,7 +700,7 @@ router.post('/waiters', authAdmin, async (req, res) => {
   }
 });
 
-router.delete('/waiters/:id', authAdmin, async (req, res) => {
+router.delete('/waiters/:id', [authAdmin, checkSubscription], async (req, res) => {
   try {
     await prisma.waiter.delete({ where: { id: req.params.id } });
     res.json({ message: 'Waiter deleted' });
@@ -710,7 +710,7 @@ router.delete('/waiters/:id', authAdmin, async (req, res) => {
 });
 
 // --- Table Bill (for admin print) ---
-router.get('/table/:num/bill', authAdmin, async (req, res) => {
+router.get('/table/:num/bill', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const tableNumber = parseInt(req.params.num);
     const restaurant = await prisma.restaurant.findUnique({

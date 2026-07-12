@@ -16,8 +16,24 @@ const io = new Server(server, {
 });
 
 // Middleware
+require('express-async-errors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+// Use Helmet for security headers, but disable CSP to avoid breaking frontend scripts/styles
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
+
+// Global API Rate Limiter
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 120, // Limit each IP to 120 requests per `window` (here, per minute)
+  message: { message: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+app.use('/api/', apiLimiter);
 
 // Removed aggressive caching headers for faster loading
 
@@ -105,6 +121,12 @@ app.use('/api/master', require('./routes/master'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/customer', require('./routes/customer'));
 app.use('/api/waiter', require('./routes/waiter'));
+
+// Global Error Handler (must be after all routes)
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err);
+  res.status(500).json({ message: 'Internal Server Error', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
+});
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

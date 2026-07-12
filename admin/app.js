@@ -188,6 +188,10 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
   };
   if (body) options.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${endpoint}`, options);
+  if (res.status === 402) {
+    alert("Your subscription or trial has expired. Please upgrade or renew your plan to continue.");
+    logout();
+  }
   if (res.status === 400 || res.status === 401 || res.status === 403) logout();
   
   const data = await res.json();

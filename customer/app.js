@@ -302,13 +302,19 @@ function closeWaiterPopup() {
 
 async function confirmCallWaiter() {
   try {
-    await fetch(`${BASE_URL}/api/customer/call-waiter`, {
+    const res = await fetch(`${BASE_URL}/api/customer/call-waiter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ restaurantId, tableNumber: parseInt(tableNumber) })
     });
-    alert('Waiter has been notified!');
-    closeWaiterPopup();
+    
+    if (res.status === 402) {
+      const data = await res.json();
+      alert(data.message || 'Restaurant subscription expired. Cannot call waiter.');
+    } else {
+      alert('Waiter has been notified!');
+      closeWaiterPopup();
+    }
   } catch (err) {
     console.error(err);
   }
@@ -482,7 +488,9 @@ async function submitOrder(passcode) {
     const data = await res.json();
 
     if (!res.ok) {
-      if (res.status === 401) {
+      if (res.status === 402) {
+        alert(data.message || 'Restaurant subscription expired. Cannot place order.');
+      } else if (res.status === 401) {
         localStorage.removeItem('tablePasscode');
         localStorage.removeItem('sessionId');
         alert('Passcode expired or invalid. Please ask waiter for the new PIN.');
