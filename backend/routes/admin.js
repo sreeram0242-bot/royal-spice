@@ -472,13 +472,17 @@ router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
     orders.forEach(o => {
       const waiterName = o.waiterName || 'Self Order / Unknown';
       if (!waiterMap[waiterName]) {
-        waiterMap[waiterName] = { name: waiterName, orders: 0, revenue: 0 };
+        waiterMap[waiterName] = { name: waiterName, sessions: new Set(), revenue: 0 };
       }
-      waiterMap[waiterName].orders++;
+      waiterMap[waiterName].sessions.add(o.sessionId);
       waiterMap[waiterName].revenue += o.total;
     });
-    // Sort by number of orders
-    const waiterRanking = Object.values(waiterMap).sort((a, b) => b.orders - a.orders);
+    // Sort by number of sessions
+    const waiterRanking = Object.values(waiterMap).map(w => ({
+      name: w.name,
+      orders: w.sessions.size,
+      revenue: w.revenue
+    })).sort((a, b) => b.orders - a.orders);
 
     // Hourly breakdown (orders by hour of day)
     const hourMap = Array(24).fill(0);

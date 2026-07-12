@@ -1604,7 +1604,28 @@ async function loadAnalytics() {
       }
     }
 
-    // Hourly chart
+      // Waiter Ranking
+      const waiterEl = document.getElementById('analyticsWaiterRanking');
+      if (waiterEl) {
+        if (!data.waiterRanking || data.waiterRanking.length === 0) {
+          waiterEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
+        } else {
+          const maxOrders = Math.max(...data.waiterRanking.map(w => w.orders), 1);
+          waiterEl.innerHTML = data.waiterRanking.map((w, idx) => `
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:13px;color:var(--text-primary);"><span style="color:var(--gold-secondary)">#${idx+1}</span> ${w.name}</span>
+                <span style="font-size:13px;font-weight:600;color:var(--green);">₹${Math.round(w.revenue).toLocaleString('en-IN')} (${w.orders} sessions)</span>
+              </div>
+              <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
+                <div style="width:${(w.orders/maxOrders*100).toFixed(0)}%;height:100%;background:var(--green);border-radius:4px;"></div>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Hourly chart
     const hourEl = document.getElementById('analyticsHourly');
     const hourLbl = document.getElementById('analyticsHourlyLabels');
     if (hourEl && data.hourlyOrders) {
