@@ -908,8 +908,16 @@
     </div>
   </div>
 
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      alert("FATAL ERROR: " + msg + "\nLine: " + line);
+    };
+    window.onunhandledrejection = function(event) {
+      alert("UNHANDLED PROMISE: " + (event.reason ? event.reason.message || event.reason : "Unknown error"));
+    };
+  </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
   <script>
     lucide.createIcons();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
