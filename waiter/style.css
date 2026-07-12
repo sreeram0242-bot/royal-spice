@@ -473,9 +473,9 @@ body {
   white-space: nowrap;
 }
 .cat-chip.active {
-  background: var(--border); /* Grey colour tab as requested */
-  color: white; /* White text as requested */
-  border-color: var(--text-muted);
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
 }
 .menu-item-card {
   background: var(--card-bg);
