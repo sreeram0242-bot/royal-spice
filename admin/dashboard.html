@@ -901,12 +901,15 @@
     </div>
     <div style="display: flex; gap: 8px;">
       <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('orderPopup').classList.add('hidden'); showView('orders');">View Order</button>
-      <button style="padding: 6px 12px; font-size: 12px; background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;" onclick="document.getElementById('orderPopup').classList.add('hidden')">Dismiss</button>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('orderPopup').classList.add('hidden'); showView('orders');">View Order</button>
+        <button style="padding: 6px 12px; font-size: 12px; background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;" onclick="document.getElementById('orderPopup').classList.add('hidden')">Dismiss</button>
+      </div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=2"></script>
   <script>
     lucide.createIcons();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
