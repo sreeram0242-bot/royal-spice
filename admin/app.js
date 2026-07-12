@@ -179,27 +179,36 @@ function showView(viewId) {
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {
-  const options = {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+  try {
+    const options = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    if (body) options.body = JSON.stringify(body);
+    const res = await fetch(`${BASE_URL}${endpoint}`, options);
+    if (res.status === 402) {
+      alert("Your subscription or trial has expired. Please upgrade or renew your plan to continue.");
+      logout();
+      return [];
     }
-  };
-  if (body) options.body = JSON.stringify(body);
-  const res = await fetch(`${BASE_URL}${endpoint}`, options);
-  if (res.status === 402) {
-    alert("Your subscription or trial has expired. Please upgrade or renew your plan to continue.");
-    logout();
+    if (res.status === 400 || res.status === 401 || res.status === 403) {
+      logout();
+      return [];
+    }
+    
+    const data = await res.json();
+    if (!res.ok) {
+      console.error('API Error:', data);
+      return [];
+    }
+    return data;
+  } catch (err) {
+    alert(`DEBUG Network Error on ${endpoint}: ` + err.message);
+    return [];
   }
-  if (res.status === 400 || res.status === 401 || res.status === 403) logout();
-  
-  const data = await res.json();
-  if (!res.ok) {
-    console.error('API Error:', data);
-    return []; // Return empty array on error to prevent UI crashes
-  }
-  return data;
 }
 
 const AppState = {
@@ -364,11 +373,13 @@ function renderDashboard(orders, calls, tablesData) {
   const activeTablesCount = new Set(pendingOrders.map(o => o.tableNumber)).size;
   const pendingCalls = calls.filter(c => c.status === 'pending');
 
+  const totalTables = restaurantSettings ? restaurantSettings.totalTables : 0;
+
   document.getElementById('dashRev').innerText = `₹${Math.round(totalRev).toLocaleString('en-IN')}`;
   document.getElementById('dashOrders').innerText = orders.length;
   document.getElementById('dashPending').innerText = pendingOrders.length;
   document.getElementById('dashCalls').innerText = pendingCalls.length;
-  document.getElementById('dashTables').innerText = `${activeTablesCount}/${restaurantSettings.totalTables}`;
+  document.getElementById('dashTables').innerText = `${activeTablesCount}/${totalTables}`;
 
   if (pendingCalls.length > 0) {
     document.getElementById('waiterBadge').innerText = pendingCalls.length;
