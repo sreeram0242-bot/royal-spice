@@ -458,9 +458,15 @@ router.get('/analytics', [authAdmin, checkSubscription], async (req, res) => {
     const topItems = Object.values(itemMap).sort((a, b) => b.qty - a.qty || b.revenue - a.revenue).slice(0, 10);
 
     // Revenue by table
+    const tables = await prisma.table.findMany({
+      where: { restaurantId: req.user.restaurantId }
+    });
+    const tableNames = {};
+    tables.forEach(t => tableNames[t.tableNumber] = t.name);
+
     const tableMap = {};
     orders.forEach(o => {
-      const tn = `Table ${o.tableNumber}`;
+      const tn = tableNames[o.tableNumber] || `Table ${o.tableNumber}`;
       if (!tableMap[tn]) tableMap[tn] = { table: tn, revenue: 0, orders: 0 };
       tableMap[tn].revenue += o.total;
       tableMap[tn].orders++;
