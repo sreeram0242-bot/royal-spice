@@ -29,7 +29,7 @@ function showLoader() {
           100% { opacity: 0; transform: translateY(-10px) scaleY(1.1); }
         }
       </style>
-      <div class="loader-container">
+      <div class="loader-container" style="flex-direction: column;">
         <div class="loader-icon">
           <svg viewBox="0 0 100 100" fill="rgba(226, 97, 54, 1)">
             <path d="M15 75h70v5H15z" />
@@ -39,6 +39,9 @@ function showLoader() {
             <path class="steam steam-2" d="M 50 30 Q 45 25 50 20 T 50 10" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
             <path class="steam steam-3" d="M 65 35 Q 60 30 65 25 T 65 15" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
+        </div>
+        <div style="width: 150px; height: 6px; border: 1px solid rgba(255,255,255,0.8); border-radius: 6px; margin-top: 16px; overflow: hidden; background: transparent;">
+          <div id="loaderProgressBar" style="width: 0%; height: 100%; background: rgba(226, 97, 54, 1); transition: width 0.2s ease;"></div>
         </div>
       </div>
     `;
@@ -2543,25 +2546,37 @@ function handleGlobalSearch() {
 async function bootApp() {
   const hash = window.location.hash.replace('#', '') || 'dashboard';
   showLoader();
+  
+  let completed = 0;
+  const total = 12;
+  const advance = () => {
+    completed++;
+    const bar = document.getElementById('loaderProgressBar');
+    if (bar) bar.style.width = (completed / total * 100) + '%';
+  };
+
   try {
     // Fire all initial fetch requests concurrently
     await Promise.allSettled([
-      loadSettings(true),
-      loadSettings(),
-      loadDashboard(),
-      loadOrders(),
-      loadMenu(),
-      loadCategories(),
-      loadQRCodes(),
-      loadWaiterCalls(),
-      loadWaiters(),
-      loadRevenue(),
-      loadAnalytics(),
-      getGlobalTables()
+      loadSettings(true).finally(advance),
+      loadSettings().finally(advance),
+      loadDashboard().finally(advance),
+      loadOrders().finally(advance),
+      loadMenu().finally(advance),
+      loadCategories().finally(advance),
+      loadQRCodes().finally(advance),
+      loadWaiterCalls().finally(advance),
+      loadWaiters().finally(advance),
+      loadRevenue().finally(advance),
+      loadAnalytics().finally(advance),
+      getGlobalTables().finally(advance)
     ]);
   } catch(e) {
     console.error('Boot loading error', e);
   }
-  hideLoader();
-  showView(hash);
+  
+  setTimeout(() => {
+    hideLoader();
+    showView(hash);
+  }, 200);
 }
