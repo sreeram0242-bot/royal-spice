@@ -8,9 +8,22 @@ const BASE_URL = '';
 const token = localStorage.getItem('adminToken');
 const restaurantId = localStorage.getItem('adminRestaurantId');
 
-// Prevent ReferenceErrors across all views
-function showLoader() {}
-function hideLoader() {}
+// Prevent ReferenceErrors and show a beautiful visual loader
+function showLoader() {
+  let loader = document.getElementById('globalLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'globalLoader';
+    loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(18,18,18,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px);';
+    loader.innerHTML = '<div style="width:50px;height:50px;border:4px solid var(--gold-secondary);border-top-color:var(--gold-primary);border-radius:50%;animation:spin 1s linear infinite;"></div><style>@keyframes spin{to{transform:rotate(360deg);}}</style>';
+    document.body.appendChild(loader);
+  }
+  loader.style.display = 'flex';
+}
+function hideLoader() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) loader.style.display = 'none';
+}
 
 if (!token && !window.location.pathname.includes('index.html')) {
   window.location.href = 'index.html';
@@ -522,19 +535,19 @@ function renderOrders(orders) {
     
     // Sort by status priority: new > preparing > ready > served
     const statusWeight = { 'new': 1, 'preparing': 2, 'ready': 3, 'served': 4 };
-    filteredOrders.sort((a, b) => {
+    const sortedOrders = [...filteredOrders].sort((a, b) => {
       if (statusWeight[a.status] !== statusWeight[b.status]) {
         return statusWeight[a.status] - statusWeight[b.status];
       }
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
     
-    if (filteredOrders.length === 0) {
+    if (sortedOrders.length === 0) {
       grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">Currently no orders</div>';
       return;
     }
     
-    filteredOrders.forEach(o => {
+    sortedOrders.forEach(o => {
       let actionBtn = '';
       if (o.status === 'new') {
         actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing', this)">Receive (Start Preparing)</button>`;
