@@ -202,6 +202,18 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
   return data;
 }
 
+const AppState = {
+  dashboard: null,
+  orders: null,
+  waiterCalls: null,
+  menu: null,
+  categories: null,
+  qrCodes: null,
+  waiters: null,
+  revenue: null,
+  settings: null
+};
+
 let restaurantSettings = null;
 let revenueChartInstance = null;
 let _globalTablesData = [];
@@ -220,24 +232,37 @@ function getTableName(num) {
 }
 
 async function loadSettings(onlyTables = false) {
-  restaurantSettings = await fetchAPI('/api/admin/settings');
-  document.getElementById('sidebarRestaurantName').innerText = restaurantSettings.name;
+  if (restaurantSettings) renderSettings(restaurantSettings, onlyTables);
+  else showLoader();
+  try {
+    const data = await fetchAPI('/api/admin/settings');
+    if (!restaurantSettings || JSON.stringify(restaurantSettings) !== JSON.stringify(data)) {
+      restaurantSettings = data;
+      renderSettings(data, onlyTables);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
+
+function renderSettings(settings, onlyTables) {
+  document.getElementById('sidebarRestaurantName').innerText = settings.name;
   
   if (onlyTables) {
-    document.getElementById('settingsTotalTables').value = restaurantSettings.totalTables;
-    renderFullTableGrid(restaurantSettings.totalTables);
+    document.getElementById('settingsTotalTables').value = settings.totalTables;
+    renderFullTableGrid();
   } else {
-    document.getElementById('setRestName').value = restaurantSettings.name;
-    document.getElementById('setRestAddress').value = restaurantSettings.address;
-    document.getElementById('setRestGst').value = restaurantSettings.gstPercent;
+    document.getElementById('setRestName').value = settings.name;
+    document.getElementById('setRestAddress').value = settings.address;
+    document.getElementById('setRestGst').value = settings.gstPercent;
     
     // Load Auto Print toggle from LocalStorage
     document.getElementById('setAutoPrint').checked = localStorage.getItem('autoPrint') === 'true';
     
     // Load QR Code
-    if (restaurantSettings.paymentQrCode) {
-      document.getElementById('setQrImageBase64').value = restaurantSettings.paymentQrCode;
-      document.getElementById('setQrPreview').src = restaurantSettings.paymentQrCode;
+    if (settings.paymentQrCode) {
+      document.getElementById('setQrImageBase64').value = settings.paymentQrCode;
+      document.getElementById('setQrPreview').src = settings.paymentQrCode;
       document.getElementById('setQrPreview').style.display = 'block';
       document.getElementById('setQrPreviewText').style.display = 'none';
     } else {
@@ -308,19 +333,32 @@ function toggleTableSettings() {
 
 // DASHBOARD
 async function loadDashboard() {
-  const promises = [
-    fetchAPI('/api/admin/orders?date=today'),
-    fetchAPI('/api/admin/waiter-calls'),
-    fetchAPI('/api/admin/tables')
-  ];
-  if (!restaurantSettings) promises.push(loadSettings());
-  
-  const results = await Promise.all(promises);
-  const orders = results[0];
-  const calls = results[1];
-  const tablesData = results[2];
+  if (AppState.dashboard) renderDashboard(AppState.dashboard.orders, AppState.dashboard.calls, AppState.dashboard.tablesData);
+  else showLoader();
+  try {
+    const promises = [
+      fetchAPI('/api/admin/orders?date=today'),
+      fetchAPI('/api/admin/waiter-calls'),
+      fetchAPI('/api/admin/tables')
+    ];
+    if (!restaurantSettings) promises.push(loadSettings());
+    
+    const results = await Promise.all(promises);
+    const orders = results[0];
+    const calls = results[1];
+    const tablesData = results[2];
+    
+    const dataStr = JSON.stringify({ orders, calls, tablesData });
+    if (!AppState.dashboard || JSON.stringify(AppState.dashboard) !== dataStr) {
+      AppState.dashboard = { orders, calls, tablesData };
+      renderDashboard(orders, calls, tablesData);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
 
-
+function renderDashboard(orders, calls, tablesData) {
   const totalRev = orders.reduce((sum, o) => sum + o.total, 0);
   const pendingOrders = orders.filter(o => o.status === 'new' || o.status === 'preparing');
   const activeTablesCount = new Set(pendingOrders.map(o => o.tableNumber)).size;
@@ -438,10 +476,22 @@ async function loadDashboard() {
 
 // ORDERS
 async function loadOrders() {
+  if (AppState.orders) renderOrders(AppState.orders);
+  else showLoader();
   try {
     const orders = await fetchAPI('/api/admin/orders');
     await getGlobalTables();
-    const grid = document.getElementById('ordersGrid');
+    if (!AppState.orders || JSON.stringify(AppState.orders) !== JSON.stringify(orders)) {
+      AppState.orders = orders;
+      renderOrders(orders);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
+
+function renderOrders(orders) {
+  const grid = document.getElementById('ordersGrid');
     if (!grid) return;
     grid.innerHTML = '';
     
@@ -531,9 +581,6 @@ async function loadOrders() {
       `;
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
-  } catch (e) {
-    console.error(e);
-  }
 }
 
 function updateOrderStatus(id, status, btn) {
@@ -556,14 +603,26 @@ function updateOrderStatus(id, status, btn) {
 
 // WAITER CALLS
 async function loadWaiterCalls() {
+  if (AppState.waiterCalls) renderWaiterCalls(AppState.waiterCalls);
+  else showLoader();
   try {
     const calls = await fetchAPI('/api/admin/waiter-calls');
     await getGlobalTables();
-    const tbody = document.getElementById('waiterCallsBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    
-    calls.forEach(c => {
+    if (!AppState.waiterCalls || JSON.stringify(AppState.waiterCalls) !== JSON.stringify(calls)) {
+      AppState.waiterCalls = calls;
+      renderWaiterCalls(calls);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
+
+function renderWaiterCalls(calls) {
+  const tbody = document.getElementById('waiterCallsBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  calls.forEach(c => {
       const timeStr = new Date(c.createdAt).toLocaleTimeString();
       tbody.innerHTML += `
         <tr>
@@ -577,7 +636,7 @@ async function loadWaiterCalls() {
         </tr>
       `;
     });
-  } catch (e) { console.error(e); }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 async function attendWaiterCall(id) {
@@ -588,13 +647,25 @@ async function attendWaiterCall(id) {
 // MENU
 let currentMenuData = [];
 async function loadMenu() {
-  const [menuRes, catRes] = await Promise.all([
-    fetchAPI('/api/admin/menu'),
-    fetchAPI('/api/admin/categories').catch(e => { console.error(e); return []; })
-  ]);
-  currentMenuData = menuRes;
-  let catSettings = catRes;
+  if (AppState.menu) renderMenu(AppState.menu);
+  else showLoader();
+  try {
+    const [menuRes, catRes] = await Promise.all([
+      fetchAPI('/api/admin/menu'),
+      fetchAPI('/api/admin/categories').catch(e => { console.error(e); return []; })
+    ]);
+    const data = { currentMenuData: menuRes, catSettings: catRes };
+    if (!AppState.menu || JSON.stringify(AppState.menu) !== JSON.stringify(data)) {
+      AppState.menu = data;
+      renderMenu(data);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
 
+function renderMenu({ currentMenuData: menuRes, catSettings }) {
+  currentMenuData = menuRes;
   const container = document.getElementById('menuContainer');
   if (!container) return;
   container.innerHTML = '';
@@ -868,11 +939,24 @@ async function deleteMenuItem(id) {
 
 // CATEGORIES
 async function loadCategories() {
-  const [catSettings, menuData] = await Promise.all([
-    fetchAPI('/api/admin/categories'),
-    fetchAPI('/api/admin/menu')
-  ]);
-  
+  if (AppState.categories) renderCategories(AppState.categories);
+  else showLoader();
+  try {
+    const [catSettings, menuData] = await Promise.all([
+      fetchAPI('/api/admin/categories'),
+      fetchAPI('/api/admin/menu')
+    ]);
+    const data = { catSettings, menuData };
+    if (!AppState.categories || JSON.stringify(AppState.categories) !== JSON.stringify(data)) {
+      AppState.categories = data;
+      renderCategories(data);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
+
+function renderCategories({ catSettings, menuData }) {
   // Get unique categories from menu
   const uniqueCats = [...new Set(menuData.map(m => m.category))];
   
@@ -1356,8 +1440,20 @@ function switchRevenueTab(tab) {
 }
 
 async function loadRevenue() {
+  if (AppState.revenue) renderRevenue(AppState.revenue);
+  else showLoader();
   try {
     const data = await fetchAPI('/api/admin/revenue');
+    if (!AppState.revenue || JSON.stringify(AppState.revenue) !== JSON.stringify(data)) {
+      AppState.revenue = data;
+      renderRevenue(data);
+    }
+  } catch(e) { console.error('Failed to load revenue', e); } finally {
+    hideLoader();
+  }
+}
+
+function renderRevenue(data) {
     _revenueData = data;
 
     document.getElementById('revTotal').innerText = `₹${Math.round(data.totalRevenue || 0).toLocaleString('en-IN')}`;
@@ -1407,9 +1503,6 @@ async function loadRevenue() {
     // Default show overview tab
     switchRevenueTab('overview');
 
-  } catch (err) {
-    console.error('Failed to load revenue', err);
-  }
 }
 
 // ANALYTICS TAB
@@ -2003,6 +2096,20 @@ if (window.location.pathname.includes('dashboard.html')) {
 
 // ── WAITER MANAGEMENT ──
 async function loadWaiters() {
+  if (AppState.waiters) renderWaiters(AppState.waiters);
+  else showLoader();
+  try {
+    const waiters = await fetchAPI('/api/admin/waiters');
+    if (!AppState.waiters || JSON.stringify(AppState.waiters) !== JSON.stringify(waiters)) {
+      AppState.waiters = waiters;
+      renderWaiters(waiters);
+    }
+  } catch(e) { console.error(e); } finally {
+    hideLoader();
+  }
+}
+
+async function renderWaiters(waiters) {
   // Show restaurant ID (fetch from settings if missing from localStorage)
   let rid = localStorage.getItem('adminRestaurantId');
   if (!rid) {
@@ -2015,9 +2122,9 @@ async function loadWaiters() {
     } catch (e) {}
   }
   const tbody = document.getElementById('waitersTableBody');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr>';
+  if (!tbody) return;
+  tbody.innerHTML = '';
   try {
-    const waiters = await fetchAPI('/api/admin/waiters');
     if (!waiters || !Array.isArray(waiters) || waiters.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No waiters yet. Click "+ Add Waiter" to create one.</td></tr>';
       return;
