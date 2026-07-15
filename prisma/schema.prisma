@@ -200,11 +200,15 @@ model Table {
 }
 
 model KotPrinter {
-  id           String     @id @default(cuid())
-  restaurantId String
-  name         String
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
+  id             String     @id @default(cuid())
+  restaurantId   String
+  name           String
+  isActive       Boolean    @default(true)
+  connectionType String     @default("browser") // browser, network, usb, bluetooth
+  ipAddress      String?
+  port           String?
+  deviceId       String?
+  createdAt      DateTime   @default(now())
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }

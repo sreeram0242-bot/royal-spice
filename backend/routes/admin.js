@@ -718,11 +718,15 @@ router.get('/kot-printers', [authAdmin, checkSubscription], async (req, res) => 
 
 router.post('/kot-printers', [authAdmin, checkSubscription], async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, connectionType, ipAddress, port, deviceId } = req.body;
     const newPrinter = await prisma.kotPrinter.create({
       data: {
         restaurantId: req.user.restaurantId,
-        name
+        name,
+        connectionType: connectionType || 'browser',
+        ipAddress: ipAddress || null,
+        port: port || null,
+        deviceId: deviceId || null
       }
     });
     res.status(201).json(newPrinter);
@@ -733,10 +737,18 @@ router.post('/kot-printers', [authAdmin, checkSubscription], async (req, res) =>
 
 router.put('/kot-printers/:id', [authAdmin, checkSubscription], async (req, res) => {
   try {
-    const { isActive } = req.body;
+    const { isActive, name, connectionType, ipAddress, port, deviceId } = req.body;
+    const dataToUpdate = {};
+    if (isActive !== undefined) dataToUpdate.isActive = Boolean(isActive);
+    if (name !== undefined) dataToUpdate.name = name;
+    if (connectionType !== undefined) dataToUpdate.connectionType = connectionType;
+    if (ipAddress !== undefined) dataToUpdate.ipAddress = ipAddress;
+    if (port !== undefined) dataToUpdate.port = port;
+    if (deviceId !== undefined) dataToUpdate.deviceId = deviceId;
+
     const updatedPrinter = await prisma.kotPrinter.update({
       where: { id: req.params.id, restaurantId: req.user.restaurantId },
-      data: { isActive: Boolean(isActive) }
+      data: dataToUpdate
     });
     res.json(updatedPrinter);
   } catch (err) {
@@ -753,6 +765,44 @@ router.delete('/kot-printers/:id', [authAdmin, checkSubscription], async (req, r
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// --- Network Printing ---
+router.post('/print-network', [authAdmin, checkSubscription], (req, res) => {
+  const { ipAddress, port, textContent } = req.body;
+  if (!ipAddress || !textContent) {
+    return res.status(400).json({ message: 'IP address and textContent are required' });
+  }
+
+  const net = require('net');
+  const client = new net.Socket();
+  const targetPort = port || 9100;
+
+  client.setTimeout(3000); // 3 seconds timeout
+
+  client.on('error', (err) => {
+    client.destroy();
+    res.status(500).json({ message: 'Failed to connect to printer', error: err.message });
+  });
+
+  client.on('timeout', () => {
+    client.destroy();
+    res.status(504).json({ message: 'Connection to printer timed out' });
+  });
+
+  client.connect(targetPort, ipAddress, () => {
+    // ESC/POS init command: ESC @
+    const initCmd = Buffer.from([0x1B, 0x40]);
+    // Cut command: GS V 0
+    const cutCmd = Buffer.from([0x1D, 0x56, 0x00]);
+
+    client.write(initCmd);
+    client.write(Buffer.from(textContent + '\n\n\n'));
+    client.write(cutCmd);
+    
+    client.destroy();
+    res.json({ message: 'Printed successfully via network' });
+  });
 });
 
 module.exports = router;

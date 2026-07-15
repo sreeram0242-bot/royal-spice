@@ -924,6 +924,48 @@
     </div>
   </div>
 
+  <!-- KOT CONFIG MODAL (Admin) -->
+  <div class="modal-overlay hidden" id="kotConfigModal" style="background: var(--modal-overlay); z-index:3000; justify-content:center; align-items:center;" onclick="closeKotConfigModal()">
+    <div style="background:var(--panel-bg); padding:24px; border-radius:16px; width:90%; max-width:450px; border:1px solid var(--border-color);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:18px;">Configure Printer: <span id="kotConfigName" style="color:var(--gold);"></span></h3>
+        <i data-lucide="x" style="cursor:pointer;" onclick="closeKotConfigModal()"></i>
+      </div>
+      
+      <input type="hidden" id="kotConfigId">
+      
+      <label style="display:block; margin-bottom:8px; font-weight:bold;">Connection Type</label>
+      <select id="kotConfigType" class="login-input" style="background:var(--bg-dark);" onchange="updateKotConfigFields()">
+        <option value="browser">Browser Default (Web Dialog)</option>
+        <option value="network">Network / IP Printer</option>
+        <option value="usb">USB Printer (WebUSB)</option>
+        <option value="bluetooth">Bluetooth Printer</option>
+      </select>
+
+      <div id="kotConfigNetworkFields" class="hidden">
+        <label style="display:block; margin-bottom:8px; font-weight:bold;">Printer IP Address</label>
+        <input type="text" id="kotConfigIp" class="login-input" placeholder="e.g. 192.168.1.100">
+        
+        <label style="display:block; margin-bottom:8px; font-weight:bold;">Port</label>
+        <input type="text" id="kotConfigPort" class="login-input" placeholder="e.g. 9100">
+      </div>
+
+      <div id="kotConfigUsbFields" class="hidden" style="margin-bottom:16px; background:rgba(59,130,246,0.1); padding:16px; border-radius:8px; border:1px solid rgba(59,130,246,0.3);">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Click below to pair your USB/Bluetooth device to the browser.</div>
+        <button class="btn-gold" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="pairKotDevice()">
+          <i data-lucide="link"></i> Pair Device
+        </button>
+        <div id="kotConfigDeviceStatus" style="font-size:11px; margin-top:8px; color:var(--green); text-align:center;"></div>
+        <input type="hidden" id="kotConfigDeviceId">
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button class="btn-gold" style="flex:1;" onclick="saveKotConfig()">Save Configuration</button>
+        <button class="btn-gold" style="flex:1; background:transparent; border:1px solid var(--border-color); color:var(--text-primary);" onclick="closeKotConfigModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Order Popup Notification -->
   <div id="orderPopup" class="hidden">
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: bold; color: var(--primary);">

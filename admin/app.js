@@ -409,10 +409,20 @@ function renderKotPrinters() {
     return;
   }
   
-  container.innerHTML = _kotPrinters.map(printer => `
+  container.innerHTML = _kotPrinters.map(printer => {
+    let connText = 'Browser';
+    if(printer.connectionType==='network') connText = `IP: ${printer.ipAddress || 'Not set'}`;
+    else if(printer.connectionType==='usb') connText = `USB Device`;
+    else if(printer.connectionType==='bluetooth') connText = `Bluetooth`;
+
+    return `
     <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); padding:10px 14px; border-radius:6px; border:1px solid var(--border-color);">
-      <div style="font-size:14px; font-weight:500;">${printer.name}</div>
+      <div>
+        <div style="font-size:14px; font-weight:500;">${printer.name}</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${connText}</div>
+      </div>
       <div style="display:flex; align-items:center; gap:12px;">
+        <button onclick="openKotConfig('${printer.id}')" style="background:transparent; border:none; color:var(--text-primary); cursor:pointer;"><i data-lucide="settings" style="width:16px;height:16px;"></i></button>
         <label class="toggle-switch">
           <input type="checkbox" onchange="toggleKotPrinter('${printer.id}', this.checked)" ${printer.isActive ? 'checked' : ''}>
           <span class="slider"></span>
@@ -420,8 +430,90 @@ function renderKotPrinters() {
         <button onclick="deleteKotPrinter('${printer.id}')" style="background:transparent; border:none; color:#EF4444; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
       </div>
     </div>
-  `).join('');
+  `}).join('');
   lucide.createIcons();
+}
+
+function openKotConfig(id) {
+  const p = _kotPrinters.find(x => x.id === id);
+  if (!p) return;
+  
+  document.getElementById('kotConfigId').value = p.id;
+  document.getElementById('kotConfigName').innerText = p.name;
+  document.getElementById('kotConfigType').value = p.connectionType || 'browser';
+  document.getElementById('kotConfigIp').value = p.ipAddress || '';
+  document.getElementById('kotConfigPort').value = p.port || '9100';
+  document.getElementById('kotConfigDeviceId').value = p.deviceId || '';
+  
+  if(p.deviceId) {
+    document.getElementById('kotConfigDeviceStatus').innerText = "Device Pair ID: " + p.deviceId;
+  } else {
+    document.getElementById('kotConfigDeviceStatus').innerText = "";
+  }
+  
+  updateKotConfigFields();
+  document.getElementById('kotConfigModal').classList.remove('hidden');
+}
+
+function closeKotConfigModal() {
+  document.getElementById('kotConfigModal').classList.add('hidden');
+}
+
+function updateKotConfigFields() {
+  const type = document.getElementById('kotConfigType').value;
+  document.getElementById('kotConfigNetworkFields').classList.add('hidden');
+  document.getElementById('kotConfigUsbFields').classList.add('hidden');
+  
+  if (type === 'network') {
+    document.getElementById('kotConfigNetworkFields').classList.remove('hidden');
+  } else if (type === 'usb' || type === 'bluetooth') {
+    document.getElementById('kotConfigUsbFields').classList.remove('hidden');
+  }
+}
+
+async function pairKotDevice() {
+  const type = document.getElementById('kotConfigType').value;
+  try {
+    let device;
+    if (type === 'usb' && navigator.usb) {
+      device = await navigator.usb.requestDevice({ filters: [] });
+    } else if (type === 'bluetooth' && navigator.bluetooth) {
+      device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
+    } else {
+      return alert('This connection type is not supported in your browser.');
+    }
+    
+    // We store a dummy ID or the serial number if available, just to show it's paired
+    const id = device.serialNumber || device.id || 'paired-' + Date.now();
+    document.getElementById('kotConfigDeviceId').value = id;
+    document.getElementById('kotConfigDeviceStatus').innerText = "Paired! ID: " + id;
+  } catch (e) {
+    console.log(e);
+    alert('Pairing failed or cancelled.');
+  }
+}
+
+async function saveKotConfig() {
+  const id = document.getElementById('kotConfigId').value;
+  const connectionType = document.getElementById('kotConfigType').value;
+  const ipAddress = document.getElementById('kotConfigIp').value;
+  const port = document.getElementById('kotConfigPort').value;
+  const deviceId = document.getElementById('kotConfigDeviceId').value;
+  
+  try {
+    await fetchAPI('/api/admin/kot-printers/' + id, 'PUT', { connectionType, ipAddress, port, deviceId });
+    const p = _kotPrinters.find(x => x.id === id);
+    if (p) {
+      p.connectionType = connectionType;
+      p.ipAddress = ipAddress;
+      p.port = port;
+      p.deviceId = deviceId;
+    }
+    closeKotConfigModal();
+    renderKotPrinters();
+  } catch(e) {
+    alert('Failed to save config');
+  }
 }
 
 async function addKotPrinter() {
@@ -756,9 +848,12 @@ function renderOrders(orders) {
               <span style="color:var(--text-muted);">Payment Method:</span>
               <strong style="color:var(--text-primary); text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</strong>
             </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--text-muted);">Closed By Waiter:</span>
-              <strong style="color:var(--text-primary); text-transform:capitalize;">${o.waiterName || 'Admin'}</strong>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span style="color:var(--text-muted);">Closed By:</span>
+                <strong style="color:var(--text-primary); text-transform:capitalize;">${o.waiterName || 'Admin'}</strong>
+              </div>
+              <button onclick="printPastBill('${o.id}')" style="background:var(--gold); border:none; border-radius:4px; padding:6px 12px; color:#111; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:12px; font-weight:bold;"><i data-lucide="printer" style="width:14px; height:14px;"></i> Print Bill</button>
             </div>
           </div>
           ` : ''}
@@ -2499,13 +2594,11 @@ async function adminPrintBill(tableNumber) {
 
 // PRINT KOT
 function printKOT(orderId) {
-  const printWindow = window.open('', '_blank', 'width=300,height=600');
-  printWindow.document.write('<html><body><div style="font-family:monospace; padding:20px;">Fetching order details to print...</div></body></html>');
-  
   fetchAPI('/api/admin/orders').then(orders => {
     const o = orders.find(or => or.id === orderId);
     if (!o) return;
     
+    let itemsText = o.items.map(i => `${i.qty}x ${i.name}${i.specialNote ? ' (Note: ' + i.specialNote + ')' : ''}`).join('\n');
     let itemsHtml = o.items.map(i => `
       <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:14px;">
         <div><b>${i.qty}x</b> ${i.name}</div>
@@ -2516,26 +2609,156 @@ function printKOT(orderId) {
     // Determine active KOTs
     const activePrinters = _kotPrinters && _kotPrinters.length > 0 
       ? _kotPrinters.filter(p => p.isActive) 
-      : [{ name: 'KITCHEN TICKET' }]; // fallback if none
+      : [{ name: 'KITCHEN TICKET', connectionType: 'browser' }];
 
-    if (activePrinters.length === 0) activePrinters.push({ name: 'KITCHEN TICKET' });
+    if (activePrinters.length === 0) activePrinters.push({ name: 'KITCHEN TICKET', connectionType: 'browser' });
 
-    let fullHtml = activePrinters.map(printer => `
-      <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always;">
-        <h2 style="text-align:center; margin:0 0 10px 0; text-transform:uppercase;">${printer.name}</h2>
-        <div style="font-size: 10px; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 4px;">
-          <div><b>Order #${o.orderNumber}</b></div>
-          <div><b>${getTableName(o.tableNumber)}</b></div>
+    let browserPrinters = [];
+
+    activePrinters.forEach(printer => {
+      const textContent = `--- ${printer.name.toUpperCase()} ---\nOrder #${o.orderNumber}\nTable: ${getTableName(o.tableNumber)}\n\n${itemsText}\n\n*** END OF ${printer.name.toUpperCase()} ***`;
+      
+      if (printer.connectionType === 'network' && printer.ipAddress) {
+        fetchAPI('/api/admin/print-network', 'POST', {
+          ipAddress: printer.ipAddress,
+          port: parseInt(printer.port) || 9100,
+          textContent: textContent
+        }).then(() => console.log('Network print sent to ' + printer.ipAddress))
+          .catch(e => console.error('Network print failed', e));
+      } else if (printer.connectionType === 'usb' || printer.connectionType === 'bluetooth') {
+        alert(`Hardware printing to ${printer.connectionType} (${printer.name}) is in beta. Please ensure device is paired.`);
+        // Placeholder for raw WebUSB/WebBluetooth ESC/POS driver integration
+        console.log(`Sending ESC/POS bytes to ${printer.connectionType} device: ${printer.deviceId}`);
+      } else {
+        browserPrinters.push(printer);
+      }
+    });
+
+    // Handle Browser Printing for the rest
+    if (browserPrinters.length > 0) {
+      const printWindow = window.open('', '_blank', 'width=300,height=600');
+      printWindow.document.write('<html><body><div style="font-family:monospace; padding:20px;">Preparing to print...</div></body></html>');
+      
+      let fullHtml = browserPrinters.map(printer => `
+        <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always;">
+          <h2 style="text-align:center; margin:0 0 10px 0; text-transform:uppercase;">${printer.name}</h2>
+          <div style="font-size: 10px; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 4px;">
+            <div><b>Order #${o.orderNumber}</b></div>
+            <div><b>${getTableName(o.tableNumber)}</b></div>
+          </div>
+          <div style="font-family:monospace;">${itemsHtml}</div>
+          <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; text-align:center; font-family:monospace;">
+            *** END OF ${printer.name.toUpperCase()} ***
+          </div>
         </div>
-        <div style="font-family:monospace;">${itemsHtml}</div>
-        <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; text-align:center; font-family:monospace;">
-          *** END OF ${printer.name.toUpperCase()} ***
-        </div>
+      `).join('');
+
+      printWindow.document.body.innerHTML = fullHtml;
+      setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    }
+  });
+}
+
+// PRINT PAST BILL (Uses active printers)
+function printPastBill(orderId) {
+  fetchAPI('/api/admin/orders').then(orders => {
+    const o = orders.find(or => or.id === orderId);
+    if (!o) return;
+    
+    // Flatten items
+    const allItems = [];
+    o.items.forEach(item => {
+      const ex = allItems.find(i => i.name === item.name && i.price === item.price);
+      if (ex) { ex.qty += item.qty; ex.total += item.price * item.qty; }
+      else allItems.push({ name: item.name, price: item.price, qty: item.qty, total: item.price * item.qty });
+    });
+
+    let itemsText = allItems.map(i => `${i.name.padEnd(20).substring(0,20)} ${String(i.qty).padStart(3)}  ${(i.total).toFixed(2).padStart(6)}`).join('\n');
+    let itemsHtml = allItems.map(i => `
+      <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;">
+        <span style="flex:1;">${i.name}</span>
+        <span style="width:30px; text-align:center;">${i.qty}</span>
+        <span style="width:70px; text-align:right;">${i.total.toFixed(2)}</span>
       </div>
     `).join('');
+    
+    const now = new Date(o.createdAt);
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const rName = restaurantSettings ? restaurantSettings.name : 'Restaurant';
 
-    printWindow.document.body.innerHTML = fullHtml;
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    const activePrinters = _kotPrinters && _kotPrinters.length > 0 
+      ? _kotPrinters.filter(p => p.isActive) 
+      : [{ name: 'BILLING', connectionType: 'browser' }];
+
+    if (activePrinters.length === 0) activePrinters.push({ name: 'BILLING', connectionType: 'browser' });
+
+    let browserPrinters = [];
+
+    activePrinters.forEach(printer => {
+      const textContent = `
+${rName.toUpperCase().padStart(15 + Math.floor(rName.length/2))}
+--------------------------------
+Date: ${dateStr}   Time: ${timeStr}
+Table: ${getTableName(o.tableNumber)}   Order: #${o.orderNumber}
+--------------------------------
+ITEM                   QTY  AMT
+--------------------------------
+${itemsText}
+--------------------------------
+Subtotal:                ${o.subtotal.toFixed(2)}
+GST:                     ${(o.total - o.subtotal - (o.tip||0)).toFixed(2)}
+Tip:                     ${(o.tip||0).toFixed(2)}
+--------------------------------
+GRAND TOTAL:             ${o.total.toFixed(2)}
+--------------------------------
+Payment: ${o.paymentMethod || 'Unknown'}
+Thank you for dining with us!
+      `.trim();
+      
+      if (printer.connectionType === 'network' && printer.ipAddress) {
+        fetchAPI('/api/admin/print-network', 'POST', {
+          ipAddress: printer.ipAddress,
+          port: parseInt(printer.port) || 9100,
+          textContent: textContent
+        }).then(() => console.log('Network print sent'))
+          .catch(e => console.error('Network print failed', e));
+      } else if (printer.connectionType === 'usb' || printer.connectionType === 'bluetooth') {
+        alert(`Hardware printing to ${printer.connectionType} is in beta.`);
+      } else {
+        browserPrinters.push(printer);
+      }
+    });
+
+    if (browserPrinters.length > 0) {
+      const printWindow = window.open('', '_blank', 'width=300,height=600');
+      let fullHtml = browserPrinters.map(printer => `
+        <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always; color:#000; background:#fff;">
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-size:18px;font-weight:bold;text-transform:uppercase;">${rName}</div>
+          </div>
+          <hr style="border-top:1px dashed #aaa;margin:10px 0;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Date:</span><span>${dateStr}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Time:</span><span>${timeStr}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Table:</span><span>${getTableName(o.tableNumber)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Order:</span><span>#${o.orderNumber}</span></div>
+          <hr style="border-top:1px dashed #aaa;margin:10px 0;">
+          <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;border-bottom:1px dashed #aaa;padding-bottom:4px;margin-bottom:8px;">
+            <span style="flex:1;">Item</span><span style="width:30px;text-align:center;">Qty</span><span style="width:70px;text-align:right;">Amount</span>
+          </div>
+          ${itemsHtml}
+          <hr style="border-top:1px dashed #aaa;margin:10px 0;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Subtotal</span><span>${o.subtotal.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>GST</span><span>${(o.total - o.subtotal - (o.tip||0)).toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Tip</span><span>${(o.tip||0).toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:bold;border-top:2px solid #111;padding:6px 0;margin-top:4px;"><span>TOTAL</span><span>${o.total.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;"><span>Payment:</span><span style="font-weight:bold;text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</span></div>
+          <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">Thank you for dining with us!</div>
+        </div>
+      `).join('');
+      printWindow.document.write('<html><head><style>@page { margin: 0; } body { font-family: monospace; }</style></head><body>' + fullHtml + '</body></html>');
+      setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    }
   });
 }
 
