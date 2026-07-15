@@ -35,12 +35,12 @@ async function api(path, method = 'GET', body = null) {
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  
+
   const tabContent = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
-  if(tabContent) tabContent.classList.add('active');
-  
+  if (tabContent) tabContent.classList.add('active');
+
   const navBtn = document.getElementById('nav-' + name);
-  if(navBtn) navBtn.classList.add('active');
+  if (navBtn) navBtn.classList.add('active');
 
   if (name === 'tables') loadTables();
   if (name === 'calls') loadCalls();
@@ -70,13 +70,13 @@ async function loadTables(showLoader = true) {
   }
   try {
     const res = await api('/api/waiter/tables');
-    if (!res || !res.ok) { 
-      if (showLoader) grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>'; 
-      return; 
+    if (!res || !res.ok) {
+      if (showLoader) grid.innerHTML = '<div class="loading-text">Failed to load tables.</div>';
+      return;
     }
     const tables = await res.json();
     window._allTablesData = tables;
-    
+
     // Update metric cards
     if (document.getElementById('totalTablesCount')) {
       document.getElementById('totalTablesCount').textContent = tables.length;
@@ -102,10 +102,10 @@ function renderTableGrid() {
   const grid = document.getElementById('tableGrid');
   const zoneFilters = document.getElementById('zoneFilters');
   if (!grid || !window._allTablesData) return;
-  
+
   const allTables = window._allTablesData;
   const q = (document.getElementById('tableSearch')?.value || '').toLowerCase();
-  
+
   // Build Zone Filters
   if (zoneFilters) {
     const zones = ['all', ...new Set(allTables.map(t => t.categoryName || 'Main'))];
@@ -124,18 +124,18 @@ function renderTableGrid() {
   if (q) {
     filtered = filtered.filter(t => (t.name || String(t.tableNumber)).toLowerCase().includes(q));
   }
-  
+
   grid.innerHTML = '';
-  
+
   if (!filtered || filtered.length === 0) {
     grid.innerHTML = '<div class="loading-text" style="grid-column: 1 / -1; padding: 40px; color: var(--text-muted);">No tables found.</div>';
     return;
   }
-  
+
   filtered.forEach(t => {
     const card = document.createElement('div');
     card.onclick = () => openTableModal(t.tableNumber, t.passcode);
-    
+
     const statusMap = {
       available: 'free',
       new: 'ordered',
@@ -162,9 +162,9 @@ function renderTableGrid() {
         <i data-lucide="armchair" style="width:24px;height:24px;"></i>
         ${bellHtml}
       </div>
-      <div class="table-name" style="font-size:18px;">${t.name || ('T' + String(t.tableNumber).padStart(2,'0'))}</div>
+      <div class="table-name" style="font-size:18px;">${t.name || ('T' + String(t.tableNumber).padStart(2, '0'))}</div>
       <div class="table-pin">PIN: ${t.passcode || '----'}</div>
-      <div class="status-text">${t.total > 0 ? '₹'+t.total.toFixed(2) + ' <br>' : ''}${statusLabel}</div>
+      <div class="status-text">${t.total > 0 ? '₹' + t.total.toFixed(2) + ' <br>' : ''}${statusLabel}</div>
     `;
     grid.appendChild(card);
   });
@@ -202,9 +202,9 @@ async function openTableModal(tableNumber, passcode = null) {
 
     const bill = await res.json();
     const sessionNo = bill.orders[0]?.sessionNumber || bill.orders[0]?.orderNumber;
-    
+
     let statusPill = `<div class="modal-status-btn ready"><i data-lucide="check-circle" style="width:16px;"></i> Ready</div>`;
-    let timeStr = new Date(bill.orders[0].createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    let timeStr = new Date(bill.orders[0].createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let bodyHTML = `
       ${statusPill}
@@ -372,27 +372,27 @@ if (confirmBtn) {
     if (!tableToClose) return;
     const tableNumber = tableToClose;
     let paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-    
+
     if (paymentMethod === 'split') {
       const cash = parseFloat(document.getElementById('splitCash').value) || 0;
       const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
       const card = parseFloat(document.getElementById('splitCard').value) || 0;
-      
+
       let parts = [];
       if (cash > 0) parts.push(`Cash(₹${cash})`);
       if (upi > 0) parts.push(`UPI(₹${upi})`);
       if (card > 0) parts.push(`Card(₹${card})`);
-      
+
       if (parts.length === 0) {
         alert("Please enter at least one split amount!");
         return;
       }
       paymentMethod = `Split: ${parts.join(', ')}`;
     }
-    
+
     closeConfirmModal();
     closeTableModal();
-    
+
     try {
       const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { paymentMethod });
       const data = await res.json();
@@ -412,9 +412,9 @@ async function loadCalls(showLoader = true) {
   }
   try {
     const res = await api('/api/waiter/calls');
-    if (!res || !res.ok) { 
-      if (showLoader) list.innerHTML = '<div class="loading-text">Failed to load calls.</div>'; 
-      return; 
+    if (!res || !res.ok) {
+      if (showLoader) list.innerHTML = '<div class="loading-text">Failed to load calls.</div>';
+      return;
     }
     const calls = await res.json();
     window._activeCalls = calls;
@@ -434,7 +434,7 @@ async function loadCalls(showLoader = true) {
       <div class="call-card" id="call-${c.id}">
         <div class="call-info">
           <div class="call-table"><i data-lucide="bell" style="width:14px;height:14px;vertical-align:middle;"></i> Table ${c.tableNumber}</div>
-          <div class="call-time">${new Date(c.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+          <div class="call-time">${new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         </div>
         <button class="btn-attend" onclick="attendCall('${c.id}')">Attended</button>
       </div>
@@ -467,25 +467,25 @@ function closeOrderOverlay() {
 
 async function startOrderForTable(tableNumber, sessionId) {
   document.getElementById('orderOverlay').style.display = 'block';
-  
+
   const menuSec = document.getElementById('orderMenuSection');
   if (menuSec) menuSec.style.display = 'block';
-  
+
   document.getElementById('activeOrderTableNum').innerText = tableNumber;
   document.getElementById('orderTable').value = tableNumber;
   if (document.getElementById('orderSessionId')) {
     document.getElementById('orderSessionId').value = sessionId || '';
   }
-  
+
   cart = {};
-  
+
   if (fullMenu.length === 0) {
     try {
       const res = await api('/api/waiter/menu');
       if (res && res.ok) fullMenu = await res.json();
     } catch (e) { console.error(e); }
   }
-  
+
   renderCategoryFilter();
   renderMenuItems();
   renderCart();
@@ -647,17 +647,17 @@ async function loadLiveOrders() {
 function renderLiveOrders() {
   const container = document.getElementById('liveOrdersContainer');
   let filtered = allLiveOrders;
-  
+
   const countAll = allLiveOrders.length;
   const countPrep = allLiveOrders.filter(o => o.status === 'preparing' || o.status === 'new').length;
   const countReady = allLiveOrders.filter(o => o.status === 'ready').length;
   const countServed = allLiveOrders.filter(o => o.status === 'served' || o.status === 'completed').length;
-  
+
   if (document.getElementById('countAll')) document.getElementById('countAll').innerText = countAll;
   if (document.getElementById('countPrep')) document.getElementById('countPrep').innerText = countPrep;
   if (document.getElementById('countReady')) document.getElementById('countReady').innerText = countReady;
   if (document.getElementById('countServed')) document.getElementById('countServed').innerText = countServed;
-  
+
   if (currentOrderFilter === 'preparing') filtered = allLiveOrders.filter(o => o.status === 'preparing' || o.status === 'new');
   else if (currentOrderFilter === 'ready') filtered = allLiveOrders.filter(o => o.status === 'ready');
   else if (currentOrderFilter === 'served') filtered = allLiveOrders.filter(o => o.status === 'served' || o.status === 'completed');
@@ -672,8 +672,8 @@ function renderLiveOrders() {
     let statusName = 'Served';
     if (order.status === 'preparing' || order.status === 'new') { pillClass = 'pill-preparing'; statusName = 'Preparing'; }
     else if (order.status === 'ready') { pillClass = 'pill-ready'; statusName = 'Ready'; }
-    
-    let timeStr = new Date(order.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    let timeStr = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return `
       <div class="order-card">
@@ -715,19 +715,19 @@ function updateThemeIcon() {
   const oldBtn = document.getElementById('themeToggleBtn');
   if (!oldBtn) return;
   const isLight = document.body.classList.contains('light-theme');
-  
+
   const newBtn = document.createElement('i');
   newBtn.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
   newBtn.className = 'theme-toggle';
   newBtn.id = 'themeToggleBtn';
   newBtn.setAttribute('onclick', 'toggleTheme()');
-  
+
   oldBtn.replaceWith(newBtn);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // Apply saved theme on page load
-(function() {
+(function () {
   if (localStorage.getItem('theme') === 'light') {
     document.body.classList.add('light-theme');
   }

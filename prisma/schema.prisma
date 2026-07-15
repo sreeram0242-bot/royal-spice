@@ -38,6 +38,7 @@ model Restaurant {
   tablePasscodes     TablePasscode[]
   tableCategories    TableCategory[]
   tables             Table[]
+  kotPrinters        KotPrinter[]
 }
 
 model MenuItem {
@@ -196,4 +197,14 @@ model Table {
   category     TableCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   
   @@unique([restaurantId, tableNumber])
+}
+
+model KotPrinter {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }

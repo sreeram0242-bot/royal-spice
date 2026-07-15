@@ -703,6 +703,58 @@ router.post('/categories', [authAdmin, checkSubscription], async (req, res) => {
   }
 });
 
+// --- KOT Printers Management ---
+router.get('/kot-printers', [authAdmin, checkSubscription], async (req, res) => {
+  try {
+    const printers = await prisma.kotPrinter.findMany({
+      where: { restaurantId: req.user.restaurantId },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json(printers);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/kot-printers', [authAdmin, checkSubscription], async (req, res) => {
+  try {
+    const { name } = req.body;
+    const newPrinter = await prisma.kotPrinter.create({
+      data: {
+        restaurantId: req.user.restaurantId,
+        name
+      }
+    });
+    res.status(201).json(newPrinter);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/kot-printers/:id', [authAdmin, checkSubscription], async (req, res) => {
+  try {
+    const { isActive } = req.body;
+    const updatedPrinter = await prisma.kotPrinter.update({
+      where: { id: req.params.id, restaurantId: req.user.restaurantId },
+      data: { isActive: Boolean(isActive) }
+    });
+    res.json(updatedPrinter);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/kot-printers/:id', [authAdmin, checkSubscription], async (req, res) => {
+  try {
+    await prisma.kotPrinter.delete({
+      where: { id: req.params.id, restaurantId: req.user.restaurantId }
+    });
+    res.json({ message: 'KOT Printer deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
 
 // --- Waiter Management ---

@@ -612,6 +612,21 @@
               </label>
             </div>
             
+            <!-- Multiple KOT Printers Section -->
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color); margin-top: 16px; margin-bottom: 16px;">
+              <h4 style="margin-bottom: 12px; font-weight: 600;">🖨️ Multiple KOT Printers</h4>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Add different KOT printers (e.g., Kitchen, Bar) and toggle them ON/OFF. A separate KOT ticket will print for each active printer.</div>
+              
+              <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <input type="text" id="newKotName" class="login-input" placeholder="Enter Printer Name (e.g. Bar KOT)" style="margin-bottom: 0; flex: 1;">
+                <button class="btn-gold" style="width: auto; white-space: nowrap;" onclick="addKotPrinter()">Add Printer</button>
+              </div>
+
+              <div id="kotPrintersList" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- KOT printers rendered here via JS -->
+              </div>
+            </div>
+
             <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
               <label style="display: block; margin-bottom: 12px; font-weight: 600;">Payment QR Code</label>
               <div style="display: flex; gap: 16px; align-items: flex-start;">
@@ -797,19 +812,19 @@
       
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom: 24px; text-align:left;">
         <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="cash" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='block'; document.getElementById('adminPrintBillBtn').style.display='flex';">
+          <input type="radio" name="paymentMethod" value="cash" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='block';">
           <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Full Cash</span>
         </label>
         <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="upi" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='none'; document.getElementById('adminPrintBillBtn').style.display='flex';">
+          <input type="radio" name="paymentMethod" value="upi" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='none';">
           <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Full UPI</span>
         </label>
         <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="card" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='none'; document.getElementById('adminPrintBillBtn').style.display='flex';">
+          <input type="radio" name="paymentMethod" value="card" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='none';">
           <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Full Card</span>
         </label>
         <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="split" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='block'; document.getElementById('changeCalculator').style.display='none'; document.getElementById('adminPrintBillBtn').style.display='flex';">
+          <input type="radio" name="paymentMethod" value="split" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='block'; document.getElementById('changeCalculator').style.display='none';">
           <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Split Payment</span>
         </label>
       </div>
@@ -902,7 +917,7 @@
         </script>
 
       <div style="display:flex; flex-direction:column; gap:12px;">
-        <button id="adminPrintBillBtn" class="btn-gold" style="display:none; width:100%; background:#3B82F6; color:white; justify-content:center; align-items:center; gap:6px; border:none;" onclick="adminPrintBill(document.getElementById('confirmTableNum').innerText)"><i data-lucide="printer" style="width:18px;height:18px;"></i> Print Bill</button>
+        <!-- adminPrintBillBtn removed as requested -->
         <button class="btn-gold" style="width:100%;" id="confirmCloseBtn">Done</button>
         <button class="btn-gold" style="width:100%; background:transparent; border:1px solid var(--border-color); color:var(--text-primary);" onclick="closeConfirmModal()">Cancel</button>
       </div>

@@ -323,10 +323,12 @@ const AppState = {
   qrCodes: null,
   waiters: null,
   revenue: null,
+  tables: null,
   settings: null
 };
 
 let restaurantSettings = null;
+let _kotPrinters = [];
 let revenueChartInstance = null;
 let _globalTablesData = [];
 
@@ -381,8 +383,81 @@ function renderSettings(settings, onlyTables) {
       document.getElementById('setQrImageBase64').value = '';
       document.getElementById('setQrPreview').src = '';
       document.getElementById('setQrPreview').style.display = 'none';
+      document.getElementById('setQrPreview').style.display = 'none';
       document.getElementById('setQrPreviewText').style.display = 'block';
     }
+    
+    // Load KOT Printers
+    loadKotPrinters();
+  }
+}
+
+async function loadKotPrinters() {
+  try {
+    const data = await fetchAPI('/api/admin/kot-printers');
+    _kotPrinters = data;
+    renderKotPrinters();
+  } catch (e) {
+    console.error('Failed to load KOT printers', e);
+  }
+}
+
+function renderKotPrinters() {
+  const container = document.getElementById('kotPrintersList');
+  if (!_kotPrinters || _kotPrinters.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted); font-size:12px; font-style:italic;">No KOT printers added yet.</div>';
+    return;
+  }
+  
+  container.innerHTML = _kotPrinters.map(printer => `
+    <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); padding:10px 14px; border-radius:6px; border:1px solid var(--border-color);">
+      <div style="font-size:14px; font-weight:500;">${printer.name}</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <label class="toggle-switch">
+          <input type="checkbox" onchange="toggleKotPrinter('${printer.id}', this.checked)" ${printer.isActive ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+        <button onclick="deleteKotPrinter('${printer.id}')" style="background:transparent; border:none; color:#EF4444; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+      </div>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+
+async function addKotPrinter() {
+  const inp = document.getElementById('newKotName');
+  const name = inp.value.trim();
+  if (!name) return alert('Enter printer name');
+  
+  try {
+    const newPrinter = await fetchAPI('/api/admin/kot-printers', 'POST', { name });
+    _kotPrinters.push(newPrinter);
+    inp.value = '';
+    renderKotPrinters();
+  } catch (e) {
+    alert('Failed to add printer');
+  }
+}
+
+async function toggleKotPrinter(id, isActive) {
+  try {
+    await fetchAPI('/api/admin/kot-printers/' + id, 'PUT', { isActive });
+    const p = _kotPrinters.find(x => x.id === id);
+    if (p) p.isActive = isActive;
+  } catch (e) {
+    alert('Failed to toggle printer');
+    renderKotPrinters(); // revert UI on fail
+  }
+}
+
+async function deleteKotPrinter(id) {
+  if (!confirm('Delete this printer?')) return;
+  try {
+    await fetchAPI('/api/admin/kot-printers/' + id, 'DELETE');
+    _kotPrinters = _kotPrinters.filter(x => x.id !== id);
+    renderKotPrinters();
+  } catch (e) {
+    alert('Failed to delete printer');
   }
 }
 async function handleAutoPrintToggle(el) {
@@ -660,7 +735,7 @@ function renderOrders(orders) {
             </div>
             <div style="text-align: right;">
               <span class="status ${o.status}">${o.status.toUpperCase()}</span>
-              <button onclick="printKOT('${o.id}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; display:block; margin-top:8px;"><i data-lucide="printer" style="width:20px; height:20px;"></i></button>
+              <button onclick="printKOT('${o.id}')" style="background:transparent; border:1px solid var(--border-color); border-radius:4px; padding:4px 8px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px; margin-top:8px; font-size:12px; font-weight:bold;"><i data-lucide="printer" style="width:14px; height:14px;"></i> KOT</button>
             </div>
           </div>
           
@@ -2438,17 +2513,28 @@ function printKOT(orderId) {
       ${i.specialNote ? `<div style="font-size:12px; font-style:italic; margin-left:20px; margin-bottom:8px;">Note: ${i.specialNote}</div>` : ''}
     `).join('');
     
-    printWindow.document.body.innerHTML = `
-        <h2 style="text-align:center; margin:0 0 10px 0;">KITCHEN TICKET</h2>
+    // Determine active KOTs
+    const activePrinters = _kotPrinters && _kotPrinters.length > 0 
+      ? _kotPrinters.filter(p => p.isActive) 
+      : [{ name: 'KITCHEN TICKET' }]; // fallback if none
+
+    if (activePrinters.length === 0) activePrinters.push({ name: 'KITCHEN TICKET' });
+
+    let fullHtml = activePrinters.map(printer => `
+      <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always;">
+        <h2 style="text-align:center; margin:0 0 10px 0; text-transform:uppercase;">${printer.name}</h2>
         <div style="font-size: 10px; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 4px;">
           <div><b>Order #${o.orderNumber}</b></div>
           <div><b>${getTableName(o.tableNumber)}</b></div>
         </div>
         <div style="font-family:monospace;">${itemsHtml}</div>
         <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; text-align:center; font-family:monospace;">
-          *** END OF KOT ***
+          *** END OF ${printer.name.toUpperCase()} ***
         </div>
-    `;
+      </div>
+    `).join('');
+
+    printWindow.document.body.innerHTML = fullHtml;
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
   });
 }
