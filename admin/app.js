@@ -2637,7 +2637,7 @@ function printKOT(orderId) {
     // Handle Browser Printing for the rest
     if (browserPrinters.length > 0) {
       const printWindow = window.open('', '_blank', 'width=300,height=600');
-      printWindow.document.write('<html><body><div style="font-family:monospace; padding:20px;">Preparing to print...</div></body></html>');
+      printWindow.document.write('<html><head><style>@page { size: 80mm auto; margin: 0; } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body><div style="font-family:monospace; padding:20px;">Preparing to print...</div></body></html>');
       
       let fullHtml = browserPrinters.map(printer => `
         <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always;">
@@ -2756,7 +2756,7 @@ Thank you for dining with us!
           <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">Thank you for dining with us!</div>
         </div>
       `).join('');
-      printWindow.document.write('<html><head><style>@page { margin: 0; } body { font-family: monospace; }</style></head><body>' + fullHtml + '</body></html>');
+      printWindow.document.write('<html><head><style>@page { size: 80mm auto; margin: 0; } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body>' + fullHtml + '</body></html>');
       setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
     }
   });
@@ -2793,7 +2793,8 @@ function printHistoryBill(sessionId) {
   
   printWindow.document.write(`
     <html>
-      <body style="font-family:'Courier New', monospace; padding:20px; color:#000;">
+      <head><style>@page { size: 80mm auto; margin: 0; } body { width: 80mm; margin: 0; padding: 10px; box-sizing: border-box; }</style></head>
+      <body style="font-family:'Courier New', monospace; color:#000;">
         <h2 style="text-align:center; margin:0 0 10px 0;">PAST BILL</h2>
         <div style="border-bottom:1px dashed #000; margin-bottom:10px; padding-bottom:10px; font-size:12px;">
           <div style="display:flex;justify-content:space-between;"><span>Date:</span><span>${dateStr}</span></div>
