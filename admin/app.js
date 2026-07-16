@@ -2890,14 +2890,26 @@ function handleGlobalSearch() {
   if (currentView === 'orders') {
     const cards = document.querySelectorAll('#ordersGrid .panel');
     cards.forEach(card => {
-      if (card.innerText.toLowerCase().includes(query)) card.style.display = 'block';
+      if (card.textContent.toLowerCase().includes(query)) card.style.display = 'block';
       else card.style.display = 'none';
     });
   } else if (currentView === 'menu items') {
-    const rows = document.querySelectorAll('#menuContainer tbody tr');
-    rows.forEach(row => {
-      if (row.innerText.toLowerCase().includes(query)) row.style.display = 'table-row';
-      else row.style.display = 'none';
+    const panels = document.querySelectorAll('#menuContainer .panel');
+    panels.forEach(panel => {
+      let hasVisibleRow = false;
+      const rows = panel.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        if (row.textContent.toLowerCase().includes(query)) {
+          row.style.display = 'table-row';
+          hasVisibleRow = true;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+      // Hide the entire category panel if no items match the search
+      if (rows.length > 0) {
+        panel.style.display = hasVisibleRow ? 'block' : 'none';
+      }
     });
   }
 }
