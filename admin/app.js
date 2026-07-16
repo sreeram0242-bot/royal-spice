@@ -1114,7 +1114,11 @@ function handleImageUpload(event, previewId) {
     // Compress image to ensure it's fully optimized
     base64 = await compressImageBase64(base64);
 
-    document.getElementById(previewId + 'Base64').value = base64;
+    const targetId = previewId.replace('Preview', 'ImageBase64');
+    const hiddenInput = document.getElementById(targetId);
+    if (hiddenInput) hiddenInput.value = base64;
+    else console.warn('Hidden input not found for ' + targetId);
+
     const preview = document.getElementById(previewId);
     preview.src = base64;
     preview.style.display = 'block';
