@@ -2637,7 +2637,7 @@ function printKOT(orderId) {
     // Handle Browser Printing for the rest
     if (browserPrinters.length > 0) {
       const printWindow = window.open('', '_blank', 'width=300,height=600');
-      printWindow.document.write('<html><head><style>@page { size: 80mm auto; margin: 0; } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body><div style="font-family:monospace; padding:20px;">Preparing to print...</div></body></html>');
+      printWindow.document.write('<html><head><style>@page { size: 80mm 297mm; margin: 0; } @media print { body { width: 80mm; margin: 0; padding: 5mm; } } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body><div style="font-family:monospace; padding:20px;">Preparing to print...</div></body></html>');
       
       let fullHtml = browserPrinters.map(printer => `
         <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always;">
@@ -2756,7 +2756,7 @@ Thank you for dining with us!
           <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">Thank you for dining with us!</div>
         </div>
       `).join('');
-      printWindow.document.write('<html><head><style>@page { size: 80mm auto; margin: 0; } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body>' + fullHtml + '</body></html>');
+      printWindow.document.write('<html><head><style>@page { size: 80mm 297mm; margin: 0; } @media print { body { width: 80mm; margin: 0; padding: 5mm; } } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body>' + fullHtml + '</body></html>');
       setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
     }
   });
@@ -2777,12 +2777,12 @@ function printHistoryBill(sessionId) {
   const session = allHistorySessions.find(s => s.sessionId === sessionId);
   if (!session) return;
   
-  const printWindow = window.open('', '_blank', 'width=350,height=600');
-  
   const d = new Date(session.createdAt);
   const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const rName = restaurantSettings ? restaurantSettings.name : 'Restaurant';
   
+  let itemsText = session.items.map(i => `${i.name.padEnd(20).substring(0,20)} ${String(i.qty).padStart(3)}  ${(i.price * i.qty).toFixed(2).padStart(6)}`).join('\n');
   let itemsHtml = session.items.map(item => `
     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
       <span style="flex:1;">${item.qty}x ${item.name}</span>
@@ -2791,11 +2791,55 @@ function printHistoryBill(sessionId) {
     ${item.specialNote ? `<div style="font-size:11px;font-style:italic;margin-left:20px;">Note: ${item.specialNote}</div>` : ''}
   `).join('');
   
-  printWindow.document.write(`
-    <html>
-      <head><style>@page { size: 80mm auto; margin: 0; } body { width: 80mm; margin: 0; padding: 10px; box-sizing: border-box; }</style></head>
-      <body style="font-family:'Courier New', monospace; color:#000;">
-        <h2 style="text-align:center; margin:0 0 10px 0;">PAST BILL</h2>
+  const activePrinters = _kotPrinters && _kotPrinters.length > 0 
+    ? _kotPrinters.filter(p => p.isActive) 
+    : [{ name: 'BILLING', connectionType: 'browser' }];
+
+  if (activePrinters.length === 0) activePrinters.push({ name: 'BILLING', connectionType: 'browser' });
+
+  let browserPrinters = [];
+
+  activePrinters.forEach(printer => {
+    const textContent = `
+${rName.toUpperCase().padStart(15 + Math.floor(rName.length/2))}
+--------------------------------
+Date: ${dateStr}   Time: ${timeStr}
+Table: ${getTableName(session.tableNumber)}   Session: #${session.sessionNumber}
+--------------------------------
+ITEM                   QTY  AMT
+--------------------------------
+${itemsText}
+--------------------------------
+Subtotal:                ${session.subtotal.toFixed(2)}
+GST:                     ${session.gst.toFixed(2)}
+Tip:                     ${session.tip.toFixed(2)}
+--------------------------------
+GRAND TOTAL:             ${session.total.toFixed(2)}
+--------------------------------
+Payment: ${session.paymentMethod || 'Unknown'}
+Thank you for dining with us!
+    `.trim();
+    
+    if (printer.connectionType === 'network' && printer.ipAddress) {
+      fetchAPI('/api/admin/print-network', 'POST', {
+        ipAddress: printer.ipAddress,
+        port: parseInt(printer.port) || 9100,
+        textContent: textContent
+      }).then(() => console.log('Network print sent'))
+        .catch(e => console.error('Network print failed', e));
+    } else if (printer.connectionType === 'usb' || printer.connectionType === 'bluetooth') {
+      alert(`Hardware printing to ${printer.connectionType} is in beta.`);
+    } else {
+      browserPrinters.push(printer);
+    }
+  });
+
+  if (browserPrinters.length > 0) {
+    const printWindow = window.open('', '_blank', 'width=350,height=600');
+    let fullHtml = browserPrinters.map(printer => `
+      <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always; color:#000; background:#fff;">
+        <h2 style="text-align:center; margin:0 0 10px 0; text-transform:uppercase;">${rName}</h2>
+        <div style="text-align:center; margin:0 0 10px 0; font-weight:bold;">PAST BILL</div>
         <div style="border-bottom:1px dashed #000; margin-bottom:10px; padding-bottom:10px; font-size:12px;">
           <div style="display:flex;justify-content:space-between;"><span>Date:</span><span>${dateStr}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Time:</span><span>${timeStr}</span></div>
@@ -2821,11 +2865,12 @@ function printHistoryBill(sessionId) {
         <div style="text-align:center; margin-top:20px; font-size:11px; color:#555;">
           *** END OF BILL ***
         </div>
-      </body>
-    </html>
-  `);
-  
-  setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+      </div>
+    `).join('');
+    
+    printWindow.document.write('<html><head><style>@page { size: 80mm 297mm; margin: 0; } @media print { body { width: 80mm; margin: 0; padding: 5mm; } } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body>' + fullHtml + '</body></html>');
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+  }
 }
 
 // GLOBAL SEARCH
