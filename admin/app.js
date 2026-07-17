@@ -1,7 +1,7 @@
-window.onerror = function(msg, url, line, col, error) {
+window.onerror = function (msg, url, line, col, error) {
   alert("Global Error: " + msg + "\nLine: " + line);
 };
-window.onunhandledrejection = function(event) {
+window.onunhandledrejection = function (event) {
   alert("Unhandled Promise: " + (event.reason && event.reason.message ? event.reason.message : event.reason));
 };
 const BASE_URL = '';
@@ -123,7 +123,7 @@ if (socket && restaurantId) {
   socket.on('new_order', (order) => {
     // Play sound
     dingSound.play().catch(e => console.log('Audio play prevented by browser', e));
-    
+
     // Auto Print if enabled
     if (localStorage.getItem('autoPrint') === 'true') {
       setTimeout(() => {
@@ -188,7 +188,7 @@ function updateThemeIcon() {
 }
 
 // Apply saved theme on page load
-(function() {
+(function () {
   if (localStorage.getItem('theme') === 'light') {
     document.body.classList.add('light-theme');
   }
@@ -245,9 +245,9 @@ async function submitComplaint() {
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-' + viewId).classList.remove('hidden');
-  
+
   document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-  
+
   // Safely set the active nav link
   document.querySelectorAll('.nav-link').forEach(link => {
     if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`)) {
@@ -301,7 +301,7 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
       logout();
       return [];
     }
-    
+
     const data = await res.json();
     if (!res.ok) {
       console.error('API Error:', data);
@@ -336,7 +336,7 @@ async function getGlobalTables() {
   if (_globalTablesData.length === 0) {
     try {
       _globalTablesData = await fetchAPI('/api/admin/tables');
-    } catch(e) {}
+    } catch (e) { }
   }
   return _globalTablesData;
 }
@@ -354,14 +354,14 @@ async function loadSettings(onlyTables = false) {
       restaurantSettings = data;
       renderSettings(data, onlyTables);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
 
 function renderSettings(settings, onlyTables) {
   document.getElementById('sidebarRestaurantName').innerText = settings.name;
-  
+
   if (onlyTables) {
     document.getElementById('settingsTotalTables').value = settings.totalTables;
     renderFullTableGrid();
@@ -369,10 +369,10 @@ function renderSettings(settings, onlyTables) {
     document.getElementById('setRestName').value = settings.name;
     document.getElementById('setRestAddress').value = settings.address;
     document.getElementById('setRestGst').value = settings.gstPercent;
-    
+
     // Load Auto Print toggle from LocalStorage
     document.getElementById('setAutoPrint').checked = localStorage.getItem('autoPrint') === 'true';
-    
+
     // Load QR Code
     if (settings.paymentQrCode) {
       document.getElementById('setQrImageBase64').value = settings.paymentQrCode;
@@ -386,7 +386,7 @@ function renderSettings(settings, onlyTables) {
       document.getElementById('setQrPreview').style.display = 'none';
       document.getElementById('setQrPreviewText').style.display = 'block';
     }
-    
+
     // Load KOT Printers
     loadKotPrinters();
   }
@@ -408,12 +408,12 @@ function renderKotPrinters() {
     container.innerHTML = '<div style="color:var(--text-muted); font-size:12px; font-style:italic;">No KOT printers added yet.</div>';
     return;
   }
-  
+
   container.innerHTML = _kotPrinters.map(printer => {
     let connText = 'Browser';
-    if(printer.connectionType==='network') connText = `IP: ${printer.ipAddress || 'Not set'}`;
-    else if(printer.connectionType==='usb') connText = `USB Device`;
-    else if(printer.connectionType==='bluetooth') connText = `Bluetooth`;
+    if (printer.connectionType === 'network') connText = `IP: ${printer.ipAddress || 'Not set'}`;
+    else if (printer.connectionType === 'usb') connText = `USB Device`;
+    else if (printer.connectionType === 'bluetooth') connText = `Bluetooth`;
 
     return `
     <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); padding:10px 14px; border-radius:6px; border:1px solid var(--border-color);">
@@ -437,20 +437,20 @@ function renderKotPrinters() {
 function openKotConfig(id) {
   const p = _kotPrinters.find(x => x.id === id);
   if (!p) return;
-  
+
   document.getElementById('kotConfigId').value = p.id;
   document.getElementById('kotConfigName').innerText = p.name;
   document.getElementById('kotConfigType').value = p.connectionType || 'browser';
   document.getElementById('kotConfigIp').value = p.ipAddress || '';
   document.getElementById('kotConfigPort').value = p.port || '9100';
   document.getElementById('kotConfigDeviceId').value = p.deviceId || '';
-  
-  if(p.deviceId) {
+
+  if (p.deviceId) {
     document.getElementById('kotConfigDeviceStatus').innerText = "Device Pair ID: " + p.deviceId;
   } else {
     document.getElementById('kotConfigDeviceStatus').innerText = "";
   }
-  
+
   updateKotConfigFields();
   document.getElementById('kotConfigModal').classList.remove('hidden');
 }
@@ -463,7 +463,7 @@ function updateKotConfigFields() {
   const type = document.getElementById('kotConfigType').value;
   document.getElementById('kotConfigNetworkFields').classList.add('hidden');
   document.getElementById('kotConfigUsbFields').classList.add('hidden');
-  
+
   if (type === 'network') {
     document.getElementById('kotConfigNetworkFields').classList.remove('hidden');
   } else if (type === 'usb' || type === 'bluetooth') {
@@ -482,7 +482,7 @@ async function pairKotDevice() {
     } else {
       return alert('This connection type is not supported in your browser.');
     }
-    
+
     // We store a dummy ID or the serial number if available, just to show it's paired
     const id = device.serialNumber || device.id || 'paired-' + Date.now();
     document.getElementById('kotConfigDeviceId').value = id;
@@ -499,7 +499,7 @@ async function saveKotConfig() {
   const ipAddress = document.getElementById('kotConfigIp').value;
   const port = document.getElementById('kotConfigPort').value;
   const deviceId = document.getElementById('kotConfigDeviceId').value;
-  
+
   try {
     await fetchAPI('/api/admin/kot-printers/' + id, 'PUT', { connectionType, ipAddress, port, deviceId });
     const p = _kotPrinters.find(x => x.id === id);
@@ -511,7 +511,7 @@ async function saveKotConfig() {
     }
     closeKotConfigModal();
     renderKotPrinters();
-  } catch(e) {
+  } catch (e) {
     alert('Failed to save config');
   }
 }
@@ -520,7 +520,7 @@ async function addKotPrinter() {
   const inp = document.getElementById('newKotName');
   const name = inp.value.trim();
   if (!name) return alert('Enter printer name');
-  
+
   try {
     const newPrinter = await fetchAPI('/api/admin/kot-printers', 'POST', { name });
     _kotPrinters.push(newPrinter);
@@ -579,10 +579,10 @@ async function saveSettings() {
   const address = document.getElementById('setRestAddress').value;
   const gstPercent = document.getElementById('setRestGst').value;
   const paymentQrCode = document.getElementById('setQrImageBase64').value || null;
-  
+
   // Save Auto Print toggle
   localStorage.setItem('autoPrint', document.getElementById('setAutoPrint').checked);
-  
+
   await fetchAPI('/api/admin/settings', 'PUT', { name, address, gstPercent, paymentQrCode });
   alert('Settings saved');
   loadSettings();
@@ -621,18 +621,18 @@ async function loadDashboard() {
       fetchAPI('/api/admin/tables')
     ];
     if (!restaurantSettings) promises.push(loadSettings());
-    
+
     const results = await Promise.all(promises);
     const orders = results[0];
     const calls = results[1];
     const tablesData = results[2];
-    
+
     const dataStr = JSON.stringify({ orders, calls, tablesData });
     if (!AppState.dashboard || JSON.stringify(AppState.dashboard) !== dataStr) {
       AppState.dashboard = { orders, calls, tablesData };
       renderDashboard(orders, calls, tablesData);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
@@ -663,7 +663,7 @@ function renderDashboard(orders, calls, tablesData) {
   // Live orders table
   const tbody = document.getElementById('liveOrdersTable');
   tbody.innerHTML = '';
-  
+
   if (pendingOrders.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">Currently no live orders</td></tr>';
   } else {
@@ -674,7 +674,7 @@ function renderDashboard(orders, calls, tablesData) {
         <tr onclick="showView('orders');" style="cursor: pointer;">
           <td><div class="table-pill" style="padding: 4px; border-radius: 0; width: auto; min-width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">${tableName}</div></td>
           <td>#${o.orderNumber}</td>
-          <td>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+          <td>${new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
           <td>${o.items.length} items</td>
           <td>₹${o.total}</td>
           <td><span class="status ${o.status}">${o.status.toUpperCase()}</span></td>
@@ -686,7 +686,7 @@ function renderDashboard(orders, calls, tablesData) {
   // Table Grid
   const grid = document.getElementById('dashTableGrid');
   grid.innerHTML = '';
-  
+
   tablesData.forEach(t => {
     let statusClass = 'available';
     const tableOrder = pendingOrders.find(o => o.tableNumber === t.tableNumber);
@@ -705,7 +705,7 @@ function renderDashboard(orders, calls, tablesData) {
       if (revenueChartInstance) {
         revenueChartInstance.destroy();
       }
-      
+
       // Group orders by hour
       const hourlyRevenue = Array(24).fill(0);
       orders.forEach(o => {
@@ -766,47 +766,47 @@ async function loadOrders() {
       AppState.orders = orders;
       renderOrders(orders);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
 
 function renderOrders(orders) {
   const grid = document.getElementById('ordersGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    
-    const filter = document.getElementById('orderFilterStatus') ? document.getElementById('orderFilterStatus').value : 'all';
-    
-    const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
-    
-    // Sort by status priority: new > preparing > ready > served
-    const statusWeight = { 'new': 1, 'preparing': 2, 'ready': 3, 'served': 4 };
-    const sortedOrders = [...filteredOrders].sort((a, b) => {
-      if (statusWeight[a.status] !== statusWeight[b.status]) {
-        return statusWeight[a.status] - statusWeight[b.status];
-      }
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-    
-    if (sortedOrders.length === 0) {
-      grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">Currently no orders</div>';
-      return;
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const filter = document.getElementById('orderFilterStatus') ? document.getElementById('orderFilterStatus').value : 'all';
+
+  const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+
+  // Sort by status priority: new > preparing > ready > served
+  const statusWeight = { 'new': 1, 'preparing': 2, 'ready': 3, 'served': 4 };
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    if (statusWeight[a.status] !== statusWeight[b.status]) {
+      return statusWeight[a.status] - statusWeight[b.status];
     }
-    
-    sortedOrders.forEach(o => {
-      let actionBtn = '';
-      if (o.status === 'new') {
-        actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing', this)">Receive (Start Preparing)</button>`;
-      } else if (o.status === 'preparing') {
-        actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready', this)">Mark Ready</button>`;
-      } else if (o.status === 'ready') {
-        actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served', this)">Mark Served</button>`;
-      } else if (o.status === 'served') {
-        actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" disabled>Completed</button>`;
-      }
-  
-      let itemsHtml = o.items.map(i => `
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  if (sortedOrders.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">Currently no orders</div>';
+    return;
+  }
+
+  sortedOrders.forEach(o => {
+    let actionBtn = '';
+    if (o.status === 'new') {
+      actionBtn = `<button class="btn-gold" style="width: 100%;" onclick="updateOrderStatus('${o.id}', 'preparing', this)">Receive (Start Preparing)</button>`;
+    } else if (o.status === 'preparing') {
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--green); color: black;" onclick="updateOrderStatus('${o.id}', 'ready', this)">Mark Ready</button>`;
+    } else if (o.status === 'ready') {
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: var(--border-color); color: var(--text-secondary);" onclick="updateOrderStatus('${o.id}', 'served', this)">Mark Served</button>`;
+    } else if (o.status === 'served') {
+      actionBtn = `<button class="btn-gold" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" disabled>Completed</button>`;
+    }
+
+    let itemsHtml = o.items.map(i => `
         <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
           <div>
             <span style="color: var(--gold); font-weight: bold; margin-right: 8px;">${i.qty}x</span>${i.name}
@@ -815,10 +815,10 @@ function renderOrders(orders) {
           <div style="color: var(--text-muted);">₹${i.price * i.qty}</div>
         </div>
       `).join('');
-  
-      const timeStr = new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-  
-      grid.innerHTML += `
+
+    const timeStr = new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    grid.innerHTML += `
         <div class="panel" style="padding: 20px; border: 1px solid #333; position: relative; border-radius: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
             <div>
@@ -863,8 +863,8 @@ function renderOrders(orders) {
           </div>
         </div>
       `;
-    });
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function updateOrderStatus(id, status, btn) {
@@ -896,7 +896,7 @@ async function loadWaiterCalls() {
       AppState.waiterCalls = calls;
       renderWaiterCalls(calls);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
@@ -905,10 +905,10 @@ function renderWaiterCalls(calls) {
   const tbody = document.getElementById('waiterCallsBody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  
+
   calls.forEach(c => {
-      const timeStr = new Date(c.createdAt).toLocaleTimeString();
-      tbody.innerHTML += `
+    const timeStr = new Date(c.createdAt).toLocaleTimeString();
+    tbody.innerHTML += `
         <tr>
           <td>${getTableName(c.tableNumber)}</td>
           <td style="text-transform:capitalize;">${c.waiterName || 'Waiter'}</td>
@@ -919,8 +919,8 @@ function renderWaiterCalls(calls) {
           </td>
         </tr>
       `;
-    });
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 async function attendWaiterCall(id) {
@@ -943,7 +943,7 @@ async function loadMenu() {
       AppState.menu = data;
       renderMenu(data);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
@@ -953,9 +953,9 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
   const container = document.getElementById('menuContainer');
   if (!container) return;
   container.innerHTML = '';
-  
+
   if (!Array.isArray(currentMenuData)) return;
-  
+
   const categories = [...new Set(currentMenuData.map(m => m.category))];
   const datalist = document.getElementById('categoryOptions');
   if (datalist) {
@@ -965,12 +965,12 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
   categories.forEach(cat => {
     const items = currentMenuData.filter(m => m.category === cat);
     const setting = catSettings && Array.isArray(catSettings) ? catSettings.find(s => s.categoryName === cat || s.name === cat) : null;
-    
+
     const groupDiv = document.createElement('div');
     groupDiv.className = 'panel';
     groupDiv.style.padding = '0';
     groupDiv.style.overflow = 'hidden';
-    
+
     const headerDiv = document.createElement('div');
     headerDiv.style.padding = '16px 20px';
     headerDiv.style.background = 'transparent';
@@ -978,12 +978,12 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
     headerDiv.style.display = 'flex';
     headerDiv.style.justifyContent = 'space-between';
     headerDiv.style.alignItems = 'center';
-    
+
     const titleSection = document.createElement('div');
     titleSection.style.display = 'flex';
     titleSection.style.alignItems = 'center';
     titleSection.style.gap = '12px';
-    
+
     let defaultImg = `/customer/images/cat_all.png`;
     if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
     else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = '/customer/images/cat_meals.png';
@@ -995,22 +995,22 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
 
     const img = document.createElement('img');
     img.src = (setting && setting.image) ? setting.image : defaultImg;
-    img.onerror = function() { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
+    img.onerror = function () { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
     img.loading = 'lazy';
     img.style.width = '40px';
     img.style.height = '40px';
     img.style.borderRadius = '50%';
     img.style.objectFit = 'cover';
     img.style.border = '2px solid var(--gold)';
-    
+
     const title = document.createElement('h4');
     title.innerText = cat;
     title.style.margin = '0';
     title.style.fontSize = '18px';
-    
+
     titleSection.appendChild(img);
     titleSection.appendChild(title);
-    
+
     const changeImgBtn = document.createElement('button');
     changeImgBtn.className = 'btn-gold';
     changeImgBtn.style.width = 'auto';
@@ -1020,13 +1020,13 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
     changeImgBtn.onclick = () => {
       showView('categories');
     };
-    
+
     headerDiv.appendChild(titleSection);
     headerDiv.appendChild(changeImgBtn);
-    
+
     const tableDiv = document.createElement('div');
     tableDiv.style.padding = '0 20px';
-    
+
     const tableHtml = `
       <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
         <thead>
@@ -1058,7 +1058,7 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
       </table>
     `;
     tableDiv.innerHTML = tableHtml;
-    
+
     groupDiv.appendChild(headerDiv);
     groupDiv.appendChild(tableDiv);
     container.appendChild(groupDiv);
@@ -1079,7 +1079,7 @@ function compressImageBase64(base64Str, maxWidth = 400, maxHeight = 400) {
     img.onload = () => {
       let width = img.width;
       let height = img.height;
-      
+
       if (width > height) {
         if (width > maxWidth) {
           height *= maxWidth / width;
@@ -1091,13 +1091,13 @@ function compressImageBase64(base64Str, maxWidth = 400, maxHeight = 400) {
           height = maxHeight;
         }
       }
-      
+
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      
+
       resolve(canvas.toDataURL('image/jpeg', 0.6)); // Compress as JPEG with 60% quality
     };
   });
@@ -1106,11 +1106,11 @@ function compressImageBase64(base64Str, maxWidth = 400, maxHeight = 400) {
 function handleImageUpload(event, previewId) {
   const file = event.target.files[0];
   if (!file) return;
-  
+
   const reader = new FileReader();
-  reader.onload = async function(e) {
+  reader.onload = async function (e) {
     let base64 = e.target.result;
-    
+
     // Compress image to ensure it's fully optimized
     base64 = await compressImageBase64(base64);
 
@@ -1136,7 +1136,7 @@ async function saveMenuItem() {
   const isVeg = document.querySelector('input[name="newMenuVeg"]:checked').value === 'true';
 
   await fetchAPI('/api/admin/menu', 'POST', { name, price, category, image, isVeg });
-  
+
   // Clear inputs
   document.getElementById('newMenuName').value = '';
   document.getElementById('newMenuPrice').value = '';
@@ -1145,7 +1145,7 @@ async function saveMenuItem() {
   document.getElementById('newMenuPreview').src = '';
   document.getElementById('newMenuPreview').style.display = 'none';
   document.getElementById('newMenuPreviewText').style.display = 'block';
-  
+
   closeModal('addMenuModal');
   loadMenu();
 }
@@ -1153,18 +1153,18 @@ async function saveMenuItem() {
 function openEditMenuModal(id) {
   const m = currentMenuData.find(x => x.id === id);
   if (!m) return;
-  
+
   document.getElementById('editMenuId').value = m.id;
   document.getElementById('editMenuName').value = m.name;
   document.getElementById('editMenuPrice').value = m.price;
   document.getElementById('editMenuCat').value = m.category;
-  
+
   const imgBase64 = m.image || '';
   document.getElementById('editMenuImageBase64').value = imgBase64;
-  
+
   const preview = document.getElementById('editMenuPreview');
   const previewText = document.getElementById('editMenuPreviewText');
-  
+
   if (imgBase64) {
     preview.src = imgBase64;
     preview.style.display = 'block';
@@ -1174,13 +1174,13 @@ function openEditMenuModal(id) {
     preview.style.display = 'none';
     previewText.style.display = 'block';
   }
-  
+
   if (m.isVeg) {
     document.querySelector('input[name="editMenuVeg"][value="true"]').checked = true;
   } else {
     document.querySelector('input[name="editMenuVeg"][value="false"]').checked = true;
   }
-  
+
   document.getElementById('editMenuModal').classList.remove('hidden');
 }
 
@@ -1193,7 +1193,7 @@ async function saveEditMenuItem() {
   const isVeg = document.querySelector('input[name="editMenuVeg"]:checked').value === 'true';
 
   await fetchAPI(`/api/admin/menu/${id}`, 'PUT', { name, price, category, image, isVeg });
-  
+
   closeModal('editMenuModal');
   loadMenu();
 }
@@ -1239,7 +1239,7 @@ async function loadCategories() {
       AppState.categories = data;
       renderCategories(data);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
@@ -1247,21 +1247,21 @@ async function loadCategories() {
 function renderCategories({ catSettings, menuData }) {
   // Get unique categories from menu
   const uniqueCats = [...new Set(menuData.map(m => m.category))];
-  
+
   const grid = document.getElementById('categoriesGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  
+
   uniqueCats.forEach(cat => {
     const setting = catSettings.find(s => s.categoryName === cat);
-    
+
     const card = document.createElement('div');
     card.style.background = 'var(--panel-bg)';
     card.style.borderRadius = '12px';
     card.style.textAlign = 'center';
     card.style.border = '1px solid var(--border-color)';
     card.style.padding = '20px';
-    
+
     const imgWrapper = document.createElement('div');
     imgWrapper.style.width = '120px';
     imgWrapper.style.height = '120px';
@@ -1271,7 +1271,7 @@ function renderCategories({ catSettings, menuData }) {
     imgWrapper.style.overflow = 'hidden';
     imgWrapper.style.cursor = 'pointer';
     imgWrapper.style.position = 'relative';
-    
+
     const img = document.createElement('img');
     let defaultImg = `/customer/images/cat_all.png`;
     if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
@@ -1283,17 +1283,17 @@ function renderCategories({ catSettings, menuData }) {
     else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = '/customer/images/cat_desserts.png';
 
     img.src = setting?.image || defaultImg;
-    img.onerror = function() { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
+    img.onerror = function () { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
     img.loading = 'lazy';
     img.style.width = '100%';
     img.style.height = '100%';
     img.style.objectFit = 'cover';
-    
+
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
     fileInput.style.display = 'none';
-    
+
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -1302,20 +1302,20 @@ function renderCategories({ catSettings, menuData }) {
         let base64 = ev.target.result;
         // Compress image to ensure it's fully optimized
         base64 = await compressImageBase64(base64);
-        
+
         img.src = base64; // instant preview
-        
+
         // upload to server
         await fetchAPI('/api/admin/categories', 'POST', {
           categoryName: cat,
           image: base64
         });
-        
+
         alert(cat + ' image updated!');
       };
       reader.readAsDataURL(file);
     };
-    
+
     const changeBtn = document.createElement('button');
     changeBtn.className = 'btn-gold';
     changeBtn.style.marginTop = '12px';
@@ -1323,14 +1323,14 @@ function renderCategories({ catSettings, menuData }) {
     changeBtn.style.padding = '8px 16px';
     changeBtn.innerText = 'Change Category Image';
     changeBtn.onclick = () => fileInput.click();
-    
+
     imgWrapper.appendChild(img);
     imgWrapper.appendChild(fileInput);
-    
+
     const title = document.createElement('h3');
     title.innerText = cat;
     title.style.margin = '0 0 8px 0';
-    
+
     card.appendChild(imgWrapper);
     card.appendChild(title);
     card.appendChild(changeBtn);
@@ -1342,7 +1342,7 @@ function renderCategories({ catSettings, menuData }) {
 async function loadTableCategories() {
   try {
     const categories = await fetchAPI('/api/admin/table-categories');
-    
+
     // Update the categories list UI
     const list = document.getElementById('tableCategoriesList');
     if (list) {
@@ -1357,7 +1357,7 @@ async function loadTableCategories() {
     // Update the bulk assign dropdown
     const select = document.getElementById('bulkAssignCatId');
     if (select) {
-      select.innerHTML = '<option value="">None (Main)</option>' + 
+      select.innerHTML = '<option value="">None (Main)</option>' +
         categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     }
     return categories;
@@ -1369,7 +1369,7 @@ async function loadTableCategories() {
 async function addTableCategory() {
   const name = document.getElementById('newCategoryName').value.trim();
   if (!name) return alert('Enter a category name');
-  
+
   await fetchAPI('/api/admin/table-categories', 'POST', { name });
   document.getElementById('newCategoryName').value = '';
   await loadTableCategories();
@@ -1388,9 +1388,9 @@ async function bulkAssignTables() {
   const prefix = document.getElementById('bulkPrefix').value;
   const count = parseInt(document.getElementById('bulkCount').value);
   const startNumber = parseInt(document.getElementById('bulkStartNum').value);
-  
+
   if (!prefix || !count || !startNumber) return alert('Please fill in prefix, count, and start #');
-  
+
   await fetchAPI('/api/admin/tables/bulk', 'POST', { categoryId, prefix, count, startNumber });
   alert('Tables assigned successfully');
   _globalTablesData = [];
@@ -1406,9 +1406,9 @@ async function renderFullTableGrid() {
 
   try {
     const tables = await fetchAPI('/api/admin/tables');
-    
+
     gridContainer.innerHTML = '';
-    
+
     if (!tables || tables.length === 0) {
       gridContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 40px 20px;">No tables configured. Please update your total tables in Settings.</div>';
       return;
@@ -1423,21 +1423,21 @@ async function renderFullTableGrid() {
 
     for (const [catName, catTables] of Object.entries(grouped)) {
       gridContainer.innerHTML += `<div style="font-size: 14px; font-weight: bold; margin: 24px 0 12px; color: var(--gold-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">${catName} Zone</div>`;
-      
+
       let catGridHTML = '<div class="table-grid">';
-      
+
       catTables.forEach(t => {
         const isOccupied = t.status === 'occupied';
         const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : 'Free';
         const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber})"` : '';
-        
+
         catGridHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
           <div style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">${t.name}</div>
           <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
           ${isOccupied && t.waiterName ? `<div style="font-size: 11px; color: var(--gold-secondary); margin-top: 4px; text-transform: capitalize;">${t.waiterName}</div>` : ''}
         </div>`;
       });
-      
+
       catGridHTML += '</div>';
       gridContainer.innerHTML += catGridHTML;
     }
@@ -1459,18 +1459,18 @@ async function openTableModal(tableNumber) {
   title.textContent = getTableName(tableNumber);
   sub.textContent = ``;
   body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</div>';
-  
+
   if (headerAction) {
     headerAction.innerHTML = `<button class="btn-gold" style="background:#10B981; color:white; border:none; padding:6px 16px; border-radius:8px; display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;" onclick="closeSession(${tableNumber})"><i data-lucide="banknote" style="width:16px; height:16px;"></i> Receive Money</button>`;
   }
-  
+
   modal.classList.remove('hidden');
 
   try {
     const res = await fetchAPI(`/api/admin/table/${tableNumber}/bill`);
-    
+
     let statusPill = `<div class="modal-status-btn ready" style="background:var(--blue); color:white; padding:4px 12px; border-radius:4px; font-size:12px; display:inline-flex; align-items:center; gap:6px; margin-bottom:12px;"><i data-lucide="check-circle" style="width:14px; height:14px;"></i> Active</div>`;
-    let timeStr = new Date(res.orders[0].createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    let timeStr = new Date(res.orders[0].createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let bodyHTML = `
       ${statusPill}
@@ -1517,10 +1517,10 @@ let tableToClose = null;
 function closeSession(tableNumber) {
   tableToClose = tableNumber;
   document.getElementById('confirmTableNum').innerText = getTableName(tableNumber);
-  
+
   // Setup change calculator
   const calcTotal = document.getElementById('calcBillTotal');
-  if(calcTotal && window.currentGrandTotal) {
+  if (calcTotal && window.currentGrandTotal) {
     calcTotal.innerText = '₹' + window.currentGrandTotal.toFixed(2);
   }
   document.getElementById('customerPaid').value = '';
@@ -1530,7 +1530,7 @@ function closeSession(tableNumber) {
 
   // Setup split calculator
   const splitTotal = document.getElementById('splitBillTotal');
-  if(splitTotal && window.currentGrandTotal) {
+  if (splitTotal && window.currentGrandTotal) {
     splitTotal.innerText = '₹' + window.currentGrandTotal.toFixed(2);
   }
   document.getElementById('splitCash').value = '';
@@ -1541,9 +1541,9 @@ function closeSession(tableNumber) {
   document.getElementById('splitBalanceValue').style.color = '#EF4444';
 
   const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
-  if(checkedRadio) checkedRadio.checked = false;
+  if (checkedRadio) checkedRadio.checked = false;
   document.getElementById('splitInputs').style.display = 'none';
-  
+
   document.getElementById('confirmCloseModal').classList.remove('hidden');
 }
 
@@ -1557,7 +1557,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (confirmBtn) {
     confirmBtn.addEventListener('click', async () => {
       if (!tableToClose) return;
-      
+
       const selectedRadio = document.querySelector('input[name="paymentMethod"]:checked');
       if (!selectedRadio) {
         alert('Please select a payment method before closing the session.');
@@ -1568,7 +1568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cash = parseFloat(document.getElementById('splitCash').value) || 0;
         const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
         const card = parseFloat(document.getElementById('splitCard').value) || 0;
-        
+
         if (cash + upi + card === 0) {
           alert('Please enter at least one split amount.');
           return;
@@ -1584,10 +1584,10 @@ document.addEventListener('DOMContentLoaded', () => {
         closeConfirmModal();
         closeTableModal();
         loadDashboard(); // Refresh UI
-        
+
         // Ensure UI updates if Tables view is open
         if (!document.getElementById('view-tables').classList.contains('hidden')) {
-           renderFullTableGrid();
+          renderFullTableGrid();
         }
       } catch (err) {
         console.error(err);
@@ -1604,13 +1604,13 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadQRCodes() {
   const grid = document.getElementById('qrGrid');
   grid.innerHTML = '';
-  
+
   if (!restaurantSettings) {
     grid.innerHTML = '<div style="color:var(--text-muted);">Loading settings...</div>';
     await loadSettings();
     grid.innerHTML = '';
   }
-  
+
   if (!restaurantSettings) return;
 
   await getGlobalTables();
@@ -1638,7 +1638,7 @@ async function loadQRCodes() {
 
     card.appendChild(title);
     card.appendChild(qrContainer);
-    
+
     // Generate QR
     const qrText = `${window.location.origin}/customer/index.html?r=${restaurantId}&t=${i}`;
     setTimeout(() => {
@@ -1646,9 +1646,9 @@ async function loadQRCodes() {
         text: qrText,
         width: 128,
         height: 128,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
       });
     }, 100);
 
@@ -1664,7 +1664,7 @@ async function loadQRCodes() {
       } else if (img) {
         dataUrl = img.src;
       }
-      
+
       if (dataUrl) {
         const a = document.createElement('a');
         a.href = dataUrl;
@@ -1708,7 +1708,7 @@ function switchRevenueTab(tab) {
     const dMonth = document.getElementById('dailySalesMonth');
     if (dMonth && !dMonth.value) {
       const now = new Date();
-      dMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      dMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     }
     loadDailySales();
   }
@@ -1719,7 +1719,7 @@ function switchRevenueTab(tab) {
     const eMonth = document.getElementById('expFilterMonth');
     if (eMonth && !eMonth.value) {
       const now = new Date();
-      eMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      eMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     }
     renderExpenses();
     renderTally();
@@ -1736,60 +1736,60 @@ async function loadRevenue() {
       AppState.revenue = data;
       renderRevenue(data);
     }
-  } catch(e) { console.error('Failed to load revenue', e); } finally {
+  } catch (e) { console.error('Failed to load revenue', e); } finally {
     hideLoader();
   }
 }
 
 function renderRevenue(data) {
-    _revenueData = data;
+  _revenueData = data;
 
-    document.getElementById('revTotal').innerText = `₹${Math.round(data.totalRevenue || 0).toLocaleString('en-IN')}`;
-    document.getElementById('revToday').innerText = `₹${Math.round(data.todayRevenue || 0).toLocaleString('en-IN')}`;
-    document.getElementById('revWeek').innerText = `₹${Math.round(data.weekRevenue || 0).toLocaleString('en-IN')}`;
-    document.getElementById('revMonth').innerText = `₹${Math.round(data.monthRevenue || 0).toLocaleString('en-IN')}`;
-    document.getElementById('revOrders').innerText = data.totalOrders || 0;
-    document.getElementById('revAvg').innerText = `₹${Math.round(data.avgOrderValue || 0).toLocaleString('en-IN')}`;
+  document.getElementById('revTotal').innerText = `₹${Math.round(data.totalRevenue || 0).toLocaleString('en-IN')}`;
+  document.getElementById('revToday').innerText = `₹${Math.round(data.todayRevenue || 0).toLocaleString('en-IN')}`;
+  document.getElementById('revWeek').innerText = `₹${Math.round(data.weekRevenue || 0).toLocaleString('en-IN')}`;
+  document.getElementById('revMonth').innerText = `₹${Math.round(data.monthRevenue || 0).toLocaleString('en-IN')}`;
+  document.getElementById('revOrders').innerText = data.totalOrders || 0;
+  document.getElementById('revAvg').innerText = `₹${Math.round(data.avgOrderValue || 0).toLocaleString('en-IN')}`;
 
-    // Payment breakdown
-    const pb = data.paymentBreakdown || { cash: 0, upi: 0, card: 0 };
-    document.getElementById('revCash').innerText = `₹${Math.round(pb.cash).toLocaleString('en-IN')}`;
-    document.getElementById('revUpi').innerText = `₹${Math.round(pb.upi).toLocaleString('en-IN')}`;
-    document.getElementById('revCard').innerText = `₹${Math.round(pb.card).toLocaleString('en-IN')}`;
+  // Payment breakdown
+  const pb = data.paymentBreakdown || { cash: 0, upi: 0, card: 0 };
+  document.getElementById('revCash').innerText = `₹${Math.round(pb.cash).toLocaleString('en-IN')}`;
+  document.getElementById('revUpi').innerText = `₹${Math.round(pb.upi).toLocaleString('en-IN')}`;
+  document.getElementById('revCard').innerText = `₹${Math.round(pb.card).toLocaleString('en-IN')}`;
 
-    // Payment bar
-    const total = (pb.cash + pb.upi + pb.card) || 1;
-    const bar = document.getElementById('revPaymentBar');
-    if (bar) {
-      const cashPct = (pb.cash / total * 100).toFixed(1);
-      const upiPct = (pb.upi / total * 100).toFixed(1);
-      const cardPct = (pb.card / total * 100).toFixed(1);
-      bar.innerHTML = `
+  // Payment bar
+  const total = (pb.cash + pb.upi + pb.card) || 1;
+  const bar = document.getElementById('revPaymentBar');
+  if (bar) {
+    const cashPct = (pb.cash / total * 100).toFixed(1);
+    const upiPct = (pb.upi / total * 100).toFixed(1);
+    const cardPct = (pb.card / total * 100).toFixed(1);
+    bar.innerHTML = `
         <div style="flex:${cashPct};background:#10B981;height:100%;border-radius:4px;" title="Cash ${cashPct}%"></div>
         <div style="flex:${upiPct};background:#3B82F6;height:100%;border-radius:4px;" title="UPI ${upiPct}%"></div>
         <div style="flex:${cardPct};background:#8B5CF6;height:100%;border-radius:4px;" title="Card ${cardPct}%"></div>
       `;
-    }
+  }
 
-    // 7-day bar chart
-    const days = data.revenueByDay || [];
-    const maxVal = Math.max(...days.map(d => d.revenue), 1);
-    const chart = document.getElementById('revBarChart');
-    const labels = document.getElementById('revBarLabels');
-    if (chart && labels) {
-      chart.innerHTML = days.map(d => {
-        const h = Math.max(8, (d.revenue / maxVal) * 120);
-        const isToday = d.dateString === new Date().toISOString().split('T')[0];
-        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+  // 7-day bar chart
+  const days = data.revenueByDay || [];
+  const maxVal = Math.max(...days.map(d => d.revenue), 1);
+  const chart = document.getElementById('revBarChart');
+  const labels = document.getElementById('revBarLabels');
+  if (chart && labels) {
+    chart.innerHTML = days.map(d => {
+      const h = Math.max(8, (d.revenue / maxVal) * 120);
+      const isToday = d.dateString === new Date().toISOString().split('T')[0];
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
           <div style="font-size:10px;color:var(--text-muted);">₹${Math.round(d.revenue)}</div>
           <div style="width:100%;height:${h}px;background:${isToday ? 'var(--gold-primary)' : 'var(--blue)'};border-radius:4px 4px 0 0;opacity:0.85;transition:height 0.5s;"></div>
         </div>`;
-      }).join('');
-      labels.innerHTML = days.map(d => `<div style="flex:1;text-align:center;font-size:11px;">${d.date}</div>`).join('');
-    }
+    }).join('');
+    labels.innerHTML = days.map(d => `<div style="flex:1;text-align:center;font-size:11px;">${d.date}</div>`).join('');
+  }
 
-    // Default show overview tab
-    switchRevenueTab('overview');
+  // Default show overview tab
+  switchRevenueTab('overview');
 
 }
 
@@ -1799,10 +1799,10 @@ async function loadAnalytics() {
     showLoader();
     const periodSelect = document.getElementById('analyticsPeriod');
     const dateInput = document.getElementById('analyticsDate');
-    
+
     let period = periodSelect ? periodSelect.value : 'all';
     let date = dateInput ? dateInput.value : '';
-    
+
     if (period === 'day') {
       if (dateInput) dateInput.style.display = 'block';
       if (!date) {
@@ -1812,7 +1812,7 @@ async function loadAnalytics() {
     } else {
       if (dateInput) dateInput.style.display = 'none';
     }
-    
+
     const url = `/api/admin/analytics?period=${period}&date=${date}`;
     const data = await fetchAPI(url);
 
@@ -1826,11 +1826,11 @@ async function loadAnalytics() {
         topEl.innerHTML = data.topItems.map((item, idx) => `
           <div>
             <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <span style="font-size:13px;color:var(--text-primary);">${idx+1}. ${item.name}</span>
+              <span style="font-size:13px;color:var(--text-primary);">${idx + 1}. ${item.name}</span>
               <span style="font-size:13px;font-weight:600;color:var(--gold-primary);">${item.qty} sold (₹${Math.round(item.revenue).toLocaleString('en-IN')})</span>
             </div>
             <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
-              <div style="width:${(item.qty/maxQty*100).toFixed(0)}%;height:100%;background:var(--gold-primary);border-radius:4px;"></div>
+              <div style="width:${(item.qty / maxQty * 100).toFixed(0)}%;height:100%;background:var(--gold-primary);border-radius:4px;"></div>
             </div>
           </div>
         `).join('');
@@ -1851,35 +1851,35 @@ async function loadAnalytics() {
               <span style="font-size:13px;font-weight:600;color:#3B82F6;">₹${Math.round(t.revenue).toLocaleString('en-IN')} (${t.orders} orders)</span>
             </div>
             <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
-              <div style="width:${(t.revenue/maxRev*100).toFixed(0)}%;height:100%;background:#3B82F6;border-radius:4px;"></div>
+              <div style="width:${(t.revenue / maxRev * 100).toFixed(0)}%;height:100%;background:#3B82F6;border-radius:4px;"></div>
             </div>
           </div>
         `).join('');
       }
     }
 
-      // Waiter Ranking
-      const waiterEl = document.getElementById('analyticsWaiterRanking');
-      if (waiterEl) {
-        if (!data.waiterRanking || data.waiterRanking.length === 0) {
-          waiterEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
-        } else {
-          const maxOrders = Math.max(...data.waiterRanking.map(w => w.orders), 1);
-          waiterEl.innerHTML = data.waiterRanking.map((w, idx) => `
+    // Waiter Ranking
+    const waiterEl = document.getElementById('analyticsWaiterRanking');
+    if (waiterEl) {
+      if (!data.waiterRanking || data.waiterRanking.length === 0) {
+        waiterEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
+      } else {
+        const maxOrders = Math.max(...data.waiterRanking.map(w => w.orders), 1);
+        waiterEl.innerHTML = data.waiterRanking.map((w, idx) => `
             <div>
               <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                <span style="font-size:13px;color:var(--text-primary);"><span style="color:var(--gold-secondary)">#${idx+1}</span> ${w.name}</span>
+                <span style="font-size:13px;color:var(--text-primary);"><span style="color:var(--gold-secondary)">#${idx + 1}</span> ${w.name}</span>
                 <span style="font-size:13px;font-weight:600;color:var(--green);">₹${Math.round(w.revenue).toLocaleString('en-IN')} (${w.orders} sessions)</span>
               </div>
               <div style="height:6px;background:var(--border-color);border-radius:4px;overflow:hidden;">
-                <div style="width:${(w.orders/maxOrders*100).toFixed(0)}%;height:100%;background:var(--green);border-radius:4px;"></div>
+                <div style="width:${(w.orders / maxOrders * 100).toFixed(0)}%;height:100%;background:var(--green);border-radius:4px;"></div>
               </div>
             </div>
           `).join('');
-        }
       }
+    }
 
-      // Hourly chart
+    // Hourly chart
     const hourEl = document.getElementById('analyticsHourly');
     const hourLbl = document.getElementById('analyticsHourlyLabels');
     if (hourEl && data.hourlyOrders) {
@@ -1888,12 +1888,12 @@ async function loadAnalytics() {
         const barH = Math.max(4, (count / maxH) * 80);
         const isPeak = count === maxH && count > 0;
         return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;" title="${h}:00 — ${count} orders">
-          <div style="width:100%;height:${barH}px;background:${isPeak?'#EF4444':'var(--blue)'};border-radius:2px 2px 0 0;opacity:0.8;"></div>
+          <div style="width:100%;height:${barH}px;background:${isPeak ? '#EF4444' : 'var(--blue)'};border-radius:2px 2px 0 0;opacity:0.8;"></div>
         </div>`;
       }).join('');
       if (hourLbl) {
         hourLbl.innerHTML = data.hourlyOrders.map((_, h) =>
-          `<div style="flex:1;text-align:center;font-size:9px;color:var(--text-muted);">${h%3===0?h+'h':''}</div>`
+          `<div style="flex:1;text-align:center;font-size:9px;color:var(--text-muted);">${h % 3 === 0 ? h + 'h' : ''}</div>`
         ).join('');
       }
     }
@@ -1910,13 +1910,13 @@ let _dailySalesData = [];
 async function loadDailySales() {
   try {
     const orders = await fetchAPI('/api/admin/history');
-    
+
     // Group by Date string
     const grouped = {};
     orders.forEach(o => {
       const d = new Date(o.createdAt);
       const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
-      
+
       if (!grouped[dateStr]) {
         grouped[dateStr] = {
           date: dateStr,
@@ -1929,16 +1929,16 @@ async function loadDailySales() {
           items: {}
         };
       }
-      
+
       grouped[dateStr].total += o.total;
       grouped[dateStr].ordersCount++;
-      
+
       const pm = (o.paymentMethod || 'cash').toLowerCase();
       if (pm.includes('cash')) grouped[dateStr].cash += o.total;
       else if (pm.includes('upi')) grouped[dateStr].upi += o.total;
       else if (pm.includes('card')) grouped[dateStr].card += o.total;
       else grouped[dateStr].cash += o.total;
-      
+
       if (o.items && Array.isArray(o.items)) {
         o.items.forEach(item => {
           if (!grouped[dateStr].items[item.name]) {
@@ -1950,9 +1950,9 @@ async function loadDailySales() {
       }
     });
 
-    _dailySalesData = Object.values(grouped).sort((a,b) => new Date(b.date) - new Date(a.date));
+    _dailySalesData = Object.values(grouped).sort((a, b) => new Date(b.date) - new Date(a.date));
     renderDailySales();
-  } catch(e) {
+  } catch (e) {
     console.error('Failed to load daily sales', e);
   }
 }
@@ -1960,7 +1960,7 @@ async function loadDailySales() {
 function renderDailySales() {
   const tbody = document.getElementById('dailySalesTableBody');
   if (!tbody) return;
-  
+
   const filterMonth = document.getElementById('dailySalesMonth')?.value;
   let filtered = _dailySalesData;
   if (filterMonth) {
@@ -1971,17 +1971,17 @@ function renderDailySales() {
     tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--text-muted);">No sales data for this month.</td></tr>';
     return;
   }
-  
+
   let html = '';
   let sumOrders = 0, sumCash = 0, sumUpi = 0, sumCard = 0, sumTotal = 0;
-  
+
   filtered.forEach(d => {
     sumOrders += d.ordersCount;
     sumCash += d.cash;
     sumUpi += d.upi;
     sumCard += d.card;
     sumTotal += d.total;
-    
+
     html += `
       <tr style="border-bottom:1px solid var(--border-color);">
         <td style="padding:12px;color:var(--text-primary);">${d.displayDate}</td>
@@ -1994,7 +1994,7 @@ function renderDailySales() {
       </tr>
     `;
   });
-  
+
   html += `
     <tr style="background:rgba(255,255,255,0.02);">
       <td style="padding:16px 12px;font-weight:bold;color:var(--text-primary);">Total</td>
@@ -2006,20 +2006,20 @@ function renderDailySales() {
       <td></td>
     </tr>
   `;
-  
+
   tbody.innerHTML = html;
 }
 
 function showDailySalesDetails(dateStr) {
   const dayData = _dailySalesData.find(d => d.date === dateStr);
   if (!dayData) return;
-  
+
   document.getElementById('dailySalesModalTitle').innerText = `Sales Details - ${dayData.displayDate}`;
-  
+
   const tbody = document.getElementById('dailySalesModalBody');
   const items = Object.entries(dayData.items).map(([name, data]) => ({ name, ...data }));
   items.sort((a, b) => b.revenue - a.revenue);
-  
+
   if (items.length === 0) {
     tbody.innerHTML = '<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--text-muted);">No item details available.</td></tr>';
   } else {
@@ -2031,7 +2031,7 @@ function showDailySalesDetails(dateStr) {
       </tr>
     `).join('');
   }
-  
+
   document.getElementById('dailySalesModal').classList.remove('hidden');
 }
 
@@ -2069,7 +2069,7 @@ function addExpense() {
 
 function renderExpenses() {
   const filterMonth = document.getElementById('expFilterMonth')?.value;
-  let list = getExpenses().sort((a,b) => new Date(b.date) - new Date(a.date));
+  let list = getExpenses().sort((a, b) => new Date(b.date) - new Date(a.date));
 
   if (filterMonth) {
     list = list.filter(e => e.date && e.date.startsWith(filterMonth));
@@ -2083,7 +2083,7 @@ function renderExpenses() {
     return;
   }
 
-  const total = list.reduce((s,e) => s + e.amount, 0);
+  const total = list.reduce((s, e) => s + e.amount, 0);
 
   el.innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -2138,7 +2138,7 @@ function renderTally() {
   if (!panel) return;
 
   const expenses = getExpenses().filter(e => e.date === date);
-  const totalExpense = expenses.reduce((s,e) => s + e.amount, 0);
+  const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
 
   // Calculate today's revenue from cached data (or 0)
   let dayRevenue = 0;
@@ -2170,7 +2170,7 @@ function renderTally() {
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Expense Breakdown:</div>
       ${expenses.map(e => `
         <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border-color);">
-          <span style="color:var(--text-muted);">${e.category}${e.description ? ' — '+e.description : ''}</span>
+          <span style="color:var(--text-muted);">${e.category}${e.description ? ' — ' + e.description : ''}</span>
           <span style="color:#EF4444;">₹${e.amount.toFixed(2)}</span>
         </div>
       `).join('')}
@@ -2187,7 +2187,7 @@ async function loadHistory() {
 
   try {
     const orders = await fetchAPI(url);
-    
+
     // Group by Session ID
     const grouped = {};
     orders.forEach(o => {
@@ -2211,17 +2211,17 @@ async function loadHistory() {
       grouped[sid].subtotal += o.subtotal;
       grouped[sid].gst += o.gst;
       grouped[sid].tip += (o.tip || 0);
-      
+
       o.items.forEach(i => {
         const existing = grouped[sid].items.find(xi => xi.name === i.name && xi.price === i.price);
         if (existing) {
           existing.qty += i.qty;
         } else {
-          grouped[sid].items.push({...i});
+          grouped[sid].items.push({ ...i });
         }
       });
     });
-    
+
     allHistorySessions = Object.values(grouped).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderHistory();
   } catch (err) {
@@ -2235,7 +2235,7 @@ function renderHistory() {
 
   const searchInput = document.getElementById('historySearchInput');
   const query = searchInput ? searchInput.value.toLowerCase() : '';
-  
+
   const filteredSessions = allHistorySessions.filter(session => {
     const d = new Date(session.createdAt);
     const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2252,7 +2252,7 @@ function renderHistory() {
   filteredSessions.forEach((session, index) => {
     const d = new Date(session.createdAt);
     const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     html += `
       <tr style="border-bottom: 1px solid var(--border-color);">
         <td style="padding: 12px; font-weight: bold; font-size: 14px;">#${session.sessionNumber}</td>
@@ -2267,7 +2267,7 @@ function renderHistory() {
       </tr>
     `;
   });
-  
+
   tbody.innerHTML = html;
   setTimeout(() => lucide.createIcons(), 100);
 }
@@ -2281,10 +2281,10 @@ function viewHistoryDetails(sessionId) {
   if (!session) return;
 
   document.getElementById('historyModalTitle').innerText = `Session #${session.sessionNumber} - ${getTableName(session.tableNumber)}`;
-  
+
   const container = document.getElementById('historyModalItems');
   let html = '';
-  
+
   session.items.forEach(item => {
     html += `
       <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 12px 0;">
@@ -2293,7 +2293,7 @@ function viewHistoryDetails(sessionId) {
       </div>
     `;
   });
-  
+
   html += `
     <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: bold;">
       <div style="color: var(--text-primary);">Subtotal</div>
@@ -2312,7 +2312,7 @@ function viewHistoryDetails(sessionId) {
       <div style="color: var(--gold-primary);">₹${session.total.toFixed(2)}</div>
     </div>
   `;
-  
+
   container.innerHTML = html;
   document.getElementById('historyItemsModal').style.display = 'flex';
 }
@@ -2325,7 +2325,7 @@ async function generatePDF(range) {
   let startDate = '';
   let endDate = '';
   const d = new Date();
-  
+
   if (range === '1day') {
     d.setDate(d.getDate() - 1);
     startDate = d.toISOString().split('T')[0];
@@ -2346,12 +2346,12 @@ async function generatePDF(range) {
       return;
     }
   }
-  
+
   try {
     document.getElementById('pdfModal').style.display = 'none';
     const url = `/api/admin/history?startDate=${startDate}&endDate=${endDate}`;
     const orders = await fetchAPI(url);
-    
+
     // Group by Session ID
     const grouped = {};
     orders.forEach(o => {
@@ -2370,22 +2370,22 @@ async function generatePDF(range) {
       }
       grouped[sid].total += o.total;
     });
-    
+
     const sessions = Object.values(grouped).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
     if (!window.jspdf) {
       alert("PDF library not loaded yet.");
       return;
     }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
+
     doc.setFontSize(18);
     doc.text("Revenue & Order History", 14, 22);
-    
+
     doc.setFontSize(11);
     doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 30);
-    
+
     const totalRev = sessions.reduce((sum, s) => sum + s.total, 0);
     doc.text(`Total Sessions: ${sessions.length} | Total Revenue: Rs. ${totalRev.toFixed(2)}`, 14, 36);
 
@@ -2412,7 +2412,7 @@ async function generatePDF(range) {
     });
 
     doc.save(`Revenue_Report_${startDate}_to_${endDate}.pdf`);
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     alert("Failed to generate PDF.");
   }
@@ -2433,7 +2433,7 @@ async function loadWaiters() {
       AppState.waiters = waiters;
       renderWaiters(waiters);
     }
-  } catch(e) { console.error(e); } finally {
+  } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
@@ -2448,7 +2448,7 @@ async function renderWaiters(waiters) {
         rid = setRes.id;
         localStorage.setItem('adminRestaurantId', rid);
       }
-    } catch (e) {}
+    } catch (e) { }
   }
   const tbody = document.getElementById('waitersTableBody');
   if (!tbody) return;
@@ -2520,18 +2520,18 @@ function copyRestaurantId() {
 async function adminPrintBill(tableNumber) {
   const modal = document.getElementById('adminBillModal');
   const content = document.getElementById('adminBillContent');
-  
+
   // Extract payment method from UI
   const selectedRadio = document.querySelector('input[name="paymentMethod"]:checked');
   let paymentText = 'Not Specified';
   if (selectedRadio) {
     if (selectedRadio.value === 'split') {
-       const cash = parseFloat(document.getElementById('splitCash').value) || 0;
-       const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
-       const card = parseFloat(document.getElementById('splitCard').value) || 0;
-       paymentText = `Split (Cash: ₹${cash}, UPI: ₹${upi}, Card: ₹${card})`;
+      const cash = parseFloat(document.getElementById('splitCash').value) || 0;
+      const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
+      const card = parseFloat(document.getElementById('splitCard').value) || 0;
+      paymentText = `Split (Cash: ₹${cash}, UPI: ₹${upi}, Card: ₹${card})`;
     } else {
-       paymentText = 'Full ' + selectedRadio.value.charAt(0).toUpperCase() + selectedRadio.value.slice(1);
+      paymentText = 'Full ' + selectedRadio.value.charAt(0).toUpperCase() + selectedRadio.value.slice(1);
     }
   }
 
@@ -2601,7 +2601,7 @@ function printKOT(orderId) {
   fetchAPI('/api/admin/orders').then(orders => {
     const o = orders.find(or => or.id === orderId);
     if (!o) return;
-    
+
     let itemsText = o.items.map(i => `${i.qty}x ${i.name}${i.specialNote ? ' (Note: ' + i.specialNote + ')' : ''}`).join('\n');
     let itemsHtml = o.items.map(i => `
       <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:14px;">
@@ -2609,10 +2609,10 @@ function printKOT(orderId) {
       </div>
       ${i.specialNote ? `<div style="font-size:12px; font-style:italic; margin-left:20px; margin-bottom:8px;">Note: ${i.specialNote}</div>` : ''}
     `).join('');
-    
+
     // Determine active KOTs
-    const activePrinters = _kotPrinters && _kotPrinters.length > 0 
-      ? _kotPrinters.filter(p => p.isActive) 
+    const activePrinters = _kotPrinters && _kotPrinters.length > 0
+      ? _kotPrinters.filter(p => p.isActive)
       : [{ name: 'KITCHEN TICKET', connectionType: 'browser' }];
 
     if (activePrinters.length === 0) activePrinters.push({ name: 'KITCHEN TICKET', connectionType: 'browser' });
@@ -2621,7 +2621,7 @@ function printKOT(orderId) {
 
     activePrinters.forEach(printer => {
       const textContent = `--- ${printer.name.toUpperCase()} ---\nOrder #${o.orderNumber}\nTable: ${getTableName(o.tableNumber)}\n\n${itemsText}\n\n*** END OF ${printer.name.toUpperCase()} ***`;
-      
+
       if (printer.connectionType === 'network' && printer.ipAddress) {
         fetchAPI('/api/admin/print-network', 'POST', {
           ipAddress: printer.ipAddress,
@@ -2642,7 +2642,7 @@ function printKOT(orderId) {
     if (browserPrinters.length > 0) {
       const printWindow = window.open('', '_blank', 'width=300,height=600');
       printWindow.document.write('<html><head><style>@page { size: 80mm 297mm; margin: 0; } @media print { body { width: 80mm; margin: 0; padding: 5mm; } } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body><div style="font-family:monospace; padding:20px;">Preparing to print...</div></body></html>');
-      
+
       let fullHtml = browserPrinters.map(printer => `
         <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #000; page-break-after: always;">
           <h2 style="text-align:center; margin:0 0 10px 0; text-transform:uppercase;">${printer.name}</h2>
@@ -2668,7 +2668,7 @@ function printPastBill(orderId) {
   fetchAPI('/api/admin/orders').then(orders => {
     const o = orders.find(or => or.id === orderId);
     if (!o) return;
-    
+
     // Flatten items
     const allItems = [];
     o.items.forEach(item => {
@@ -2677,7 +2677,7 @@ function printPastBill(orderId) {
       else allItems.push({ name: item.name, price: item.price, qty: item.qty, total: item.price * item.qty });
     });
 
-    let itemsText = allItems.map(i => `${i.name.padEnd(20).substring(0,20)} ${String(i.qty).padStart(3)}  ${(i.total).toFixed(2).padStart(6)}`).join('\n');
+    let itemsText = allItems.map(i => `${i.name.padEnd(20).substring(0, 20)} ${String(i.qty).padStart(3)}  ${(i.total).toFixed(2).padStart(6)}`).join('\n');
     let itemsHtml = allItems.map(i => `
       <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;">
         <span style="flex:1;">${i.name}</span>
@@ -2685,14 +2685,14 @@ function printPastBill(orderId) {
         <span style="width:70px; text-align:right;">${i.total.toFixed(2)}</span>
       </div>
     `).join('');
-    
+
     const now = new Date(o.createdAt);
     const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     const rName = restaurantSettings ? restaurantSettings.name : 'Restaurant';
 
-    const activePrinters = _kotPrinters && _kotPrinters.length > 0 
-      ? _kotPrinters.filter(p => p.isActive) 
+    const activePrinters = _kotPrinters && _kotPrinters.length > 0
+      ? _kotPrinters.filter(p => p.isActive)
       : [{ name: 'BILLING', connectionType: 'browser' }];
 
     if (activePrinters.length === 0) activePrinters.push({ name: 'BILLING', connectionType: 'browser' });
@@ -2701,7 +2701,7 @@ function printPastBill(orderId) {
 
     activePrinters.forEach(printer => {
       const textContent = `
-${rName.toUpperCase().padStart(15 + Math.floor(rName.length/2))}
+${rName.toUpperCase().padStart(15 + Math.floor(rName.length / 2))}
 --------------------------------
 Date: ${dateStr}   Time: ${timeStr}
 Table: ${getTableName(o.tableNumber)}   Order: #${o.orderNumber}
@@ -2711,15 +2711,15 @@ ITEM                   QTY  AMT
 ${itemsText}
 --------------------------------
 Subtotal:                ${o.subtotal.toFixed(2)}
-GST:                     ${(o.total - o.subtotal - (o.tip||0)).toFixed(2)}
-Tip:                     ${(o.tip||0).toFixed(2)}
+GST:                     ${(o.total - o.subtotal - (o.tip || 0)).toFixed(2)}
+Tip:                     ${(o.tip || 0).toFixed(2)}
 --------------------------------
 GRAND TOTAL:             ${o.total.toFixed(2)}
 --------------------------------
 Payment: ${o.paymentMethod || 'Unknown'}
 Thank you for dining with us!
       `.trim();
-      
+
       if (printer.connectionType === 'network' && printer.ipAddress) {
         fetchAPI('/api/admin/print-network', 'POST', {
           ipAddress: printer.ipAddress,
@@ -2753,8 +2753,8 @@ Thank you for dining with us!
           ${itemsHtml}
           <hr style="border-top:1px dashed #aaa;margin:10px 0;">
           <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Subtotal</span><span>${o.subtotal.toFixed(2)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>GST</span><span>${(o.total - o.subtotal - (o.tip||0)).toFixed(2)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Tip</span><span>${(o.tip||0).toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>GST</span><span>${(o.total - o.subtotal - (o.tip || 0)).toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>Tip</span><span>${(o.tip || 0).toFixed(2)}</span></div>
           <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:bold;border-top:2px solid #111;padding:6px 0;margin-top:4px;"><span>TOTAL</span><span>${o.total.toFixed(2)}</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;"><span>Payment:</span><span style="font-weight:bold;text-transform:capitalize;">${o.paymentMethod || 'Unknown'}</span></div>
           <div style="text-align:center;margin-top:16px;font-size:11px;color:#777;">Thank you for dining with us!</div>
@@ -2780,13 +2780,13 @@ function showAdminQr() {
 function printHistoryBill(sessionId) {
   const session = allHistorySessions.find(s => s.sessionId === sessionId);
   if (!session) return;
-  
+
   const d = new Date(session.createdAt);
   const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   const rName = restaurantSettings ? restaurantSettings.name : 'Restaurant';
-  
-  let itemsText = session.items.map(i => `${i.name.padEnd(20).substring(0,20)} ${String(i.qty).padStart(3)}  ${(i.price * i.qty).toFixed(2).padStart(6)}`).join('\n');
+
+  let itemsText = session.items.map(i => `${i.name.padEnd(20).substring(0, 20)} ${String(i.qty).padStart(3)}  ${(i.price * i.qty).toFixed(2).padStart(6)}`).join('\n');
   let itemsHtml = session.items.map(item => `
     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
       <span style="flex:1;">${item.qty}x ${item.name}</span>
@@ -2794,9 +2794,9 @@ function printHistoryBill(sessionId) {
     </div>
     ${item.specialNote ? `<div style="font-size:11px;font-style:italic;margin-left:20px;">Note: ${item.specialNote}</div>` : ''}
   `).join('');
-  
-  const activePrinters = _kotPrinters && _kotPrinters.length > 0 
-    ? _kotPrinters.filter(p => p.isActive) 
+
+  const activePrinters = _kotPrinters && _kotPrinters.length > 0
+    ? _kotPrinters.filter(p => p.isActive)
     : [{ name: 'BILLING', connectionType: 'browser' }];
 
   if (activePrinters.length === 0) activePrinters.push({ name: 'BILLING', connectionType: 'browser' });
@@ -2805,7 +2805,7 @@ function printHistoryBill(sessionId) {
 
   activePrinters.forEach(printer => {
     const textContent = `
-${rName.toUpperCase().padStart(15 + Math.floor(rName.length/2))}
+${rName.toUpperCase().padStart(15 + Math.floor(rName.length / 2))}
 --------------------------------
 Date: ${dateStr}   Time: ${timeStr}
 Table: ${getTableName(session.tableNumber)}   Session: #${session.sessionNumber}
@@ -2823,7 +2823,7 @@ GRAND TOTAL:             ${session.total.toFixed(2)}
 Payment: ${session.paymentMethod || 'Unknown'}
 Thank you for dining with us!
     `.trim();
-    
+
     if (printer.connectionType === 'network' && printer.ipAddress) {
       fetchAPI('/api/admin/print-network', 'POST', {
         ipAddress: printer.ipAddress,
@@ -2871,7 +2871,7 @@ Thank you for dining with us!
         </div>
       </div>
     `).join('');
-    
+
     printWindow.document.write('<html><head><style>@page { size: 80mm 297mm; margin: 0; } @media print { body { width: 80mm; margin: 0; padding: 5mm; } } body { width: 80mm; margin: 0; padding: 10px; font-family: monospace; box-sizing: border-box; }</style></head><body>' + fullHtml + '</body></html>');
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
   }
@@ -2882,11 +2882,11 @@ function handleGlobalSearch() {
   const input = document.getElementById('globalSearchInput');
   if (!input) return;
   const query = input.value.toLowerCase();
-  
+
   const currentViewTitle = document.getElementById('currentViewTitle');
   if (!currentViewTitle) return;
   const currentView = currentViewTitle.innerText.toLowerCase();
-  
+
   if (currentView === 'orders') {
     const cards = document.querySelectorAll('#ordersGrid .panel');
     cards.forEach(card => {
@@ -2917,7 +2917,7 @@ function handleGlobalSearch() {
 async function bootApp() {
   const hash = window.location.hash.replace('#', '') || 'dashboard';
   showLoader();
-  
+
   let completed = 0;
   const total = 12;
   const advance = () => {
@@ -2942,10 +2942,10 @@ async function bootApp() {
       loadAnalytics().finally(advance),
       getGlobalTables().finally(advance)
     ]);
-  } catch(e) {
+  } catch (e) {
     console.error('Boot loading error', e);
   }
-  
+
   setTimeout(() => {
     hideLoader();
     showView(hash);
