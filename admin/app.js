@@ -242,6 +242,22 @@ async function submitComplaint() {
   }
 }
 
+function toggleMobileSidebar(forceClose = false) {
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('mobileSidebarOverlay');
+  if (!sidebar || !overlay) return;
+  
+  if (forceClose) {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+    return;
+  }
+  
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('active');
+}
+
+
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-' + viewId).classList.remove('hidden');
@@ -269,16 +285,22 @@ function showView(viewId) {
   };
   document.getElementById('currentViewTitle').innerText = titles[viewId];
 
-  if (viewId === 'dashboard') loadDashboard();
-  if (viewId === 'orders') loadOrders();
-  if (viewId === 'tables') loadSettings(true);
-  if (viewId === 'menu') loadMenu();
-  if (viewId === 'categories') loadCategories();
-  if (viewId === 'qr') loadQRCodes();
-  if (viewId === 'waiter') loadWaiterCalls();
-  if (viewId === 'waiters') loadWaiters();
-  if (viewId === 'revenue') loadRevenue();
-  if (viewId === 'settings') loadSettings();
+  // Close mobile sidebar on navigation
+  toggleMobileSidebar(true);
+
+  // Use setTimeout to allow the browser to paint the new UI state before running heavy JS/DOM operations
+  setTimeout(() => {
+    if (viewId === 'dashboard') loadDashboard();
+    if (viewId === 'orders') loadOrders();
+    if (viewId === 'tables') loadSettings(true);
+    if (viewId === 'menu') loadMenu();
+    if (viewId === 'categories') loadCategories();
+    if (viewId === 'qr') loadQRCodes();
+    if (viewId === 'waiter') loadWaiterCalls();
+    if (viewId === 'waiters') loadWaiters();
+    if (viewId === 'revenue') loadRevenue();
+    if (viewId === 'settings') loadSettings();
+  }, 50);
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {

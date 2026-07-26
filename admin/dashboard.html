@@ -27,8 +27,11 @@
     });
   </script>
 
+  <!-- Sidebar Overlay for mobile -->
+  <div class="sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
   <!-- Sidebar -->
-<div class="sidebar">
+<div class="sidebar" id="adminSidebar">
   <div class="brand">
     <h2 id="sidebarRestaurantName" style="color: var(--gold-primary);">Cloud Dine</h2>
     <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Restaurant</p>
@@ -60,7 +63,7 @@
   <div class="main-content">
     <div class="header">
       <div style="font-size: 18px; font-weight: 400; display: flex; align-items: center; gap: 12px; font-family: 'Instrument Serif', serif;">
-        <span style="font-size: 24px; cursor: pointer; font-family: 'Inter', sans-serif;">≡</span>
+        <span style="font-size: 24px; cursor: pointer; font-family: 'Inter', sans-serif;" onclick="toggleMobileSidebar()">≡</span>
         <span id="currentViewTitle" style="font-size: 22px; letter-spacing: -0.3px;">Dashboard</span>
       </div>
       <div class="search-bar" style="position:relative; display:flex; align-items:center;">

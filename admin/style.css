@@ -276,7 +276,8 @@ body {
   color: var(--search-color);
   padding: 9px 18px;
   border-radius: 10px;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
   outline: none;
   font-size: 14px;
   transition: all 0.2s ease;
@@ -725,7 +726,71 @@ h3 { font-size: 20px; }
 }
 @media (max-width: 640px) {
   .dashboard-grid { grid-template-columns: 1fr; }
-  .sidebar { width: 220px; }
+  .panels-grid { grid-template-columns: 1fr; }
+  
+  .sidebar { 
+    position: fixed;
+    top: 0;
+    left: -260px; /* Hide by default */
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    width: 260px;
+  }
+  .sidebar.mobile-open {
+    left: 0;
+  }
+
+  .content-body {
+    padding: 16px 20px;
+  }
+  
+  .header {
+    padding: 0 20px;
+  }
+
+  /* Overlay for mobile sidebar */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+
+  /* Table responsiveness on mobile */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Header adjustments for mobile to prevent text overflow */
+  .header {
+    padding: 0 16px;
+    gap: 8px;
+  }
+  #currentViewTitle {
+    font-size: 18px !important;
+  }
+  .search-bar input {
+    max-width: 140px;
+    padding-left: 30px;
+  }
+  
+  /* Stat cards font size adjustment */
+  .stat-card .value {
+    font-size: 22px;
+  }
 }
 
 /* ============================================================
