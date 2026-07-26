@@ -10,7 +10,10 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="light-theme">
-  <div class="sidebar">
+  <!-- Sidebar Overlay for mobile -->
+  <div class="sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+  <div class="sidebar" id="adminSidebar">
     <div class="brand">
       <h2><i data-lucide="crown" style="width:28px;height:28px;margin-bottom:-4px;"></i> Master Panel</h2>
     </div>
@@ -29,7 +32,8 @@
 
   <div class="main-content">
     <div class="header">
-      <div style="font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 12px; font-family: 'Instrument Serif', serif;">
+        <span style="font-size: 24px; cursor: pointer; font-family: 'Inter', sans-serif;" onclick="toggleMobileSidebar()">≡</span>
         <span id="currentViewTitle">Dashboard</span>
       </div>
       <div class="search-bar">

@@ -36,6 +36,21 @@ function updateThemeIcon() {
   }
 })();
 
+function toggleMobileSidebar(forceClose = false) {
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('mobileSidebarOverlay');
+  if (!sidebar || !overlay) return;
+  
+  if (forceClose) {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+    return;
+  }
+  
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('active');
+}
+
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-' + viewId).classList.remove('hidden');
@@ -61,12 +76,17 @@ function showView(viewId) {
   };
   document.getElementById('currentViewTitle').innerText = titles[viewId] || viewId;
 
-  if (viewId === 'dashboard') loadDashboard();
-  if (viewId === 'restaurants') loadRestaurants();
-  if (viewId === 'complaints') loadComplaints();
-  if (viewId === 'subscriptions') loadSubscriptions();
-  if (viewId === 'analytics') loadPlatformAnalytics();
-  if (viewId === 'announcements') renderAnnouncements();
+  // Close mobile sidebar on navigation
+  toggleMobileSidebar(true);
+
+  setTimeout(() => {
+    if (viewId === 'dashboard') loadDashboard();
+    if (viewId === 'restaurants') loadRestaurants();
+    if (viewId === 'complaints') loadComplaints();
+    if (viewId === 'subscriptions') loadSubscriptions();
+    if (viewId === 'analytics') loadPlatformAnalytics();
+    if (viewId === 'announcements') renderAnnouncements();
+  }, 50);
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {
