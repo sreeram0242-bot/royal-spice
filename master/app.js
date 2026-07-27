@@ -124,13 +124,13 @@ async function loadDashboard() {
           const expDate = new Date(r.subscriptionExpiry);
           const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
           if (daysLeft <= 7 && daysLeft >= 0) {
-            alertsDiv.innerHTML += `<div style="background: var(--orange); border: 1px solid var(--orange); color: var(--orange); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
-              <i data-lucide="alert-triangle"></i>
+            alertsDiv.innerHTML += `<div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #D97706; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 14px;">
+              <i data-lucide="alert-triangle" style="width:18px;height:18px;flex-shrink:0;color:#D97706;"></i>
               <div><strong>${r.name}</strong> subscription expires in ${daysLeft} days (on ${expDate.toLocaleDateString()}).</div>
             </div>`;
           } else if (daysLeft < 0) {
-            alertsDiv.innerHTML += `<div style="background: var(--red); border: 1px solid var(--red); color: var(--red); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
-              <i data-lucide="alert-circle"></i>
+            alertsDiv.innerHTML += `<div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #EF4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 14px;">
+              <i data-lucide="alert-circle" style="width:18px;height:18px;flex-shrink:0;color:#EF4444;"></i>
               <div><strong>${r.name}</strong> subscription expired ${Math.abs(daysLeft)} days ago!</div>
             </div>`;
           }
