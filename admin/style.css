@@ -882,26 +882,27 @@ h3 {
 /* ============================================================
    RESPONSIVE LAYOUT
    ============================================================ */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .panels-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
 @media (max-width: 640px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
-  }
-
-  .panels-grid {
-    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .sidebar {
     position: fixed;
     top: 0;
     left: -260px;
-    /* Hide by default */
     height: 100vh;
     z-index: 1000;
     transition: left 0.3s ease;
@@ -913,14 +914,31 @@ h3 {
   }
 
   .content-body {
-    padding: 16px 20px;
+    padding: 12px 14px;
   }
 
   .header {
-    padding: 0 20px;
+    padding: 0 12px;
+    height: 56px;
+    gap: 8px;
   }
 
-  /* Overlay for mobile sidebar */
+  .panel,
+  .card,
+  .stat-card {
+    padding: 14px 14px;
+    border-radius: 12px;
+  }
+
+  .modal {
+    width: 92% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    margin: 0 auto;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+
   .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -939,29 +957,29 @@ h3 {
     opacity: 1;
   }
 
-  /* Table responsiveness on mobile */
   table {
     display: block;
+    width: 100%;
     overflow-x: auto;
     white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Header adjustments for mobile to prevent text overflow */
-  .header {
-    padding: 0 16px;
-    gap: 8px;
+  th,
+  td {
+    padding: 10px 10px;
   }
 
   #currentViewTitle {
-    font-size: 18px !important;
+    font-size: 16px !important;
   }
 
   .search-bar input {
-    max-width: 140px;
-    padding-left: 30px;
+    max-width: 120px;
+    padding: 7px 12px 7px 28px;
+    font-size: 13px;
   }
 
-  /* Stat cards font size adjustment */
   .stat-card .value {
     font-size: 22px;
   }
