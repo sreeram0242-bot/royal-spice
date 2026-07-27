@@ -213,7 +213,7 @@ async function submitComplaint() {
   if (!subject || !message) {
     statusEl.style.display = 'block';
     statusEl.style.color = '#EF4444';
-    statusEl.innerText = '⚠️ Please fill in both subject and message.';
+    statusEl.innerText = 'Please fill in both subject and message.';
     return;
   }
 
@@ -227,7 +227,7 @@ async function submitComplaint() {
     });
 
     statusEl.style.color = '#10B981';
-    statusEl.innerText = '✅ Complaint sent successfully! The master admin will respond shortly.';
+    statusEl.innerText = 'Complaint sent successfully! The master admin will respond shortly.';
 
     document.getElementById('complaintSubject').value = '';
     document.getElementById('complaintMessage').value = '';
@@ -238,7 +238,7 @@ async function submitComplaint() {
     }, 2000);
   } catch (err) {
     statusEl.style.color = '#EF4444';
-    statusEl.innerText = '❌ Failed to send. Please try again.';
+    statusEl.innerText = 'Failed to send. Please try again.';
   }
 }
 
@@ -300,6 +300,7 @@ function showView(viewId) {
     if (viewId === 'waiters') loadWaiters();
     if (viewId === 'revenue') loadRevenue();
     if (viewId === 'settings') loadSettings();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }, 50);
 }
 
@@ -2172,15 +2173,15 @@ function renderTally() {
 
   const netProfit = dayRevenue - totalExpense;
   const profitColor = netProfit >= 0 ? '#10B981' : '#EF4444';
-  const profitLabel = netProfit >= 0 ? '✅ Net Profit' : '⚠️ Net Loss';
+  const profitLabel = netProfit >= 0 ? 'Net Profit' : 'Net Loss';
 
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(59,130,246,0.1);border-radius:8px;">
-      <span style="color:var(--text-muted);">📥 Revenue</span>
+      <span style="color:var(--text-muted);">Revenue</span>
       <span style="color:#3B82F6;font-weight:700;">₹${Math.round(dayRevenue).toLocaleString('en-IN')}</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;">
-      <span style="color:var(--text-muted);">📤 Expenses (${expenses.length} items)</span>
+      <span style="color:var(--text-muted);">Expenses (${expenses.length} items)</span>
       <span style="color:#EF4444;font-weight:700;">₹${totalExpense.toFixed(2)}</span>
     </div>
     <div style="border-top:1px dashed var(--border-color);padding-top:10px;display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:12px;background:rgba(0,0,0,0.05);border-radius:8px;">

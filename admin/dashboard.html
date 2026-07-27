@@ -177,7 +177,7 @@
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <h2>Tables Overview</h2>
-          <button class="btn-gold" style="width: auto;" onclick="toggleTableSettings()">⚙️ Table Settings</button>
+          <button class="btn-gold" style="width: auto;" onclick="toggleTableSettings()"><i data-lucide="settings" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Table Settings</button>
         </div>
 
         <div id="tableSettingsContainer" class="hidden">
@@ -281,11 +281,11 @@
 
         <!-- Revenue Sub-Nav Tabs -->
         <div style="display:flex; gap:8px; margin-bottom:24px; border-bottom:2px solid var(--border-color); padding-bottom:0;">
-          <button id="rev-tab-overview" onclick="switchRevenueTab('overview')" style="padding:10px 20px; font-size:14px; font-weight:600; background:var(--primary); color:white; border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;">📊 Overview</button>
-          <button id="rev-tab-analytics" onclick="switchRevenueTab('analytics')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;">📈 Analytics</button>
-          <button id="rev-tab-daily" onclick="switchRevenueTab('daily')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;">📅 Daily Sales</button>
-          <button id="rev-tab-expenses" onclick="switchRevenueTab('expenses')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;">💰 Expenses & Tally</button>
-          <button id="rev-tab-history" onclick="switchRevenueTab('history')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;">📋 Order History</button>
+          <button id="rev-tab-overview" onclick="switchRevenueTab('overview')" style="padding:10px 20px; font-size:14px; font-weight:600; background:var(--primary); color:white; border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i> Overview</button>
+          <button id="rev-tab-analytics" onclick="switchRevenueTab('analytics')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="trending-up" style="width:16px;height:16px;"></i> Analytics</button>
+          <button id="rev-tab-daily" onclick="switchRevenueTab('daily')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:16px;height:16px;"></i> Daily Sales</button>
+          <button id="rev-tab-expenses" onclick="switchRevenueTab('expenses')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="dollar-sign" style="width:16px;height:16px;"></i> Expenses & Tally</button>
+          <button id="rev-tab-history" onclick="switchRevenueTab('history')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="clipboard-list" style="width:16px;height:16px;"></i> Order History</button>
         </div>
 
         <!-- SUB TAB: OVERVIEW -->
@@ -325,15 +325,15 @@
               <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">Payment Mode Breakdown</div>
               <div style="display:flex;gap:16px;flex-wrap:wrap;">
                 <div style="flex:1;min-width:100px;text-align:center;">
-                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">💵 Cash</div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="banknote" style="width:14px;height:14px;"></i> Cash</div>
                   <div id="revCash" style="font-size:20px;font-weight:bold;color:#10B981;">₹0</div>
                 </div>
                 <div style="flex:1;min-width:100px;text-align:center;">
-                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">📱 UPI</div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="smartphone" style="width:14px;height:14px;"></i> UPI</div>
                   <div id="revUpi" style="font-size:20px;font-weight:bold;color:#3B82F6;">₹0</div>
                 </div>
                 <div style="flex:1;min-width:100px;text-align:center;">
-                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">💳 Card</div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="credit-card" style="width:14px;height:14px;"></i> Card</div>
                   <div id="revCard" style="font-size:20px;font-weight:bold;color:#8B5CF6;">₹0</div>
                 </div>
               </div>
@@ -344,7 +344,7 @@
 
           <!-- Revenue Trend Chart (last 7 days) -->
           <div class="panel">
-            <div style="font-size:16px;font-weight:700;margin-bottom:16px;">📊 Revenue — Last 7 Days</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="bar-chart" style="width:18px;height:18px;color:var(--primary);"></i> Revenue — Last 7 Days</div>
             <div id="revBarChart" style="display:flex;align-items:flex-end;gap:8px;height:120px;"></div>
             <div id="revBarLabels" style="display:flex;gap:8px;margin-top:8px;font-size:11px;color:var(--text-muted);"></div>
           </div>
@@ -367,21 +367,21 @@
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px;margin-bottom:20px;">
             <!-- Top Items -->
             <div class="panel">
-              <div style="font-size:15px;font-weight:700;margin-bottom:16px;">🏆 Top Selling Items</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="award" style="width:18px;height:18px;color:var(--gold-primary);"></i> Top Selling Items</div>
               <div id="analyticsTopItems" style="display:flex;flex-direction:column;gap:10px;">
                 <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
               </div>
             </div>
             <!-- Table Revenue -->
             <div class="panel">
-              <div style="font-size:15px;font-weight:700;margin-bottom:16px;">🪑 Revenue by Table</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="layout" style="width:18px;height:18px;color:var(--primary);"></i> Revenue by Table</div>
               <div id="analyticsTableRevenue" style="display:flex;flex-direction:column;gap:10px;">
                 <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
               </div>
             </div>
             <!-- Waiter Ranking -->
             <div class="panel">
-              <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⭐ Waiter Ranking</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="star" style="width:18px;height:18px;color:var(--gold-primary);"></i> Waiter Ranking</div>
               <div id="analyticsWaiterRanking" style="display:flex;flex-direction:column;gap:10px;">
                 <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
               </div>
@@ -389,7 +389,7 @@
           </div>
           <!-- Hourly Orders Heatmap -->
           <div class="panel">
-            <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⏰ Peak Hours (Orders by Hour)</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="clock" style="width:18px;height:18px;color:var(--blue);"></i> Peak Hours (Orders by Hour)</div>
             <div id="analyticsHourly" style="display:flex;align-items:flex-end;gap:4px;height:80px;flex-wrap:wrap;"></div>
             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;" id="analyticsHourlyLabels"></div>
           </div>
@@ -428,7 +428,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
             <!-- Add Expense Form -->
             <div class="panel">
-              <div style="font-size:15px;font-weight:700;margin-bottom:16px;">➕ Add Expense</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="plus-circle" style="width:18px;height:18px;color:var(--primary);"></i> Add Expense</div>
               <div style="display:flex;flex-direction:column;gap:12px;">
                 <div>
                   <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Date</label>
@@ -461,7 +461,7 @@
 
             <!-- Daily Tally -->
             <div class="panel">
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">📊 Daily Tally</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;"><i data-lucide="file-text" style="width:18px;height:18px;color:var(--gold-primary);"></i> Daily Tally</div>
               <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
                 <input type="date" id="tallyDate" class="login-input" style="margin-bottom:0;padding:8px;flex:1;" onchange="renderTally()">
               </div>
@@ -474,7 +474,7 @@
           <!-- Expense History Table -->
           <div class="panel">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <div style="font-size:15px;font-weight:700;">📋 Expense Log</div>
+              <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Expense Log</div>
               <div style="display:flex;gap:8px;">
                 <input type="month" id="expFilterMonth" class="login-input" style="margin-bottom:0;padding:8px;" onchange="renderExpenses()">
                 <button onclick="clearAllExpenses()" style="background:rgba(239,68,68,0.15);color:#EF4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;">Clear All</button>
@@ -607,7 +607,7 @@
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid var(--border-color);">
               <div>
-                <div style="font-weight: 600;">🖨️ Auto-Print KOT</div>
+                <div style="font-weight: 600;display:flex;align-items:center;gap:6px;"><i data-lucide="printer" style="width:16px;height:16px;color:var(--primary);"></i> Auto-Print KOT</div>
                 <div style="font-size: 12px; color: var(--text-muted);">Automatically open print dialog for new orders</div>
               </div>
               <label class="toggle-switch">
@@ -618,7 +618,7 @@
             
             <!-- Multiple KOT Printers Section -->
             <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color); margin-top: 16px; margin-bottom: 16px;">
-              <h4 style="margin-bottom: 12px; font-weight: 600;">🖨️ Multiple KOT Printers</h4>
+              <h4 style="margin-bottom: 12px; font-weight: 600;display:flex;align-items:center;gap:6px;"><i data-lucide="printer" style="width:18px;height:18px;color:var(--primary);"></i> Multiple KOT Printers</h4>
               <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Add different KOT printers (e.g., Kitchen, Bar) and toggle them ON/OFF. A separate KOT ticket will print for each active printer.</div>
               
               <div style="display: flex; gap: 8px; margin-bottom: 16px;">
@@ -1020,7 +1020,7 @@
   <div id="complaintModal" class="modal-overlay hidden">
     <div class="modal" style="max-width:480px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="color:var(--gold-primary);">📢 Send Complaint to Master</h3>
+        <h3 style="color:var(--gold-primary);display:flex;align-items:center;gap:8px;"><i data-lucide="megaphone" style="width:20px;height:20px;"></i> Send Complaint to Master</h3>
         <button onclick="closeModal('complaintModal')" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
       </div>
       <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Your message will be sent directly to the Cloud Dine Master Admin.</p>
@@ -1033,7 +1033,7 @@
         <textarea id="complaintMessage" class="login-input" rows="4" placeholder="Describe your issue or feedback in detail..."></textarea>
       </div>
       <div style="display:flex;gap:12px;">
-        <button class="btn-gold" style="flex:1;" onclick="submitComplaint()">📤 Send to Master</button>
+        <button class="btn-gold" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="submitComplaint()"><i data-lucide="send" style="width:16px;height:16px;"></i> Send to Master</button>
         <button class="btn-outline" onclick="closeModal('complaintModal')">Cancel</button>
       </div>
       <div id="complaintStatus" style="margin-top:12px;font-size:13px;display:none;"></div>

@@ -67,12 +67,12 @@ function showView(viewId) {
     'restaurants': 'Restaurants',
     'complaints': 'Complaints',
     'revenue': 'Platform Revenue',
-    'subscriptions': '💳 Subscriptions',
-    'analytics': '📊 Platform Analytics',
-    'announcements': '📢 Announcements',
-    'backup': '🗄️ Backup & Export',
-    'support': '🎧 Support Center',
-    'settings': '⚙️ Platform Settings'
+    'subscriptions': 'Subscriptions',
+    'analytics': 'Platform Analytics',
+    'announcements': 'Announcements',
+    'backup': 'Backup & Export',
+    'support': 'Support Center',
+    'settings': 'Platform Settings'
   };
   document.getElementById('currentViewTitle').innerText = titles[viewId] || viewId;
 
@@ -86,6 +86,7 @@ function showView(viewId) {
     if (viewId === 'subscriptions') loadSubscriptions();
     if (viewId === 'analytics') loadPlatformAnalytics();
     if (viewId === 'announcements') renderAnnouncements();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }, 50);
 }
 
