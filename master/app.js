@@ -27,7 +27,9 @@ function updateThemeIcon() {
 
 // Apply saved theme on page load
 (function() {
-  if (localStorage.getItem('theme') === 'light') {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.remove('light-theme');
+  } else {
     document.body.classList.add('light-theme');
   }
   

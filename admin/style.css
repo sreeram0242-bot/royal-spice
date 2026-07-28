@@ -72,7 +72,7 @@
 }
 
 /* ── DARK THEME ── */
-body:not(.light-theme) {
+body.dark-theme {
   --bg-dark: hsl(25, 10%, 8%);
   --bg-subtle: hsl(25, 8%, 10%);
   --panel-bg: hsl(25, 8%, 12%);

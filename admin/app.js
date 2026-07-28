@@ -173,24 +173,24 @@ function logout() {
 
 // ── THEME TOGGLE ──
 function toggleTheme() {
-  const isLight = document.body.classList.toggle('light-theme');
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  const isDark = document.body.classList.toggle('dark-theme');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
   updateThemeIcon();
 }
 
 function updateThemeIcon() {
   const btn = document.getElementById('themeToggleBtn');
   if (!btn) return;
-  const isLight = document.body.classList.contains('light-theme');
+  const isDark = document.body.classList.contains('dark-theme');
   const icon = btn.querySelector('i[data-lucide]');
-  if (icon) icon.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+  if (icon) icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // Apply saved theme on page load
 (function () {
-  if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.add('light-theme');
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-theme');
   }
   // Update icon after page loads
   window.addEventListener('DOMContentLoaded', () => updateThemeIcon());
