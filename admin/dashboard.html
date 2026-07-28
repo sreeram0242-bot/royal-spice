@@ -6,6 +6,12 @@
   <title>Admin Dashboard - Cloud Dine</title>
   <link rel="stylesheet" href="style.css?v=10">
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Registration Failed:', err));
+    }
+  </script>
   <!-- Chart.js for revenue chart -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- QRCode.js for generating QR codes -->

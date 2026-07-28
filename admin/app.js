@@ -292,7 +292,7 @@ function showView(viewId) {
   setTimeout(() => {
     if (viewId === 'dashboard') loadDashboard();
     if (viewId === 'orders') loadOrders();
-    if (viewId === 'tables') loadSettings(true);
+    if (viewId === 'tables') loadTablesView();
     if (viewId === 'menu') loadMenu();
     if (viewId === 'categories') loadCategories();
     if (viewId === 'qr') loadQRCodes();
@@ -368,30 +368,26 @@ function getTableName(num) {
   return t ? t.name : `Table ${num}`;
 }
 
-async function loadSettings(onlyTables = false) {
-  if (restaurantSettings) renderSettings(restaurantSettings, onlyTables);
+async function loadSettings() {
+  if (restaurantSettings) renderSettings(restaurantSettings, false);
   else showLoader();
   try {
     const data = await fetchAPI('/api/admin/settings');
     if (!restaurantSettings || JSON.stringify(restaurantSettings) !== JSON.stringify(data)) {
       restaurantSettings = data;
-      renderSettings(data, onlyTables);
+      renderSettings(data, false);
     }
   } catch (e) { console.error(e); } finally {
     hideLoader();
   }
 }
 
-function renderSettings(settings, onlyTables) {
+function renderSettings(settings) {
   document.getElementById('sidebarRestaurantName').innerText = settings.name;
 
-  if (onlyTables) {
-    document.getElementById('settingsTotalTables').value = settings.totalTables;
-    renderFullTableGrid();
-  } else {
-    document.getElementById('setRestName').value = settings.name;
-    document.getElementById('setRestAddress').value = settings.address;
-    document.getElementById('setRestGst').value = settings.gstPercent;
+  document.getElementById('setRestName').value = settings.name;
+  document.getElementById('setRestAddress').value = settings.address;
+  document.getElementById('setRestGst').value = settings.gstPercent;
 
     // Load Auto Print toggle from LocalStorage
     document.getElementById('setAutoPrint').checked = localStorage.getItem('autoPrint') === 'true';
@@ -410,9 +406,8 @@ function renderSettings(settings, onlyTables) {
       document.getElementById('setQrPreviewText').style.display = 'block';
     }
 
-    // Load KOT Printers
-    loadKotPrinters();
-  }
+  // Load KOT Printers
+  loadKotPrinters();
 }
 
 async function loadKotPrinters() {
@@ -690,10 +685,11 @@ function renderDashboard(orders, calls, tablesData) {
   if (pendingOrders.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">Currently no live orders</td></tr>';
   } else {
+    let tbodyHtml = '';
     pendingOrders.slice(0, 5).forEach(o => {
       const tableInfo = tablesData.find(t => t.tableNumber === o.tableNumber);
       const tableName = tableInfo ? tableInfo.name : `T${o.tableNumber}`;
-      tbody.innerHTML += `
+      tbodyHtml += `
         <tr onclick="showView('orders');" style="cursor: pointer;">
           <td><div class="table-pill" style="padding: 4px; border-radius: 0; width: auto; min-width: 60px; font-size: 12px; background: ${o.status === 'new' ? 'var(--blue)' : 'var(--orange)'}; color: ${o.status === 'new' ? 'white' : 'black'};">${tableName}</div></td>
           <td>#${o.orderNumber}</td>
@@ -704,12 +700,13 @@ function renderDashboard(orders, calls, tablesData) {
         </tr>
       `;
     });
+    tbody.innerHTML = tbodyHtml;
   }
 
   // Table Grid
   const grid = document.getElementById('dashTableGrid');
-  grid.innerHTML = '';
 
+  let gridHtml = '';
   tablesData.forEach(t => {
     let statusClass = 'available';
     const tableOrder = pendingOrders.find(o => o.tableNumber === t.tableNumber);
@@ -718,8 +715,9 @@ function renderDashboard(orders, calls, tablesData) {
       else if (tableOrder.status === 'preparing') statusClass = 'preparing';
       else if (tableOrder.status === 'ready') statusClass = 'served';
     }
-    grid.innerHTML += `<div class="table-pill ${statusClass}">${t.name}</div>`;
+    gridHtml += `<div class="table-pill ${statusClass}">${t.name}</div>`;
   });
+  grid.innerHTML = gridHtml;
 
   // Revenue Chart
   try {
@@ -817,6 +815,7 @@ function renderOrders(orders) {
     return;
   }
 
+  let gridHtml = '';
   sortedOrders.forEach(o => {
     let actionBtn = '';
     if (o.status === 'new') {
@@ -841,7 +840,7 @@ function renderOrders(orders) {
 
     const timeStr = new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    grid.innerHTML += `
+    gridHtml += `
         <div class="panel" style="padding: 20px; border: 1px solid #333; position: relative; border-radius: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
             <div>
@@ -887,6 +886,7 @@ function renderOrders(orders) {
         </div>
       `;
   });
+  grid.innerHTML = gridHtml;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -927,11 +927,10 @@ async function loadWaiterCalls() {
 function renderWaiterCalls(calls) {
   const tbody = document.getElementById('waiterCallsBody');
   if (!tbody) return;
-  tbody.innerHTML = '';
-
+  let tbodyHtml = '';
   calls.forEach(c => {
     const timeStr = new Date(c.createdAt).toLocaleTimeString();
-    tbody.innerHTML += `
+    tbodyHtml += `
         <tr>
           <td>${getTableName(c.tableNumber)}</td>
           <td style="text-transform:capitalize;">${c.waiterName || 'Waiter'}</td>
@@ -943,6 +942,7 @@ function renderWaiterCalls(calls) {
         </tr>
       `;
   });
+  tbody.innerHTML = tbodyHtml;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -1362,31 +1362,94 @@ function renderCategories({ catSettings, menuData }) {
 }
 
 // TABLES Overview & Categories
+async function loadTablesView() {
+  if (AppState.tables) renderTablesViewUI(AppState.tables);
+  else showLoader();
+  try {
+    const [settings, categories, tables] = await Promise.all([
+      fetchAPI('/api/admin/settings'),
+      fetchAPI('/api/admin/table-categories'),
+      fetchAPI('/api/admin/tables')
+    ]);
+    
+    restaurantSettings = settings;
+    _globalTablesData = tables;
+    
+    const data = { settings, categories, tables };
+    if (!AppState.tables || JSON.stringify(AppState.tables) !== JSON.stringify(data)) {
+      AppState.tables = data;
+      renderTablesViewUI(data);
+    }
+  } catch (e) {
+    console.error('Failed to load tables view', e);
+  } finally {
+    hideLoader();
+  }
+}
+
+function renderTablesViewUI({ settings, categories, tables }) {
+  // 1. Render Settings
+  document.getElementById('sidebarRestaurantName').innerText = settings.name;
+  document.getElementById('settingsTotalTables').value = settings.totalTables;
+
+  // 2. Render Categories Lists
+  const list = document.getElementById('tableCategoriesList');
+  if (list) {
+    list.innerHTML = categories.map(c => `
+      <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); padding:6px 12px; border-radius:16px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:14px;">${c.name}</span>
+        <button onclick="deleteTableCategory('${c.id}')" style="background:transparent; border:none; color:var(--red); cursor:pointer;">&times;</button>
+      </div>
+    `).join('');
+  }
+  const select = document.getElementById('bulkAssignCatId');
+  if (select) {
+    select.innerHTML = '<option value="">None (Main)</option>' +
+      categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  // 3. Render Table Grid
+  const gridContainer = document.getElementById('fullTableGridContainer');
+  if (!gridContainer) return;
+  gridContainer.innerHTML = '';
+  
+  if (!tables || tables.length === 0) {
+    gridContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 40px 20px;">No tables configured. Please update your total tables in Settings.</div>';
+    return;
+  }
+
+  const grouped = tables.reduce((acc, table) => {
+    acc[table.categoryName] = acc[table.categoryName] || [];
+    acc[table.categoryName].push(table);
+    return acc;
+  }, {});
+
+  let finalHtml = '';
+  for (const [catName, catTables] of Object.entries(grouped)) {
+    finalHtml += `<div style="font-size: 14px; font-weight: bold; margin: 24px 0 12px; color: var(--gold-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">${catName} Zone</div>`;
+    let catGridHTML = '<div class="table-grid">';
+    catTables.forEach(t => {
+      const isOccupied = t.status === 'occupied';
+      const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : 'Free';
+      const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber})"` : '';
+      catGridHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">${t.name}</div>
+        <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
+        ${isOccupied && t.waiterName ? `<div style="font-size: 11px; color: var(--gold-secondary); margin-top: 4px; text-transform: capitalize;">${t.waiterName}</div>` : ''}
+      </div>`;
+    });
+    catGridHTML += '</div>';
+    finalHtml += catGridHTML;
+  }
+  gridContainer.innerHTML = finalHtml;
+}
+
+// Fallback legacy functions needed by other UI buttons
 async function loadTableCategories() {
   try {
     const categories = await fetchAPI('/api/admin/table-categories');
-
-    // Update the categories list UI
-    const list = document.getElementById('tableCategoriesList');
-    if (list) {
-      list.innerHTML = categories.map(c => `
-        <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); padding:6px 12px; border-radius:16px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:14px;">${c.name}</span>
-          <button onclick="deleteTableCategory('${c.id}')" style="background:transparent; border:none; color:var(--red); cursor:pointer;">&times;</button>
-        </div>
-      `).join('');
-    }
-
-    // Update the bulk assign dropdown
-    const select = document.getElementById('bulkAssignCatId');
-    if (select) {
-      select.innerHTML = '<option value="">None (Main)</option>' +
-        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    }
     return categories;
-  } catch (err) {
-    console.error('Failed to load table categories', err);
-  }
+  } catch (err) {}
 }
 
 async function addTableCategory() {
@@ -1402,8 +1465,7 @@ async function deleteTableCategory(id) {
   if (!confirm('Are you sure you want to delete this category? Tables in it will revert to Main.')) return;
   await fetchAPI(`/api/admin/table-categories/${id}`, 'DELETE');
   _globalTablesData = [];
-  await loadTableCategories();
-  renderFullTableGrid();
+  loadTablesView();
 }
 
 async function bulkAssignTables() {
@@ -1417,58 +1479,10 @@ async function bulkAssignTables() {
   await fetchAPI('/api/admin/tables/bulk', 'POST', { categoryId, prefix, count, startNumber });
   alert('Tables assigned successfully');
   _globalTablesData = [];
-  renderFullTableGrid();
+  loadTablesView();
 }
 
-async function renderFullTableGrid() {
-  const gridContainer = document.getElementById('fullTableGridContainer');
-  if (!gridContainer) return;
-  gridContainer.innerHTML = '<div style="color:var(--text-muted);">Loading tables...</div>';
-
-  await loadTableCategories();
-
-  try {
-    const tables = await fetchAPI('/api/admin/tables');
-
-    gridContainer.innerHTML = '';
-
-    if (!tables || tables.length === 0) {
-      gridContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 40px 20px;">No tables configured. Please update your total tables in Settings.</div>';
-      return;
-    }
-
-    // Group tables by categoryName
-    const grouped = tables.reduce((acc, table) => {
-      acc[table.categoryName] = acc[table.categoryName] || [];
-      acc[table.categoryName].push(table);
-      return acc;
-    }, {});
-
-    for (const [catName, catTables] of Object.entries(grouped)) {
-      gridContainer.innerHTML += `<div style="font-size: 14px; font-weight: bold; margin: 24px 0 12px; color: var(--gold-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">${catName} Zone</div>`;
-
-      let catGridHTML = '<div class="table-grid">';
-
-      catTables.forEach(t => {
-        const isOccupied = t.status === 'occupied';
-        const statusText = isOccupied ? `<span style="color:var(--gold);font-weight:bold;font-size:16px;">₹${(t.total || 0).toFixed(2)}</span>` : 'Free';
-        const clickAction = isOccupied ? `onclick="openTableModal(${t.tableNumber})"` : '';
-
-        catGridHTML += `<div class="table-pill ${isOccupied ? 'occupied' : 'available'}" ${clickAction} style="height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; ${isOccupied ? 'cursor:pointer;' : ''}">
-          <div style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">${t.name}</div>
-          <div style="font-size: 12px; color: var(--text-muted); text-align: center;">${statusText}</div>
-          ${isOccupied && t.waiterName ? `<div style="font-size: 11px; color: var(--gold-secondary); margin-top: 4px; text-transform: capitalize;">${t.waiterName}</div>` : ''}
-        </div>`;
-      });
-
-      catGridHTML += '</div>';
-      gridContainer.innerHTML += catGridHTML;
-    }
-
-  } catch (err) {
-    gridContainer.innerHTML = '<div style="color:var(--red); padding: 20px; text-align:center;">Failed to load tables. Please check your connection.</div>';
-  }
-}
+// Legacy renderFullTableGrid removed completely
 
 // ── TABLE SESSION MANAGEMENT (Admin) ──
 async function openTableModal(tableNumber) {
