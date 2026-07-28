@@ -121,16 +121,16 @@ router.get('/tables', authWaiter, async (req, res) => {
 router.get('/table/:num/bill', authWaiter, async (req, res) => {
   try {
     const tableNumber = parseInt(req.params.num);
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: req.user.restaurantId },
-      select: { name: true, address: true, gstPercent: true }
-    });
-
-    // Get most recent active session for this table
-    const latestOrder = await prisma.order.findFirst({
-      where: { restaurantId: req.user.restaurantId, tableNumber, status: { not: 'completed' } },
-      orderBy: { createdAt: 'desc' }
-    });
+    const [restaurant, latestOrder] = await Promise.all([
+      prisma.restaurant.findUnique({
+        where: { id: req.user.restaurantId },
+        select: { name: true, address: true, gstPercent: true }
+      }),
+      prisma.order.findFirst({
+        where: { restaurantId: req.user.restaurantId, tableNumber, status: { not: 'completed' } },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
 
     if (!latestOrder) {
       return res.status(404).json({ message: 'No active orders for this table' });

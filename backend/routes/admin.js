@@ -252,15 +252,16 @@ router.get('/tables', [authAdmin, checkSubscription], async (req, res) => {
 router.get('/table/:num/bill', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const tableNumber = parseInt(req.params.num);
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: req.user.restaurantId },
-      select: { name: true, address: true, gstPercent: true }
-    });
-
-    const latestOrder = await prisma.order.findFirst({
-      where: { restaurantId: req.user.restaurantId, tableNumber, status: { not: 'completed' } },
-      orderBy: { createdAt: 'desc' }
-    });
+    const [restaurant, latestOrder] = await Promise.all([
+      prisma.restaurant.findUnique({
+        where: { id: req.user.restaurantId },
+        select: { name: true, address: true, gstPercent: true }
+      }),
+      prisma.order.findFirst({
+        where: { restaurantId: req.user.restaurantId, tableNumber, status: { not: 'completed' } },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
 
     if (!latestOrder) {
       return res.status(404).json({ message: 'No active orders for this table' });
