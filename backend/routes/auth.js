@@ -9,7 +9,7 @@ router.post('/master/login', (req, res) => {
   const { username, password } = req.body;
 
   if (username === process.env.MASTER_USERNAME && password === process.env.MASTER_PASSWORD) {
-    const token = jwt.sign({ role: 'master' }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ role: 'master' }, process.env.JWT_SECRET, { expiresIn: '365d' });
     return res.json({ token, message: 'Master login successful' });
   }
 
@@ -37,7 +37,7 @@ router.post('/admin/login', async (req, res) => {
     const token = jwt.sign(
       { role: 'admin', restaurantId: restaurant.id },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: '365d' }
     );
 
     res.json({ token, restaurantId: restaurant.id, message: 'Admin login successful' });
@@ -69,7 +69,7 @@ router.post('/waiter/login', async (req, res) => {
     const token = jwt.sign(
       { role: 'waiter', restaurantId: waiter.restaurantId, waiterId: waiter.id, waiterName: waiter.name },
       process.env.JWT_SECRET,
-      { expiresIn: '12h' }
+      { expiresIn: '365d' }
     );
 
     res.json({ token, restaurantId: waiter.restaurantId, waiterName: waiter.name, message: 'Login successful' });
