@@ -23,6 +23,11 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+  <script>
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-theme');
+    }
+  </script>
   <!-- Toggle switch is now in style.css -->
   <script>
     window.addEventListener('error', function(e) {

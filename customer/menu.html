@@ -12,6 +12,11 @@
 </head>
 
 <body>
+  <script>
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-theme');
+    }
+  </script>
   <div id="global-loader">
     <div class="loader-container">
       <div class="loader-icon">
