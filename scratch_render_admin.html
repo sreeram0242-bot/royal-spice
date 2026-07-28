@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Cloud Dine</title>
+  <link rel="stylesheet" href="style.css?v=10">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Registration Failed:', err));
+    }
+  </script>
+  <!-- Chart.js for revenue chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- QRCode.js for generating QR codes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <script>
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-theme');
+    }
+  </script>
+  <!-- Toggle switch is now in style.css -->
+  <script>
+    window.addEventListener('error', function(e) {
+      console.error('JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('Promise Error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+    });
+  </script>
+
+  <!-- Sidebar Overlay for mobile -->
+  <div class="sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+  <!-- Sidebar -->
+<div class="sidebar" id="adminSidebar">
+  <div class="brand">
+    <h2 id="sidebarRestaurantName" style="color: var(--gold-primary);">Cloud Dine</h2>
+    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Restaurant</p>
+  </div>
+    <a class="nav-link active" onclick="showView('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-link" onclick="showView('orders')"><i data-lucide="clipboard-list"></i> Orders <span class="badge" id="ordersBadge" style="display:none;">0</span></a>
+    <a class="nav-link" onclick="showView('tables')"><i data-lucide="armchair"></i> Tables</a>
+    <a class="nav-link" onclick="showView('menu')"><i data-lucide="utensils"></i> Menu Items</a>
+    <a class="nav-link" onclick="showView('categories')"><i data-lucide="folder-tree"></i> Categories</a>
+    <a class="nav-link" onclick="showView('qr')"><i data-lucide="qr-code"></i> QR Codes</a>
+    <a class="nav-link" onclick="showView('waiter')"><i data-lucide="bell-ring"></i> Waiter Calls <span class="badge" id="waiterBadge" style="display:none;">0</span></a>
+    <a class="nav-link" onclick="showView('waiters')"><i data-lucide="users"></i> Waiters</a>
+    <a class="nav-link" onclick="showView('revenue')"><i data-lucide="indian-rupee"></i> Revenue</a>
+    <a class="nav-link" onclick="showView('settings')"><i data-lucide="settings"></i> Settings</a>
+    
+    <a class="nav-link" onclick="openComplaintModal()" style="margin-top:auto;"><i data-lucide="message-circle-warning"></i> Send Complaint</a>
+    <a href="https://www.clouddine.store/" target="_blank" style="padding-top: 16px; margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85; text-decoration: none;">
+      <img src="logo.png" style="height: 48px; width: auto; object-fit: contain; margin-bottom: 8px;" alt="Cloud Dine Logo">
+      <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
+        Created by <br/>
+        <span style="color: var(--text-primary); font-weight: 700; font-size: 13px;">Cloud</span> <span style="color: var(--primary); font-weight: 700; font-size: 13px;">Dine</span>
+      </div>
+    </a>
+
+    <a class="nav-link" onclick="logout()"><i data-lucide="log-out"></i> Logout</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <div style="font-size: 18px; font-weight: 400; display: flex; align-items: center; gap: 12px; font-family: 'Instrument Serif', serif;">
+        <span style="font-size: 24px; cursor: pointer; font-family: 'Inter', sans-serif;" onclick="toggleMobileSidebar()">≡</span>
+        <span id="currentViewTitle" style="font-size: 22px; letter-spacing: -0.3px;">Dashboard</span>
+      </div>
+      <div class="search-bar" style="position:relative; display:flex; align-items:center;">
+        <i data-lucide="search" style="position:absolute; left:12px; width:16px; height:16px; color:var(--text-muted);"></i>
+        <input type="text" id="globalSearchInput" placeholder="Search here..." style="padding-left:36px;" onkeyup="handleGlobalSearch()">
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" style="display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="moon" id="themeIcon" style="width:18px;height:18px;"></i>
+        </button>
+        <span style="font-weight:600;color:var(--text-primary);">Admin ▾</span>
+      </div>
+    </div>
+
+    <div class="content-body" id="viewsContainer">
+      <!-- DASHBOARD VIEW -->
+      <div id="view-dashboard" class="view">
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <div class="title">Today's Revenue</div>
+            <div class="value" id="dashRev">₹0</div>
+            <div class="trend">▲ 0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Today's Orders</div>
+            <div class="value" id="dashOrders">0</div>
+            <div class="trend">▲ 0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Pending Orders</div>
+            <div class="value" id="dashPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Waiter Calls</div>
+            <div class="value" id="dashCalls">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="title">Active Tables</div>
+            <div class="value" id="dashTables">0/0</div>
+          </div>
+        </div>
+
+        <div class="panels-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Live Orders</h3>
+              <a href="#" onclick="showView('orders')" style="color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500;">View All</a>
+            </div>
+            <table id="liveOrdersTable">
+              <!-- populated via js -->
+            </table>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Today's Revenue</h3>
+            </div>
+            <div style="position: relative; height: 200px; width: 100%;">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel" style="margin-top: 24px;">
+          <div class="panel-header">
+            <h3>Active Tables</h3>
+            <div style="display: flex; gap: 12px; font-size: 12px;">
+              <span style="color: var(--text-muted)">■ Available</span>
+              <span style="color: var(--purple)">■ Ordered</span>
+              <span style="color: var(--orange)">■ Preparing</span>
+              <span style="color: var(--red)">■ Served</span>
+            </div>
+          </div>
+          <div class="table-grid" id="dashTableGrid">
+            <!-- Populated via js -->
+          </div>
+        </div>
+      </div>
+
+    <!-- Categories Section -->
+      <div id="view-categories" class="view hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2>Category Images</h2>
+        </div>
+        <div class="panel">
+          <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+            <!-- Categories loaded via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS VIEW -->
+      <div id="view-orders" class="view hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>All Orders</h3>
+          <div style="display: flex; gap: 8px;">
+            <select id="orderFilterStatus" class="login-input" style="width: auto; margin-bottom: 0; padding: 6px 12px;" onchange="loadOrders()">
+              <option value="all">All Status</option>
+              <option value="new">New</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+            </select>
+          </div>
+        </div>
+        <div id="ordersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; align-items: start;">
+          <!-- Order cards injected here -->
+        </div>
+      </div>
+
+      <!-- TABLES VIEW -->
+      <div id="view-tables" class="view hidden">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2>Tables Overview</h2>
+          <button class="btn-gold" style="width: auto;" onclick="toggleTableSettings()"><i data-lucide="settings" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Table Settings</button>
+        </div>
+
+        <div id="tableSettingsContainer" class="hidden">
+          <div class="panel" style="margin-bottom: 24px;">
+            <h3>Table Settings</h3>
+            <div style="display: flex; gap: 16px; margin-top: 16px; align-items: center;">
+              <label>Total Number of Tables:</label>
+              <input type="number" id="settingsTotalTables" class="login-input" style="width: 100px; margin-bottom: 0;">
+              <button class="btn-gold" style="width: auto; padding: 10px 24px;" onclick="updateTablesCount()">Update</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">* Changing the total number of tables applies globally. Use categories below to group them.</p>
+          </div>
+
+          <div class="panel" style="margin-bottom: 24px;">
+            <h3>Table Categories / Zones</h3>
+            <div style="display: flex; gap: 16px; margin-top: 16px; align-items: center;">
+              <input type="text" id="newCategoryName" class="login-input" placeholder="e.g. AC Room, First Floor" style="width: 250px; margin-bottom: 0;">
+              <button class="btn-gold" style="width: auto; padding: 10px 24px;" onclick="addTableCategory()">Add Category</button>
+            </div>
+            <div id="tableCategoriesList" style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 12px;">
+              <!-- Render categories here -->
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom: 24px;">
+            <h3>Bulk Assign Tables to Category</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 16px; margin-top: 16px; align-items: end;">
+              <div>
+                <label>Select Category</label>
+                <select id="bulkAssignCatId" class="login-input" style="margin-bottom: 0;">
+                  <option value="">None (Main)</option>
+                  <!-- Categories loaded via JS -->
+                </select>
+              </div>
+              <div>
+                <label>Name Prefix (e.g. AC-)</label>
+                <input type="text" id="bulkPrefix" class="login-input" style="margin-bottom: 0;" placeholder="AC-">
+              </div>
+              <div>
+                <label>Number of Tables</label>
+                <input type="number" id="bulkCount" class="login-input" style="margin-bottom: 0;" placeholder="10">
+              </div>
+              <div>
+                <label>Start Internal #</label>
+                <input type="number" id="bulkStartNum" class="login-input" style="margin-bottom: 0;" placeholder="1">
+              </div>
+              <button class="btn-gold" style="padding: 10px 24px;" onclick="bulkAssignTables()">Assign</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:12px;">* Example: 10 tables, Prefix 'AC-', Start # 11 => Creates AC-1 to AC-10 mapping to internal tables 11 to 20.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div id="fullTableGridContainer" style="margin-top: 16px;"></div>
+        </div>
+      </div>
+
+      <!-- MENU VIEW -->
+      <div id="view-menu" class="view hidden">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <h3>Menu Items</h3>
+          <button class="btn-gold" style="width: auto;" onclick="openAddMenuModal()">+ Add Item</button>
+        </div>
+        
+        <div id="menuContainer" style="display: flex; flex-direction: column; gap: 24px;">
+          <!-- Categories and their tables injected here -->
+        </div>
+      </div>
+
+      <!-- QR CODES VIEW -->
+      <div id="view-qr" class="view hidden">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <h3>Table QR Codes</h3>
+        </div>
+        <div class="panel" id="qrGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+          <!-- QR cards injected here -->
+        </div>
+      </div>
+
+      <!-- WAITER CALLS VIEW -->
+      <div id="view-waiter" class="view hidden">
+        <div class="panel">
+          <h3>Waiter Calls</h3>
+          <table id="waiterTable" style="margin-top: 16px;">
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th>Waiter</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="waiterCallsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- REVENUE VIEW -->
+      <div id="view-revenue" class="view hidden">
+
+        <!-- Revenue Sub-Nav Tabs -->
+        <div style="display:flex; gap:8px; margin-bottom:24px; border-bottom:2px solid var(--border-color); padding-bottom:0;">
+          <button id="rev-tab-overview" onclick="switchRevenueTab('overview')" style="padding:10px 20px; font-size:14px; font-weight:600; background:var(--primary); color:white; border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i> Overview</button>
+          <button id="rev-tab-analytics" onclick="switchRevenueTab('analytics')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="trending-up" style="width:16px;height:16px;"></i> Analytics</button>
+          <button id="rev-tab-daily" onclick="switchRevenueTab('daily')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:16px;height:16px;"></i> Daily Sales</button>
+          <button id="rev-tab-expenses" onclick="switchRevenueTab('expenses')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="dollar-sign" style="width:16px;height:16px;"></i> Expenses & Tally</button>
+          <button id="rev-tab-history" onclick="switchRevenueTab('history')" style="padding:10px 20px; font-size:14px; font-weight:600; background:transparent; color:var(--text-muted); border:none; border-radius:10px 10px 0 0; cursor:pointer; display:flex;align-items:center;gap:6px;"><i data-lucide="clipboard-list" style="width:16px;height:16px;"></i> Order History</button>
+        </div>
+
+        <!-- SUB TAB: OVERVIEW -->
+        <div id="rev-section-overview">
+          <!-- 4 KPI Cards -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px;">
+            <div class="panel" style="display:flex;flex-direction:column;gap:6px;border-left:4px solid var(--gold-primary);">
+              <div style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Total Revenue</div>
+              <div id="revTotal" style="font-size:26px;font-weight:bold;color:var(--gold-primary);">₹0</div>
+            </div>
+            <div class="panel" style="display:flex;flex-direction:column;gap:6px;border-left:4px solid #10B981;">
+              <div style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Today's Revenue</div>
+              <div id="revToday" style="font-size:26px;font-weight:bold;color:#10B981;">₹0</div>
+            </div>
+            <div class="panel" style="display:flex;flex-direction:column;gap:6px;border-left:4px solid #3B82F6;">
+              <div style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">This Week</div>
+              <div id="revWeek" style="font-size:26px;font-weight:bold;color:#3B82F6;">₹0</div>
+            </div>
+            <div class="panel" style="display:flex;flex-direction:column;gap:6px;border-left:4px solid #8B5CF6;">
+              <div style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">This Month</div>
+              <div id="revMonth" style="font-size:26px;font-weight:bold;color:#8B5CF6;">₹0</div>
+            </div>
+          </div>
+
+          <!-- 2nd row: Orders & Avg Order Value -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px;">
+            <div class="panel" style="display:flex;flex-direction:column;gap:6px;border-left:4px solid #F59E0B;">
+              <div style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Completed Orders</div>
+              <div id="revOrders" style="font-size:26px;font-weight:bold;color:var(--text-primary);">0</div>
+            </div>
+            <div class="panel" style="display:flex;flex-direction:column;gap:6px;border-left:4px solid #EF4444;">
+              <div style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Avg Order Value</div>
+              <div id="revAvg" style="font-size:26px;font-weight:bold;color:#EF4444;">₹0</div>
+            </div>
+            <!-- Payment mode breakdown -->
+            <div class="panel" style="grid-column:span 2;">
+              <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">Payment Mode Breakdown</div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:100px;text-align:center;">
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="banknote" style="width:14px;height:14px;"></i> Cash</div>
+                  <div id="revCash" style="font-size:20px;font-weight:bold;color:#10B981;">₹0</div>
+                </div>
+                <div style="flex:1;min-width:100px;text-align:center;">
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="smartphone" style="width:14px;height:14px;"></i> UPI</div>
+                  <div id="revUpi" style="font-size:20px;font-weight:bold;color:#3B82F6;">₹0</div>
+                </div>
+                <div style="flex:1;min-width:100px;text-align:center;">
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="credit-card" style="width:14px;height:14px;"></i> Card</div>
+                  <div id="revCard" style="font-size:20px;font-weight:bold;color:#8B5CF6;">₹0</div>
+                </div>
+              </div>
+              <!-- Payment mode bar -->
+              <div id="revPaymentBar" style="height:10px;border-radius:8px;overflow:hidden;margin-top:12px;display:flex;gap:2px;"></div>
+            </div>
+          </div>
+
+          <!-- Revenue Trend Chart (last 7 days) -->
+          <div class="panel">
+            <div style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="bar-chart" style="width:18px;height:18px;color:var(--primary);"></i> Revenue — Last 7 Days</div>
+            <div id="revBarChart" style="display:flex;align-items:flex-end;gap:8px;height:120px;"></div>
+            <div id="revBarLabels" style="display:flex;gap:8px;margin-top:8px;font-size:11px;color:var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- SUB TAB: ANALYTICS -->
+        <div id="rev-section-analytics" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div style="font-size:16px; font-weight:700;">Performance Analytics</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="analyticsPeriod" onchange="loadAnalytics()" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary); font-size:13px; cursor:pointer;">
+                <option value="all">All Time</option>
+                <option value="day">Custom Date</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+              <input type="date" id="analyticsDate" onchange="loadAnalytics()" style="display:none; padding:5px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary); font-size:13px; cursor:pointer;" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px;margin-bottom:20px;">
+            <!-- Top Items -->
+            <div class="panel">
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="award" style="width:18px;height:18px;color:var(--gold-primary);"></i> Top Selling Items</div>
+              <div id="analyticsTopItems" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
+              </div>
+            </div>
+            <!-- Table Revenue -->
+            <div class="panel">
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="layout" style="width:18px;height:18px;color:var(--primary);"></i> Revenue by Table</div>
+              <div id="analyticsTableRevenue" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
+              </div>
+            </div>
+            <!-- Waiter Ranking -->
+            <div class="panel">
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="star" style="width:18px;height:18px;color:var(--gold-primary);"></i> Waiter Ranking</div>
+              <div id="analyticsWaiterRanking" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
+              </div>
+            </div>
+          </div>
+          <!-- Hourly Orders Heatmap -->
+          <div class="panel">
+            <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="clock" style="width:18px;height:18px;color:var(--blue);"></i> Peak Hours (Orders by Hour)</div>
+            <div id="analyticsHourly" style="display:flex;align-items:flex-end;gap:4px;height:80px;flex-wrap:wrap;"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;" id="analyticsHourlyLabels"></div>
+          </div>
+        </div>
+
+        <!-- SUB TAB: DAILY SALES -->
+        <div id="rev-section-daily" style="display:none;">
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h3 style="margin-bottom:0;">Daily Sales Report</h3>
+              <input type="month" id="dailySalesMonth" class="login-input" style="width:auto;margin-bottom:0;padding:8px;" onchange="renderDailySales()">
+            </div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;text-align:left;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border-color);color:var(--text-muted);">
+                    <th style="padding:12px;">Date</th>
+                    <th style="padding:12px;text-align:center;">Total Orders</th>
+                    <th style="padding:12px;text-align:right;">Cash</th>
+                    <th style="padding:12px;text-align:right;">UPI</th>
+                    <th style="padding:12px;text-align:right;">Card</th>
+                    <th style="padding:12px;text-align:right;">Total Revenue</th>
+                    <th style="padding:12px;text-align:center;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dailySalesTableBody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB TAB: EXPENSES & TALLY -->
+        <div id="rev-section-expenses" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+            <!-- Add Expense Form -->
+            <div class="panel">
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i data-lucide="plus-circle" style="width:18px;height:18px;color:var(--primary);"></i> Add Expense</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Date</label>
+                  <input type="date" id="expDate" class="login-input" style="margin-bottom:0;padding:8px;">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Category</label>
+                  <select id="expCategory" class="login-input" style="margin-bottom:0;padding:8px;">
+                    <option value="Gas / LPG">Gas / LPG</option>
+                    <option value="Groceries">Groceries</option>
+                    <option value="Salary">Salary</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Rent">Rent</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Description</label>
+                  <input type="text" id="expDesc" class="login-input" placeholder="e.g. Tomatoes, Onions..." style="margin-bottom:0;padding:8px;">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Amount (₹)</label>
+                  <input type="number" id="expAmount" class="login-input" placeholder="0" style="margin-bottom:0;padding:8px;">
+                </div>
+                <button class="btn-gold" onclick="addExpense()" style="width:100%;margin-top:4px;">Save Expense</button>
+              </div>
+            </div>
+
+            <!-- Daily Tally -->
+            <div class="panel">
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;"><i data-lucide="file-text" style="width:18px;height:18px;color:var(--gold-primary);"></i> Daily Tally</div>
+              <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                <input type="date" id="tallyDate" class="login-input" style="margin-bottom:0;padding:8px;flex:1;" onchange="renderTally()">
+              </div>
+              <div id="tallyPanel" style="display:flex;flex-direction:column;gap:10px;">
+                <!-- Filled by renderTally() -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Expense History Table -->
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Expense Log</div>
+              <div style="display:flex;gap:8px;">
+                <input type="month" id="expFilterMonth" class="login-input" style="margin-bottom:0;padding:8px;" onchange="renderExpenses()">
+                <button onclick="clearAllExpenses()" style="background:rgba(239,68,68,0.15);color:#EF4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;">Clear All</button>
+              </div>
+            </div>
+            <div id="expenseLog" style="max-height:300px;overflow-y:auto;">
+              <div style="color:var(--text-muted);text-align:center;padding:24px;font-size:13px;">No expenses logged yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB TAB: ORDER HISTORY -->
+        <div id="rev-section-history" style="display:none;">
+          <div class="panel">
+            <h3>Order History</h3>
+            <div style="display:flex;gap:16px;margin-top:16px;align-items:center;flex-wrap:wrap;">
+              <div style="display:flex;flex-direction:column;gap:4px;flex:1;max-width:300px;">
+                <input type="text" id="historySearchInput" class="login-input" placeholder="Search by date, session, or amount..." onkeyup="filterHistory()" style="padding:10px;margin-bottom:0;">
+              </div>
+              <button class="btn-gold" style="padding:10px 16px;width:auto;margin-left:auto;" onclick="openPdfModal()">Download PDF</button>
+            </div>
+            <div style="overflow-x:auto;margin-top:24px;">
+              <table style="width:100%;border-collapse:collapse;text-align:left;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border-color);color:var(--text-muted);">
+                    <th style="padding:12px;">Date</th>
+                    <th style="padding:12px;">Session #</th>
+                    <th style="padding:12px;">Table</th>
+                    <th style="padding:12px;">Total Amount</th>
+                    <th style="padding:12px;">Payment</th>
+                    <th style="padding:12px;">Waiter</th>
+                    <th style="padding:12px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Order Items Modal -->
+      <div class="modal-overlay" id="historyItemsModal" style="display: none;">
+        <div class="modal" style="width: 90%; max-width: 500px; padding: 24px; background: var(--panel-bg); border-radius: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 id="historyModalTitle" style="color: var(--gold-primary);">Order Details</h3>
+            <button onclick="document.getElementById('historyItemsModal').style.display='none'" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+          </div>
+          <div id="historyModalItems" style="max-height: 400px; overflow-y: auto;">
+            <!-- Items injected via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF Download Modal -->
+      <div class="modal-overlay" id="pdfModal" style="display: none;">
+        <div class="modal" style="width: 90%; max-width: 400px; padding: 24px; background: var(--panel-bg); border-radius: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 style="color: var(--gold-primary);">Download PDF Report</h3>
+            <button onclick="document.getElementById('pdfModal').style.display='none'" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn-gold" style="width: 100%;" onclick="generatePDF('1day')">Last 1 Day</button>
+            <button class="btn-gold" style="width: 100%;" onclick="generatePDF('1week')">Last 1 Week</button>
+            <button class="btn-gold" style="width: 100%;" onclick="generatePDF('1month')">Last 1 Month</button>
+            
+            <div style="margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+              <div style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px; font-weight: 600;">Custom Date Range</div>
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <div style="flex: 1;">
+                  <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">From</label>
+                  <input type="date" id="pdfCustomStart" class="login-input" style="margin-bottom: 0; padding: 8px; width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">To</label>
+                  <input type="date" id="pdfCustomEnd" class="login-input" style="margin-bottom: 0; padding: 8px; width: 100%;">
+                </div>
+              </div>
+              <button class="btn-gold" style="width: 100%;" onclick="generatePDF('custom')">Download Custom Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- WAITERS VIEW -->
+  <div id="view-waiters" class="view hidden">
+    <div class="panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+        <h2 style="font-size:20px; font-weight:700;">Waiter Accounts</h2>
+        <button class="btn-gold" onclick="openAddWaiterModal()" style="padding: 10px 18px;">+ Add Waiter</button>
+      </div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:12px 12px; text-align:left; font-size:12px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Name</th>
+          <th style="padding:12px 12px; text-align:left; font-size:12px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Username</th>
+          <th style="padding:12px 12px; text-align:left; font-size:12px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Status</th>
+          <th style="padding:12px 12px; text-align:left; font-size:12px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Created</th>
+          <th style="padding:12px 12px; text-align:right; font-size:12px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="waitersTableBody">
+        <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">Loading...</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+
+      <!-- SETTINGS VIEW -->
+      <div id="view-settings" class="view hidden">
+        <div class="panel" style="max-width: 500px;">
+          <h3>Restaurant Settings</h3>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <label>Restaurant Name</label>
+              <input type="text" id="setRestName" class="login-input">
+            </div>
+            <div>
+              <label>Address</label>
+              <input type="text" id="setRestAddress" class="login-input">
+            </div>
+            <div>
+              <label>GST %</label>
+              <input type="number" id="setRestGst" class="login-input">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid var(--border-color);">
+              <div>
+                <div style="font-weight: 600;display:flex;align-items:center;gap:6px;"><i data-lucide="printer" style="width:16px;height:16px;color:var(--primary);"></i> Auto-Print KOT</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Automatically open print dialog for new orders</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setAutoPrint" onchange="handleAutoPrintToggle(this)">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <!-- Multiple KOT Printers Section -->
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color); margin-top: 16px; margin-bottom: 16px;">
+              <h4 style="margin-bottom: 12px; font-weight: 600;display:flex;align-items:center;gap:6px;"><i data-lucide="printer" style="width:18px;height:18px;color:var(--primary);"></i> Multiple KOT Printers</h4>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Add different KOT printers (e.g., Kitchen, Bar) and toggle them ON/OFF. A separate KOT ticket will print for each active printer.</div>
+              
+              <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <input type="text" id="newKotName" class="login-input" placeholder="Enter Printer Name (e.g. Bar KOT)" style="margin-bottom: 0; flex: 1;">
+                <button class="btn-gold" style="width: auto; white-space: nowrap;" onclick="addKotPrinter()">Add Printer</button>
+              </div>
+
+              <div id="kotPrintersList" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- KOT printers rendered here via JS -->
+              </div>
+            </div>
+
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
+              <label style="display: block; margin-bottom: 12px; font-weight: 600;">Payment QR Code</label>
+              <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <input type="file" id="setQrFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'setQrPreview')">
+                <input type="hidden" id="setQrImageBase64">
+                <div style="width: 120px; height: 120px; border-radius: 8px; border: 2px dashed var(--border-color); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; background: var(--bg-dark);" onclick="document.getElementById('setQrFileInput').click()">
+                  <img id="setQrPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                  <span id="setQrPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to add<br>QR Code</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="document.getElementById('setQrFileInput').click()">Change QR</button>
+                  <button style="padding: 6px 12px; font-size: 12px; background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; cursor: pointer;" onclick="removeSettingsQr()">Remove QR</button>
+                  <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Upload your UPI or bank QR code for customers to scan when paying.</span>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-gold" onclick="saveSettings()">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Menu Modal -->
+  <div id="addMenuModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Add Menu Item</h3>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <input type="file" id="newMenuFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'newMenuPreview')">
+        <input type="hidden" id="newMenuImageBase64">
+        <div style="width: 100px; height: 100px; border-radius: 8px; border: 2px dashed var(--border-color); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; background: var(--bg-dark); margin: 0 auto;" onclick="document.getElementById('newMenuFileInput').click()">
+          <img id="newMenuPreview" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+          <span id="newMenuPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to add<br>Photo</span>
+        </div>
+      </div>
+
+      <input type="text" id="newMenuName" class="login-input" placeholder="Item Name">
+      <input type="number" id="newMenuPrice" class="login-input" placeholder="Price">
+      <input type="text" id="newMenuCat" class="login-input" placeholder="Category (e.g. Starters)" list="categoryOptions">
+      <div style="margin-bottom: 16px; display: flex; gap: 16px;">
+        <label><input type="radio" name="newMenuVeg" value="true" checked> Veg</label>
+        <label><input type="radio" name="newMenuVeg" value="false"> Non-Veg</label>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="saveMenuItem()">Save</button>
+        <button class="btn-gold" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary);" onclick="closeModal('addMenuModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Sales Detail Modal -->
+  <div id="dailySalesModal" class="modal-overlay hidden" onclick="closeModal('dailySalesModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 id="dailySalesModalTitle">Sales Details</h3>
+        <button class="btn-gold" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding:6px 12px; font-size:12px;" onclick="closeModal('dailySalesModal')">Close</button>
+      </div>
+      <div style="max-height: 400px; overflow-y: auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted);">
+              <th style="padding:8px;">Item Name</th>
+              <th style="padding:8px; text-align:center;">Qty Sold</th>
+              <th style="padding:8px; text-align:right;">Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="dailySalesModalBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Menu Modal -->
+  <div id="editMenuModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">Edit Menu Item</h3>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <input type="file" id="editMenuFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'editMenuPreview')">
+        <input type="hidden" id="editMenuImageBase64">
+        <div style="width: 100px; height: 100px; border-radius: 8px; border: 2px dashed var(--border-color); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; background: var(--bg-dark); margin: 0 auto;" onclick="document.getElementById('editMenuFileInput').click()">
+          <img id="editMenuPreview" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+          <span id="editMenuPreviewText" style="color: var(--text-muted); font-size: 12px; text-align: center;">+ Tap to change<br>Photo</span>
+        </div>
+      </div>
+
+      <input type="hidden" id="editMenuId">
+      <input type="text" id="editMenuName" class="login-input" placeholder="Item Name">
+      <input type="number" id="editMenuPrice" class="login-input" placeholder="Price">
+      <input type="text" id="editMenuCat" class="login-input" placeholder="Category (e.g. Starters)" list="categoryOptions">
+      <div style="margin-bottom: 16px; display: flex; gap: 16px;">
+        <label><input type="radio" name="editMenuVeg" value="true"> Veg</label>
+        <label><input type="radio" name="editMenuVeg" value="false"> Non-Veg</label>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-gold" onclick="saveEditMenuItem()">Update</button>
+        <button class="btn-gold" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary);" onclick="closeModal('editMenuModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Datalist for Categories -->
+  <datalist id="categoryOptions"></datalist>
+
+  <!-- ADD WAITER MODAL -->
+  <div id="addWaiterModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom:20px;">Add New Waiter</h3>
+      <input type="text" id="newWaiterName" class="login-input" placeholder="Full Name (e.g. Ravi Kumar)">
+      <input type="text" id="newWaiterUsername" class="login-input" placeholder="Username (e.g. ravi_waiter)">
+      <div style="position: relative;">
+        <input type="password" id="newWaiterPassword" class="login-input" placeholder="Password" style="padding-right: 40px; margin-bottom: 0;">
+        <button type="button" onclick="toggleWaiterPwd()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="eye" id="waiterPwdEye" style="width: 20px; height: 20px;"></i></button>
+      </div>
+      <script>
+        function toggleWaiterPwd() {
+          const inp = document.getElementById('newWaiterPassword');
+          const eye = document.getElementById('waiterPwdEye');
+          if (inp.type === 'password') {
+            inp.type = 'text';
+            eye.setAttribute('data-lucide', 'eye-off');
+          } else {
+            inp.type = 'password';
+            eye.setAttribute('data-lucide', 'eye');
+          }
+          lucide.createIcons();
+        }
+      </script>
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button class="btn-gold" onclick="addWaiter()">Create Waiter</button>
+        <button class="btn-gold" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary);" onclick="closeModal('addWaiterModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILL PRINT MODAL (Admin) -->
+  <div id="adminBillModal" class="modal-overlay hidden" onclick="closeModal('adminBillModal')" style="z-index: 4000;">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:500px; max-height:85vh; overflow-y:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+        <h3>Bill Preview</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-gold" style="padding:8px 14px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="window.print()"><i data-lucide="printer" style="width:14px;height:14px;"></i> Print</button>
+          <button class="btn-gold" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding:8px 14px; font-size:13px;" onclick="closeModal('adminBillModal')">Close</button>
+        </div>
+      </div>
+      <div id="adminBillContent" style="font-family:'Courier New',monospace; background:#fff; color:#111; border-radius:8px; padding:24px 20px; font-size:13px; line-height:1.6;"></div>
+    </div>
+  </div>
+
+  <!-- TABLE DETAIL MODAL (Admin) -->
+  <div class="modal-overlay hidden" id="tableModal" onclick="closeTableModal()">
+    <div style="display:flex; flex-direction:column; height:90%; width:90%; max-width:600px; background:var(--sidebar-color); margin: 5vh auto; border-radius:12px; border:1px solid var(--border-color); overflow:hidden;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="background:var(--sidebar-color); padding:16px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color);">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div style="cursor:pointer; color:var(--text-muted);" onclick="closeTableModal()">
+            <i data-lucide="arrow-left" style="width:24px; height:24px;"></i>
+          </div>
+          <div>
+            <div style="font-size:18px; font-weight:bold; color:var(--text-primary);" id="modalTitle">Table 1</div>
+            <div style="font-size:13px; color:var(--text-muted);" id="modalSub">PIN: ----</div>
+          </div>
+        </div>
+        <div id="modalHeaderAction"></div>
+      </div>
+      
+      <div id="modalBody" style="flex:1; overflow-y:auto; padding:20px;">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM CLOSE MODAL (Admin) -->
+  <div class="modal-overlay hidden" id="confirmCloseModal" style="background: var(--modal-overlay); z-index:3000; justify-content:center; align-items:center;" onclick="closeConfirmModal()">
+    <div style="background:var(--panel-bg); padding:24px; border-radius:16px; width:90%; max-width:400px; text-align:center; border:1px solid var(--border-color);" onclick="event.stopPropagation()">
+      <div style="margin-bottom:16px;">
+        <i data-lucide="alert-triangle" style="width:48px; height:48px; color:var(--orange);"></i>
+      </div>
+      <h3 style="margin-bottom:8px; font-size:18px;">Close Table <span id="confirmTableNum"></span>?</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;">Select the payment method before closing.</p>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom: 24px; text-align:left;">
+        <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="cash" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='block';">
+          <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Full Cash</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="upi" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='none';">
+          <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Full UPI</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="card" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='none'; document.getElementById('changeCalculator').style.display='none';">
+          <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Full Card</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--sidebar-color); border:1px solid var(--border-color); border-radius:12px; cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="split" style="accent-color:var(--blue); width:16px; height:16px;" onchange="document.getElementById('splitInputs').style.display='block'; document.getElementById('changeCalculator').style.display='none';">
+          <span style="font-size:13px; font-weight:500; color:var(--text-primary);">Split Payment</span>
+        </label>
+      </div>
+        
+        <div id="splitInputs" style="display:none; margin-bottom:16px; background:var(--sidebar-color); padding:12px; border-radius:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-size:13px; color:var(--text-muted);">Bill Total</span>
+            <span style="font-size:14px; font-weight:bold; color:var(--gold);" id="splitBillTotal">₹0.00</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:13px; color:var(--text-muted); width:60px; text-align:left;">Cash</span>
+            <input type="number" id="splitCash" style="flex:1; max-width:180px; padding:8px; border:1px solid var(--border-color); border-radius:6px; background:var(--panel-bg); color:var(--text-primary); font-size:14px; text-align:right;" placeholder="₹0" oninput="calculateSplitChange()">
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:13px; color:var(--text-muted); width:60px; text-align:left;">UPI</span>
+            <input type="number" id="splitUpi" style="flex:1; max-width:180px; padding:8px; border:1px solid var(--border-color); border-radius:6px; background:var(--panel-bg); color:var(--text-primary); font-size:14px; text-align:right;" placeholder="₹0" oninput="calculateSplitChange()">
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:13px; color:var(--text-muted); width:60px; text-align:left;">Card</span>
+            <input type="number" id="splitCard" style="flex:1; max-width:180px; padding:8px; border:1px solid var(--border-color); border-radius:6px; background:var(--panel-bg); color:var(--text-primary); font-size:14px; text-align:right;" placeholder="₹0" oninput="calculateSplitChange()">
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border-color); padding-top:12px;">
+            <span style="font-size:13px; color:var(--text-muted);" id="splitBalanceLabel">Remaining</span>
+            <span style="font-size:16px; font-weight:bold; color:#EF4444;" id="splitBalanceValue">₹0.00</span>
+          </div>
+        </div>
+
+        <div id="changeCalculator" style="display:none; margin-bottom:16px; background:var(--sidebar-color); padding:12px; border-radius:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-size:13px; color:var(--text-muted);" id="calcBillTotalLabel">Bill Total</span>
+            <span style="font-size:16px; font-weight:bold; color:var(--gold);" id="calcBillTotal">₹0.00</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:13px; color:var(--text-primary); width:90px; text-align:left;">Amount Paid</span>
+            <input type="number" id="customerPaid" style="flex:1; max-width:180px; padding:8px; border:1px solid var(--border-color); border-radius:6px; background:var(--panel-bg); color:var(--text-primary); font-size:14px; text-align:right;" placeholder="₹0" oninput="calculateChange()">
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border-color); padding-top:12px;">
+            <span style="font-size:13px; color:var(--text-muted);">Change Due</span>
+            <span style="font-size:18px; font-weight:bold; color:#10B981;" id="changeDue">₹0.00</span>
+          </div>
+        </div>
+
+        <script>
+        function calculateSplitChange() {
+          const total = window.currentGrandTotal || 0;
+          const cash = parseFloat(document.getElementById('splitCash').value) || 0;
+          const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
+          const card = parseFloat(document.getElementById('splitCard').value) || 0;
+          
+          const entered = cash + upi + card;
+          const diff = entered - total;
+          
+          const label = document.getElementById('splitBalanceLabel');
+          const val = document.getElementById('splitBalanceValue');
+          
+          if (diff < 0) {
+            label.innerText = 'Remaining';
+            val.innerText = 'Need ₹' + Math.abs(diff).toFixed(2);
+            val.style.color = '#EF4444'; // red
+          } else if (diff > 0) {
+            label.innerText = 'Change Due (Cash)';
+            val.innerText = '₹' + diff.toFixed(2);
+            val.style.color = '#10B981'; // green
+          } else {
+            label.innerText = 'Remaining';
+            val.innerText = '₹0.00';
+            val.style.color = '#10B981'; // green
+          }
+        }
+
+        function calculateChange() {
+          const paid = parseFloat(document.getElementById('customerPaid').value) || 0;
+          const total = window.currentGrandTotal || 0;
+          
+          let targetTotal = total;
+          document.getElementById('calcBillTotalLabel').innerText = 'Bill Total';
+          
+          document.getElementById('calcBillTotal').innerText = '₹' + Math.max(0, targetTotal).toFixed(2);
+          
+          const change = paid - targetTotal;
+          const changeEl = document.getElementById('changeDue');
+          if(change >= 0) {
+            changeEl.innerText = '₹' + change.toFixed(2);
+            changeEl.style.color = '#10B981'; // green
+          } else {
+            changeEl.innerText = 'Need ₹' + Math.abs(change).toFixed(2);
+            changeEl.style.color = '#EF4444'; // red
+          }
+        }
+        </script>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <!-- adminPrintBillBtn removed as requested -->
+        <button class="btn-gold" style="width:100%;" id="confirmCloseBtn">Done</button>
+        <button class="btn-gold" style="width:100%; background:transparent; border:1px solid var(--border-color); color:var(--text-primary);" onclick="closeConfirmModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KOT CONFIG MODAL (Admin) -->
+  <div class="modal-overlay hidden" id="kotConfigModal" style="background: var(--modal-overlay); z-index:3000; justify-content:center; align-items:center;" onclick="closeKotConfigModal()">
+    <div style="background:var(--panel-bg); padding:24px; border-radius:16px; width:90%; max-width:450px; border:1px solid var(--border-color);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:18px;">Configure Printer: <span id="kotConfigName" style="color:var(--gold);"></span></h3>
+        <i data-lucide="x" style="cursor:pointer;" onclick="closeKotConfigModal()"></i>
+      </div>
+      
+      <input type="hidden" id="kotConfigId">
+      
+      <label style="display:block; margin-bottom:8px; font-weight:bold;">Connection Type</label>
+      <select id="kotConfigType" class="login-input" style="background:var(--bg-dark);" onchange="updateKotConfigFields()">
+        <option value="browser">Browser Default (Web Dialog)</option>
+        <option value="network">Network / IP Printer</option>
+        <option value="usb">USB Printer (WebUSB)</option>
+        <option value="bluetooth">Bluetooth Printer</option>
+      </select>
+
+      <div id="kotConfigNetworkFields" class="hidden">
+        <label style="display:block; margin-bottom:8px; font-weight:bold;">Printer IP Address</label>
+        <input type="text" id="kotConfigIp" class="login-input" placeholder="e.g. 192.168.1.100">
+        
+        <label style="display:block; margin-bottom:8px; font-weight:bold;">Port</label>
+        <input type="text" id="kotConfigPort" class="login-input" placeholder="e.g. 9100">
+      </div>
+
+      <div id="kotConfigUsbFields" class="hidden" style="margin-bottom:16px; background:rgba(59,130,246,0.1); padding:16px; border-radius:8px; border:1px solid rgba(59,130,246,0.3);">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Click below to pair your USB/Bluetooth device to the browser.</div>
+        <button class="btn-gold" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="pairKotDevice()">
+          <i data-lucide="link"></i> Pair Device
+        </button>
+        <div id="kotConfigDeviceStatus" style="font-size:11px; margin-top:8px; color:var(--green); text-align:center;"></div>
+        <input type="hidden" id="kotConfigDeviceId">
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button class="btn-gold" style="flex:1;" onclick="saveKotConfig()">Save Configuration</button>
+        <button class="btn-gold" style="flex:1; background:transparent; border:1px solid var(--border-color); color:var(--text-primary);" onclick="closeKotConfigModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Popup Notification -->
+  <div id="orderPopup" class="hidden">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: bold; color: var(--primary);">
+      <span><i data-lucide="shopping-bag" style="color:var(--primary);"></i></span> NEW ORDER RECEIVED!
+    </div>
+    <div id="popupOrderDetails" style="font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">
+      Table 12 — Order #1035<br>
+      Total: ₹756
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('orderPopup').classList.add('hidden'); showView('orders');">View Order</button>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-gold" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('orderPopup').classList.add('hidden'); showView('orders');">View Order</button>
+        <button style="padding: 6px 12px; font-size: 12px; background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;" onclick="document.getElementById('orderPopup').classList.add('hidden')">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      alert("FATAL ERROR: " + msg + "\nLine: " + line);
+    };
+    window.onunhandledrejection = function(event) {
+      alert("UNHANDLED PROMISE: " + (event.reason ? event.reason.message || event.reason : "Unknown error"));
+    };
+  </script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js?v=11"></script>
+  <script>
+    lucide.createIcons();
+    if (typeof updateThemeIcon === 'function') updateThemeIcon();
+    if (typeof bootApp === 'function') bootApp(); else showView('dashboard');
+  </script>
+  <!-- QR Display Modal -->
+  <div id="qrDisplayModal" class="modal-overlay hidden" onclick="closeModal('qrDisplayModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:350px; text-align:center; padding:32px 24px;">
+      <h3 style="margin-bottom:20px; color:var(--gold-primary);">Scan to Pay</h3>
+      <div style="background:white; padding:16px; border-radius:12px; display:inline-block; margin-bottom:24px;">
+        <img id="qrDisplayImage" src="" style="max-width:250px; max-height:250px; display:block; margin:0 auto;">
+      </div>
+      <div>
+        <button class="btn-gold" style="width:100%;" onclick="closeModal('qrDisplayModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complaint Modal -->
+  <div id="complaintModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:480px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="color:var(--gold-primary);display:flex;align-items:center;gap:8px;"><i data-lucide="megaphone" style="width:20px;height:20px;"></i> Send Complaint to Master</h3>
+        <button onclick="closeModal('complaintModal')" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Your message will be sent directly to the Cloud Dine Master Admin.</p>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Subject</label>
+        <input type="text" id="complaintSubject" class="login-input" placeholder="Brief subject (e.g. Billing issue, Feature request...)" style="margin-bottom:0;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Message</label>
+        <textarea id="complaintMessage" class="login-input" rows="4" placeholder="Describe your issue or feedback in detail..."></textarea>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-gold" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="submitComplaint()"><i data-lucide="send" style="width:16px;height:16px;"></i> Send to Master</button>
+        <button class="btn-outline" onclick="closeModal('complaintModal')">Cancel</button>
+      </div>
+      <div id="complaintStatus" style="margin-top:12px;font-size:13px;display:none;"></div>
+    </div>
+  </div>
+
+</body>
+</html>
