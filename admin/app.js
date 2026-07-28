@@ -281,6 +281,7 @@ function showView(viewId) {
     'waiter': 'Waiter Calls',
     'waiters': 'Waiters',
     'revenue': 'Revenue',
+    'inventory': 'Inventory Management',
     'settings': 'Settings'
   };
   document.getElementById('currentViewTitle').innerText = titles[viewId];
@@ -299,6 +300,7 @@ function showView(viewId) {
     if (viewId === 'waiter') loadWaiterCalls();
     if (viewId === 'waiters') loadWaiters();
     if (viewId === 'revenue') loadRevenue();
+    if (viewId === 'inventory') initInventoryView();
     if (viewId === 'settings') loadSettings();
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }, 50);
@@ -449,7 +451,7 @@ function renderKotPrinters() {
       </div>
     </div>
   `}).join('');
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function openKotConfig(id) {
@@ -633,6 +635,7 @@ async function loadDashboard() {
   if (AppState.dashboard) renderDashboard(AppState.dashboard.orders, AppState.dashboard.calls, AppState.dashboard.tablesData);
   else showLoader();
   try {
+    checkInventoryAlerts();
     const promises = [
       fetchAPI('/api/admin/orders?date=today'),
       fetchAPI('/api/admin/waiter-calls'),
@@ -2306,7 +2309,7 @@ function renderHistory() {
   });
 
   tbody.innerHTML = html;
-  setTimeout(() => lucide.createIcons(), 100);
+  setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
 }
 
 function filterHistory() {
@@ -2987,4 +2990,403 @@ async function bootApp() {
     hideLoader();
     showView(hash);
   }, 200);
+}
+
+// ==========================================
+// INVENTORY MANAGEMENT LOGIC
+// ==========================================
+
+let currentInventoryTab = 'materials';
+let inventoryItemsList = [];
+
+function switchInventoryTab(tab) {
+  currentInventoryTab = tab;
+  ['materials', 'history', 'usage', 'vendors', 'wastage'].forEach(t => {
+    const el = document.getElementById(`inv-tab-${t}`);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+    const btn = document.getElementById(`btnInv${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (btn) {
+      if (t === tab) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+
+  if (tab === 'materials') loadInventoryItems();
+  else if (tab === 'history') loadStockHistory();
+  else if (tab === 'usage') loadStockUsage();
+  else if (tab === 'vendors') loadVendors();
+  else if (tab === 'wastage') loadWastage();
+}
+
+function initInventoryView() {
+  switchInventoryTab(currentInventoryTab);
+}
+
+// --- Raw Materials --- //
+
+async function loadInventoryItems() {
+  const items = await fetchAPI('/api/admin/inventory');
+  inventoryItemsList = items || [];
+  renderInventoryItems();
+}
+
+function renderInventoryItems() {
+  const tbody = document.getElementById('inventoryItemsTableBody');
+  if (!tbody) return;
+  
+  if (!inventoryItemsList || inventoryItemsList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No items found.</td></tr>';
+    return;
+  }
+
+  let html = '';
+  const now = new Date();
+  
+  inventoryItemsList.forEach(item => {
+    const isLowStock = item.quantity <= item.minimumStockLevel;
+    let expiryWarning = false;
+    let expiryText = 'N/A';
+    
+    if (item.expiryDate) {
+      const exp = new Date(item.expiryDate);
+      expiryText = exp.toLocaleDateString();
+      const diffDays = (exp - now) / (1000 * 60 * 60 * 24);
+      if (diffDays <= 7) expiryWarning = true; // Warning if expiring within 7 days
+    }
+
+    const qtyColor = isLowStock ? 'color: var(--danger-color); font-weight: bold;' : '';
+    const expColor = expiryWarning ? 'color: var(--danger-color); font-weight: bold;' : '';
+
+    html += `
+      <tr>
+        <td>${new Date(item.createdAt).toLocaleDateString()}</td>
+        <td>${item.name}</td>
+        <td style="${qtyColor}">${item.quantity} ${item.unit}</td>
+        <td>${item.minimumStockLevel} ${item.unit}</td>
+        <td style="${expColor}">${expiryText}</td>
+        <td>
+          <button class="btn btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick='editInventoryItem(${JSON.stringify(item).replace(/'/g, "&#39;")})'><i data-lucide="edit" style="width:14px;height:14px;"></i></button>
+          <button class="btn btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--danger-color); border-color: var(--danger-color);" onclick="deleteInventoryItem('${item.id}')"><i data-lucide="trash" style="width:14px;height:14px;"></i></button>
+        </td>
+      </tr>
+    `;
+  });
+  
+  tbody.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function openInventoryItemModal() {
+  document.getElementById('invItemId').value = '';
+  document.getElementById('inventoryItemForm').reset();
+  document.getElementById('invItemDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('invModalTitle').innerText = 'Add Raw Material';
+  document.getElementById('inventoryItemModal').classList.remove('hidden');
+}
+
+function editInventoryItem(item) {
+  document.getElementById('invItemId').value = item.id;
+  document.getElementById('invItemName').value = item.name;
+  if (item.createdAt) {
+    document.getElementById('invItemDate').value = new Date(item.createdAt).toISOString().split('T')[0];
+  }
+  document.getElementById('invItemQty').value = item.quantity;
+  document.getElementById('invItemUnit').value = item.unit;
+  document.getElementById('invItemMin').value = item.minimumStockLevel;
+  if (item.expiryDate) {
+    document.getElementById('invItemExpiry').value = item.expiryDate.split('T')[0];
+  } else {
+    document.getElementById('invItemExpiry').value = '';
+  }
+  document.getElementById('invModalTitle').innerText = 'Edit Raw Material';
+  document.getElementById('inventoryItemModal').classList.remove('hidden');
+}
+
+async function saveInventoryItem(e) {
+  e.preventDefault();
+  const id = document.getElementById('invItemId').value;
+  
+  const payload = {
+    name: document.getElementById('invItemName').value,
+    createdAt: document.getElementById('invItemDate').value,
+    quantity: document.getElementById('invItemQty').value,
+    unit: document.getElementById('invItemUnit').value,
+    minimumStockLevel: document.getElementById('invItemMin').value,
+    expiryDate: document.getElementById('invItemExpiry').value
+  };
+
+  showLoader();
+  const res = await fetchAPI(id ? `/api/admin/inventory/${id}` : '/api/admin/inventory', id ? 'PUT' : 'POST', payload);
+  hideLoader();
+
+  if (res) {
+    closeModal('inventoryItemModal');
+    loadInventoryItems();
+    checkInventoryAlerts();
+  }
+}
+
+async function deleteInventoryItem(id) {
+  if (!confirm('Are you sure you want to delete this inventory item?')) return;
+  showLoader();
+  await fetchAPI(`/api/admin/inventory/${id}`, 'DELETE');
+  hideLoader();
+  loadInventoryItems();
+}
+
+
+// --- Purchase History (Stock Additions) --- //
+async function loadStockHistory() {
+  const history = await fetchAPI('/api/admin/inventory/stock');
+  const tbody = document.getElementById('stockHistoryTableBody');
+  if (!tbody) return;
+  
+  if (!history || history.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No purchase history found.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = history.map(h => `
+    <tr>
+      <td>${new Date(h.createdAt).toLocaleDateString()}</td>
+      <td><strong>${h.inventoryItem?.name || 'Unknown'}</strong></td>
+      <td style="color: var(--primary); font-weight: bold;">+${h.quantityAdded} ${h.inventoryItem?.unit || ''}</td>
+      <td>${h.cost ? '₹' + h.cost : '-'}</td>
+      <td>${h.vendor?.name || '-'}</td>
+    </tr>
+  `).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function openStockModal() {
+  const items = await fetchAPI('/api/admin/inventory');
+  const vendors = await fetchAPI('/api/admin/inventory/vendors');
+  
+  const itemSelect = document.getElementById('stockItemSelect');
+  itemSelect.innerHTML = '<option value="">-- Select Item --</option>' + (items || []).map(i => `<option value="${i.id}">${i.name} (Current: ${i.quantity} ${i.unit})</option>`).join('');
+  
+  const vendorSelect = document.getElementById('stockVendorSelect');
+  vendorSelect.innerHTML = '<option value="">-- No Vendor / Internal --</option>' + (vendors || []).map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+  
+  document.getElementById('stockForm').reset();
+  const dateInput = document.getElementById('stockDate');
+  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  document.getElementById('stockModal').classList.remove('hidden');
+}
+
+async function saveStock(e) {
+  e.preventDefault();
+  const payload = {
+    inventoryItemId: document.getElementById('stockItemSelect').value,
+    date: document.getElementById('stockDate') ? document.getElementById('stockDate').value : null,
+    quantityAdded: document.getElementById('stockQty').value,
+    cost: document.getElementById('stockCost').value,
+    vendorId: document.getElementById('stockVendorSelect').value,
+    notes: document.getElementById('stockNotes').value
+  };
+  showLoader();
+  const res = await fetchAPI('/api/admin/inventory/stock', 'POST', payload);
+  hideLoader();
+  if (res) {
+    closeModal('stockModal');
+    loadStockHistory();
+    checkInventoryAlerts();
+  }
+}
+
+
+// --- Stock Usage (Daily Consumption) --- //
+async function loadStockUsage() {
+  const usageList = await fetchAPI('/api/admin/inventory/usage');
+  const tbody = document.getElementById('stockUsageTableBody');
+  if (!tbody) return;
+  
+  if (!usageList || usageList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No stock usage logged yet.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = usageList.map(u => `
+    <tr>
+      <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+      <td><strong>${u.inventoryItem?.name || 'Unknown'}</strong></td>
+      <td style="color: var(--danger-color); font-weight: bold;">-${u.quantityUsed} ${u.inventoryItem?.unit || ''}</td>
+      <td>${u.cost ? '₹' + u.cost : '-'}</td>
+      <td>${u.notes || '-'}</td>
+    </tr>
+  `).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function openUsageModal() {
+  const items = await fetchAPI('/api/admin/inventory');
+  
+  const itemSelect = document.getElementById('usageItemSelect');
+  itemSelect.innerHTML = '<option value="">-- Select Item --</option>' + (items || []).map(i => `<option value="${i.id}">${i.name} (Available: ${i.quantity} ${i.unit})</option>`).join('');
+  
+  document.getElementById('usageForm').reset();
+  const dateInput = document.getElementById('usageDate');
+  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  document.getElementById('usageModal').classList.remove('hidden');
+}
+
+async function saveUsage(e) {
+  e.preventDefault();
+  const payload = {
+    inventoryItemId: document.getElementById('usageItemSelect').value,
+    date: document.getElementById('usageDate') ? document.getElementById('usageDate').value : null,
+    quantityUsed: document.getElementById('usageQty').value,
+    cost: document.getElementById('usageCost').value,
+    notes: document.getElementById('usageNotes').value
+  };
+  showLoader();
+  const res = await fetchAPI('/api/admin/inventory/usage', 'POST', payload);
+  hideLoader();
+  if (res) {
+    closeModal('usageModal');
+    loadStockUsage();
+    checkInventoryAlerts();
+  }
+}
+
+
+// --- Vendors --- //
+async function loadVendors() {
+  const vendors = await fetchAPI('/api/admin/inventory/vendors');
+  const tbody = document.getElementById('vendorsTableBody');
+  if (!tbody) return;
+  
+  if (!vendors || vendors.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No vendors found.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = vendors.map(v => `
+    <tr>
+      <td><strong>${v.name}</strong></td>
+      <td>${v.contactName || '-'}</td>
+      <td>${v.phone || '-'}</td>
+      <td>
+         <button class="btn btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--danger-color); border-color: var(--danger-color);" onclick="deleteVendor('${v.id}')"><i data-lucide="trash" style="width:14px;height:14px;"></i></button>
+      </td>
+    </tr>
+  `).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function openVendorModal() {
+  document.getElementById('vendorForm').reset();
+  document.getElementById('vendorModal').classList.remove('hidden');
+}
+
+async function saveVendor(e) {
+  e.preventDefault();
+  const payload = {
+    name: document.getElementById('vendorName').value,
+    contactName: document.getElementById('vendorContact').value,
+    phone: document.getElementById('vendorPhone').value
+  };
+  showLoader();
+  const res = await fetchAPI('/api/admin/inventory/vendors', 'POST', payload);
+  hideLoader();
+  if (res) {
+    closeModal('vendorModal');
+    loadVendors();
+  }
+}
+
+async function deleteVendor(id) {
+  if (!confirm('Delete this vendor?')) return;
+  await fetchAPI(`/api/admin/inventory/vendors/${id}`, 'DELETE');
+  loadVendors();
+}
+
+
+// --- Wastage --- //
+async function loadWastage() {
+  const logs = await fetchAPI('/api/admin/inventory/wastage');
+  const tbody = document.getElementById('wastageTableBody');
+  if (!tbody) return;
+  
+  if (!logs || logs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No wastage logged.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = logs.map(l => `
+    <tr>
+      <td>${new Date(l.createdAt).toLocaleString()}</td>
+      <td><strong>${l.inventoryItem?.name || 'Unknown Item'}</strong></td>
+      <td>${l.quantity} ${l.inventoryItem?.unit || ''}</td>
+      <td>${l.reason || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+async function openWastageModal() {
+  const items = await fetchAPI('/api/admin/inventory');
+  const select = document.getElementById('wastageItemSelect');
+  select.innerHTML = '<option value="">-- Select Item --</option>' + (items || []).map(i => `<option value="${i.id}">${i.name} (Current: ${i.quantity} ${i.unit})</option>`).join('');
+  document.getElementById('wastageForm').reset();
+  document.getElementById('wastageModal').classList.remove('hidden');
+}
+
+async function saveWastage(e) {
+  e.preventDefault();
+  const payload = {
+    inventoryItemId: document.getElementById('wastageItemSelect').value,
+    quantity: document.getElementById('wastageQty').value,
+    reason: document.getElementById('wastageReason').value
+  };
+  showLoader();
+  const res = await fetchAPI('/api/admin/inventory/wastage', 'POST', payload);
+  hideLoader();
+  if (res) {
+    closeModal('wastageModal');
+    loadWastage();
+    checkInventoryAlerts(); 
+  }
+}
+
+// --- Dashboard Alerts --- //
+async function checkInventoryAlerts() {
+  const container = document.getElementById('inventoryAlertsContainer');
+  if (!container) return;
+  
+  const items = await fetchAPI('/api/admin/inventory');
+  if (!items) return;
+  
+  const now = new Date();
+  const alerts = [];
+  
+  items.forEach(item => {
+    if (item.quantity <= item.minimumStockLevel) {
+      alerts.push({ type: 'low_stock', msg: `<strong>${item.name}</strong> is running low (${item.quantity} ${item.unit} left).` });
+    }
+    
+    if (item.expiryDate) {
+      const exp = new Date(item.expiryDate);
+      const diffDays = (exp - now) / (1000 * 60 * 60 * 24);
+      if (diffDays <= 7 && diffDays >= 0) {
+        alerts.push({ type: 'expiry', msg: `<strong>${item.name}</strong> is expiring soon (in ${Math.ceil(diffDays)} days).` });
+      } else if (diffDays < 0) {
+        alerts.push({ type: 'expired', msg: `<strong>${item.name}</strong> has EXPIRED!` });
+      }
+    }
+  });
+  
+  if (alerts.length > 0) {
+    container.style.display = 'flex';
+    container.innerHTML = alerts.map(a => `
+      <div style="background: ${a.type === 'expired' ? 'rgba(255,59,48,0.1)' : 'rgba(255,149,0,0.1)'}; 
+                  border-left: 4px solid ${a.type === 'expired' ? 'var(--danger-color)' : '#ff9500'}; 
+                  padding: 12px 16px; border-radius: 4px; display: flex; align-items: center; gap: 12px;">
+        <i data-lucide="${a.type === 'expired' ? 'alert-octagon' : 'alert-triangle'}" style="color: ${a.type === 'expired' ? 'var(--danger-color)' : '#ff9500'};"></i>
+        <div style="color: var(--text-color);">${a.msg}</div>
+      </div>
+    `).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  } else {
+    container.style.display = 'none';
+  }
 }

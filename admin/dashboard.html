@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Cloud Dine</title>
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <script>
@@ -19,8 +19,9 @@
   <!-- jsPDF for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <!-- Lucide Icons -->
+  <!-- Lucide Icons with fallback -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script>if (typeof lucide === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"><\/script>');</script>
 </head>
 <body>
   <script>
@@ -56,6 +57,7 @@
     <a class="nav-link" onclick="showView('waiter')"><i data-lucide="bell-ring"></i> Waiter Calls <span class="badge" id="waiterBadge" style="display:none;">0</span></a>
     <a class="nav-link" onclick="showView('waiters')"><i data-lucide="users"></i> Waiters</a>
     <a class="nav-link" onclick="showView('revenue')"><i data-lucide="indian-rupee"></i> Revenue</a>
+    <a class="nav-link" onclick="showView('inventory')"><i data-lucide="package"></i> Inventory</a>
     <a class="nav-link" onclick="showView('settings')"><i data-lucide="settings"></i> Settings</a>
     
     <a class="nav-link" onclick="openComplaintModal()" style="margin-top:auto;"><i data-lucide="message-circle-warning"></i> Send Complaint</a>
@@ -92,6 +94,7 @@
     <div class="content-body" id="viewsContainer">
       <!-- DASHBOARD VIEW -->
       <div id="view-dashboard" class="view">
+        <div id="inventoryAlertsContainer" style="margin-bottom: 24px; display: none; flex-direction: column; gap: 12px;"></div>
         <div class="dashboard-grid">
           <div class="stat-card">
             <div class="title">Today's Revenue</div>
@@ -599,6 +602,129 @@
   </div>
 
 
+      <!-- INVENTORY VIEW -->
+      <div id="view-inventory" class="view hidden">
+        <div class="header" style="margin-bottom: 20px;">
+          <h2>Inventory Management</h2>
+          <div style="display: flex; gap: 12px; background: var(--card-bg); padding: 4px; border-radius: 8px;">
+            <button class="btn btn-outline active" id="btnInvMaterials" onclick="switchInventoryTab('materials')">Raw Materials</button>
+            <button class="btn btn-outline" id="btnInvHistory" onclick="switchInventoryTab('history')">Purchase History</button>
+            <button class="btn btn-outline" id="btnInvUsage" onclick="switchInventoryTab('usage')">Usage</button>
+            <button class="btn btn-outline" id="btnInvVendors" onclick="switchInventoryTab('vendors')">Vendors</button>
+            <button class="btn btn-outline" id="btnInvWastage" onclick="switchInventoryTab('wastage')">Wastage Log</button>
+          </div>
+        </div>
+        
+        <!-- Raw Materials Tab -->
+        <div id="inv-tab-materials">
+          <div class="header">
+            <h3>Raw Materials & Stock</h3>
+            <button class="btn" onclick="openInventoryItemModal()"><i data-lucide="plus"></i> Add Item</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date Added</th>
+                  <th>Item Name</th>
+                  <th>Quantity (Unit)</th>
+                  <th>Min Stock</th>
+                  <th>Expiry Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryItemsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Purchase History Tab -->
+        <div id="inv-tab-history" style="display: none;">
+          <div class="header">
+            <h3>Purchase History</h3>
+            <button class="btn" onclick="openStockModal()"><i data-lucide="plus"></i> Add Stock</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item</th>
+                  <th>Quantity Added</th>
+                  <th>Cost</th>
+                  <th>Vendor</th>
+                </tr>
+              </thead>
+              <tbody id="stockHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Usage Tab -->
+        <div id="inv-tab-usage" style="display: none;">
+          <div class="header">
+            <h3>Daily Stock Usage History</h3>
+            <button class="btn" onclick="openUsageModal()"><i data-lucide="plus"></i> Log Usage</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item Name</th>
+                  <th>Quantity Used</th>
+                  <th>Total Value (₹)</th>
+                  <th>Notes / Purpose</th>
+                </tr>
+              </thead>
+              <tbody id="stockUsageTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Vendors Tab -->
+        <div id="inv-tab-vendors" style="display: none;">
+          <div class="header">
+            <h3>Vendors & Suppliers</h3>
+            <button class="btn" onclick="openVendorModal()"><i data-lucide="plus"></i> Add Vendor</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Vendor Name</th>
+                  <th>Contact</th>
+                  <th>Phone</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vendorsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Wastage Tab -->
+        <div id="inv-tab-wastage" style="display: none;">
+          <div class="header">
+            <h3>Wastage Log</h3>
+            <button class="btn" onclick="openWastageModal()"><i data-lucide="plus"></i> Log Wastage</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="wastageTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- SETTINGS VIEW -->
       <div id="view-settings" class="view hidden">
         <div class="panel" style="max-width: 500px;">
@@ -770,7 +896,7 @@
             inp.type = 'password';
             eye.setAttribute('data-lucide', 'eye');
           }
-          lucide.createIcons();
+          if (typeof lucide !== 'undefined') lucide.createIcons();
         }
       </script>
       <div style="display:flex; gap:12px; margin-top:8px;">
@@ -1008,9 +1134,171 @@
     };
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js?v=11"></script>
+  <!-- INVENTORY ITEM MODAL -->
+  <!-- Add Stock Modal -->
+  <div class="modal-overlay hidden" id="stockModal">
+    <div class="modal" style="max-width: 450px;">
+      <button class="close-btn" onclick="closeModal('stockModal')" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--text-color);"><i data-lucide="x"></i></button>
+      <h2>Add Stock</h2>
+      <form id="stockForm" onsubmit="saveStock(event)">
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label>Select Item <span style="color:var(--danger-color)">*</span></label>
+            <select id="stockItemSelect" class="login-input" required></select>
+          </div>
+          <div>
+            <label>Purchase Date</label>
+            <input type="date" id="stockDate" class="login-input">
+          </div>
+          <div>
+            <label>Quantity Bought <span style="color:var(--danger-color)">*</span></label>
+            <input type="number" id="stockQty" class="login-input" step="0.01" required>
+          </div>
+          <div>
+            <label>Total Cost (₹)</label>
+            <input type="number" id="stockCost" class="login-input" step="0.01">
+          </div>
+          <div>
+            <label>Vendor</label>
+            <select id="stockVendorSelect" class="login-input"></select>
+          </div>
+          <div>
+            <label>Notes</label>
+            <input type="text" id="stockNotes" class="login-input">
+          </div>
+          <button type="submit" class="btn" style="width:100%; margin-top:8px;">Log Purchase</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Usage Modal -->
+  <div class="modal-overlay hidden" id="usageModal">
+    <div class="modal" style="max-width: 450px;">
+      <button class="close-btn" onclick="closeModal('usageModal')" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--text-color);"><i data-lucide="x"></i></button>
+      <h2>Log Stock Usage</h2>
+      <form id="usageForm" onsubmit="saveUsage(event)">
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label>Select Item <span style="color:var(--danger-color)">*</span></label>
+            <select id="usageItemSelect" class="login-input" required></select>
+          </div>
+          <div>
+            <label>Usage Date</label>
+            <input type="date" id="usageDate" class="login-input">
+          </div>
+          <div>
+            <label>Quantity Used <span style="color:var(--danger-color)">*</span></label>
+            <input type="number" id="usageQty" class="login-input" step="0.01" placeholder="e.g. 5" required>
+          </div>
+          <div>
+            <label>Estimated Value (₹)</label>
+            <input type="number" id="usageCost" class="login-input" step="0.01" placeholder="e.g. 150">
+          </div>
+          <div>
+            <label>Notes / Purpose</label>
+            <input type="text" id="usageNotes" class="login-input" placeholder="e.g. Kitchen prep for lunch">
+          </div>
+          <button type="submit" class="btn" style="width:100%; margin-top:8px;">Log Usage (Deducts Stock)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="inventoryItemModal">
+    <div class="modal" style="max-width: 500px;">
+      <h3 id="invModalTitle" style="margin-bottom: 16px;">Add Raw Material</h3>
+      <button class="close-btn" onclick="closeModal('inventoryItemModal')" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--text-color);"><i data-lucide="x"></i></button>
+      <form id="inventoryItemForm" onsubmit="saveInventoryItem(event)">
+        <input type="hidden" id="invItemId">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-muted); font-weight: 500;">Item Name <span style="color: var(--danger-color)">*</span></label>
+          <input type="text" id="invItemName" class="form-control" required placeholder="e.g. Tomatoes" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-muted); font-weight: 500;">Date Added</label>
+          <input type="date" id="invItemDate" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label style="display: block; margin-bottom: 8px;">Current Quantity</label>
+            <input type="number" id="invItemQty" class="form-control" step="0.01" required value="0" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+          </div>
+          <div class="form-group">
+            <label style="display: block; margin-bottom: 8px;">Unit (kg, L, pcs)</label>
+            <input type="text" id="invItemUnit" class="form-control" required placeholder="e.g. kg" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Minimum Stock Level (Alert Threshold)</label>
+          <input type="number" id="invItemMin" class="form-control" step="0.01" value="0" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        
+        <div style="margin: 15px 0; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="margin-bottom: 10px; color: var(--gold-primary);">Optional Expiry Tracking</h4>
+          <div class="form-group">
+            <label style="display: block; margin-bottom: 8px;">Expected Expiry Date</label>
+            <input type="date" id="invItemExpiry" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+            <small style="color: var(--text-muted); display: block; margin-top: 4px;">We will notify you on the dashboard before this expires.</small>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: var(--gold-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 8px;">Save Item</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- VENDOR MODAL -->
+  <div class="modal-overlay hidden" id="vendorModal">
+    <div class="modal" style="max-width: 400px; position: relative;">
+      <h3 style="margin-bottom: 16px;">Add Vendor</h3>
+      <button class="close-btn" onclick="closeModal('vendorModal')" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--text-color);"><i data-lucide="x"></i></button>
+      <form id="vendorForm" onsubmit="saveVendor(event)">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Vendor Name</label>
+          <input type="text" id="vendorName" class="form-control" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Contact Person</label>
+          <input type="text" id="vendorContact" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Phone</label>
+          <input type="text" id="vendorPhone" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: var(--gold-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 8px;">Save Vendor</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- WASTAGE MODAL -->
+  <div class="modal-overlay hidden" id="wastageModal">
+    <div class="modal" style="max-width: 400px; position: relative;">
+      <h3 style="margin-bottom: 16px;">Log Wastage</h3>
+      <button class="close-btn" onclick="closeModal('wastageModal')" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--text-color);"><i data-lucide="x"></i></button>
+      <form id="wastageForm" onsubmit="saveWastage(event)">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Select Item</label>
+          <select id="wastageItemSelect" class="form-control" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);"></select>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Quantity Lost/Spoiled</label>
+          <input type="number" step="0.01" id="wastageQty" class="form-control" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Reason</label>
+          <input type="text" id="wastageReason" class="form-control" placeholder="e.g. Expired, Spilled" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color);">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: var(--danger-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 8px;">Log Wastage (Deducts Stock)</button>
+      </form>
+    </div>
+  </div>
+  
+  <script src="app.js?v=20"></script>
   <script>
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+      try { lucide.createIcons(); } catch(e) { console.warn('Lucide icons error:', e); }
+    }
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
     if (typeof bootApp === 'function') bootApp(); else showView('dashboard');
   </script>

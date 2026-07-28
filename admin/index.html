@@ -456,7 +456,7 @@
   </div>
 
   <script>
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     
     function togglePwd() {
       const inp = document.getElementById('password');
@@ -468,7 +468,7 @@
         inp.type = 'password';
         btn.setAttribute('data-lucide', 'eye');
       }
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {

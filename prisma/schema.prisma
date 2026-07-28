@@ -39,6 +39,12 @@ model Restaurant {
   tableCategories    TableCategory[]
   tables             Table[]
   kotPrinters        KotPrinter[]
+  inventoryItems     InventoryItem[]
+  vendors            Vendor[]
+  purchaseOrders     PurchaseOrder[]
+  wastageLogs        WastageLog[]
+  stockTransactions  StockTransaction[]
+  stockUsages        StockUsage[]
 }
 
 model MenuItem {
@@ -56,6 +62,7 @@ model MenuItem {
 
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
+  recipeIngredients RecipeIngredient[]
 }
 
 model Order {
@@ -211,4 +218,103 @@ model KotPrinter {
   createdAt      DateTime   @default(now())
 
   restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model InventoryItem {
+  id                 String     @id @default(cuid())
+  restaurantId       String
+  name               String
+  quantity           Float      @default(0)
+  unit               String     // e.g., kg, L, pieces
+  minimumStockLevel  Float      @default(0)
+  expiryDate         DateTime?
+  pricePerUnit       Float      @default(0)
+  createdAt          DateTime   @default(now())
+  
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  recipeIngredients  RecipeIngredient[]
+  wastageLogs        WastageLog[]
+  stockTransactions  StockTransaction[]
+  stockUsages        StockUsage[]
+  
+  @@unique([restaurantId, name])
+}
+
+model RecipeIngredient {
+  id               String     @id @default(cuid())
+  menuItemId       String
+  inventoryItemId  String
+  quantityRequired Float
+  
+  menuItem         MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  inventoryItem    InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@unique([menuItemId, inventoryItemId])
+}
+
+model Vendor {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  contactName  String?
+  phone        String?
+  email        String?
+  address      String?
+  createdAt    DateTime   @default(now())
+  
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+  stockTransactions StockTransaction[]
+}
+
+model PurchaseOrder {
+  id           String     @id @default(cuid())
+  restaurantId String
+  vendorId     String
+  status       String     @default("pending") // pending, received, cancelled
+  totalAmount  Float      @default(0)
+  createdAt    DateTime   @default(now())
+  
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  vendor       Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+}
+
+model WastageLog {
+  id               String     @id @default(cuid())
+  restaurantId     String
+  inventoryItemId  String
+  quantity         Float
+  reason           String?
+  createdAt        DateTime   @default(now())
+  
+  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  inventoryItem    InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+}
+
+model StockTransaction {
+  id              String   @id @default(uuid())
+  restaurantId    String
+  inventoryItemId String
+  vendorId        String?
+  quantityAdded   Float
+  cost            Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  restaurant      Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  vendor          Vendor?        @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+}
+
+model StockUsage {
+  id              String   @id @default(uuid())
+  restaurantId    String
+  inventoryItemId String
+  quantityUsed    Float
+  cost            Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  restaurant      Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
 }
