@@ -57,14 +57,22 @@ app.get('/', (req, res) => res.redirect('/customer'));
 
 const prisma = require('./db');
 
-// Test DB connection on startup
-async function connectDB() {
-  try {
-    await prisma.$connect();
-    console.log('✅ CockroachDB connected via Prisma');
-  } catch (err) {
-    console.error('❌ DB connection failed:', err);
-    process.exit(1);
+// Test DB connection on startup with automatic retries
+async function connectDB(retries = 5, delay = 3000) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      await prisma.$connect();
+      console.log('✅ CockroachDB connected via Prisma');
+      return;
+    } catch (err) {
+      console.error(`❌ DB connection attempt ${i}/${retries} failed:`, err.message || err);
+      if (i < retries) {
+        console.log(`Retrying in ${delay / 1000} seconds...`);
+        await new Promise(res => setTimeout(res, delay));
+      } else {
+        console.error('❌ Could not connect to CockroachDB after multiple retries.');
+      }
+    }
   }
 }
 connectDB();
@@ -119,6 +127,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/master', require('./routes/master'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/admin/inventory', require('./routes/inventory'));
 app.use('/api/customer', require('./routes/customer'));
 app.use('/api/waiter', require('./routes/waiter'));
 
