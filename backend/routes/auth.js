@@ -42,6 +42,7 @@ router.post('/admin/login', async (req, res) => {
 
     res.json({ token, restaurantId: restaurant.id, message: 'Admin login successful' });
   } catch (err) {
+    console.error("Admin login error:", err);
     res.status(500).json({ message: 'Server error' });
   }
 });

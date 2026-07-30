@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Cart - Cloud Dine</title>
   <link rel="stylesheet" href="style.css?v=15">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
   <script>
     if (localStorage.getItem('theme') === 'light') {
@@ -17,85 +21,121 @@
 
   <header class="back-header" style="justify-content: space-between;">
     <button class="back-btn" onclick="window.location.href='menu.html'" style="display: flex; align-items: center;">
-      <svg viewBox="0 0 24 24" style="width: 24px; height: 24px;"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+      <svg viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+        <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
+      </svg>
     </button>
     <div class="header-title" style="flex: 1; text-align: center;">YOUR CART</div>
     <div style="display:flex; align-items:center; gap:16px;">
       <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌓</button>
-      <button onclick="clearCart()" style="background:transparent; border:none; color:var(--red); font-weight:bold; cursor:pointer; font-size: 14px;">CLEAR</button>
+      <button onclick="clearCart()"
+        style="background:transparent; border:none; color:var(--red); font-weight:bold; cursor:pointer; font-size: 14px;">CLEAR</button>
     </div>
   </header>
 
   <div class="cart-list" id="cartContainer" style="padding-bottom: 0;"></div>
 
-  <div class="cart-summary" id="cartSummary" style="display:none; margin: 20px; background:var(--panel-color); border:1px solid var(--border-color); border-radius:16px; padding:20px;">
-    <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;"><span>Items</span><span id="summaryItems">0</span></div>
-    <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;"><span>Subtotal</span><span id="summarySubTotal">₹0</span></div>
-    <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;"><span id="gstLabel">GST</span><span id="summaryGST">₹0</span></div>
-    <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;"><span>Tip</span><span id="summaryTip">₹0</span></div>
-    <div class="summary-row total" style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border-top: 1px dashed var(--border-color); padding-top: 16px;"><span style="color:var(--text-primary);">Total</span><span id="summaryTotal" style="color:var(--gold-primary);">₹0</span></div>
-    
+  <div class="cart-summary" id="cartSummary"
+    style="display:none; margin: 20px; background:var(--panel-color); border:1px solid var(--border-color); border-radius:16px; padding:20px;">
+    <div class="summary-row"
+      style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">
+      <span>Items</span><span id="summaryItems">0</span></div>
+    <div class="summary-row"
+      style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">
+      <span>Subtotal</span><span id="summarySubTotal">₹0</span></div>
+    <div class="summary-row"
+      style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">
+      <span id="gstLabel">GST</span><span id="summaryGST">₹0</span></div>
+    <div class="summary-row"
+      style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+      <span>Tip</span><span id="summaryTip">₹0</span></div>
+    <div class="summary-row total"
+      style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border-top: 1px dashed var(--border-color); padding-top: 16px;">
+      <span style="color:var(--text-primary);">Total</span><span id="summaryTotal"
+        style="color:var(--gold-primary);">₹0</span></div>
+
     <div style="margin: 24px 0 16px;">
-      <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Add a Tip <span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">(Optional)</span></div>
+      <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Add a Tip <span
+          style="font-size:12px; font-weight:normal; color:var(--text-secondary);">(Optional)</span></div>
       <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
-        <button class="tip-btn active" onclick="setTip(0)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--gold-primary); background:var(--gold-primary); color:#000; font-weight:bold; cursor:pointer;">No Tip</button>
-        <button class="tip-btn" onclick="setTip(10)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹10</button>
-        <button class="tip-btn" onclick="setTip(20)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹20</button>
-        <button class="tip-btn" onclick="setTip(50)" style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹50</button>
+        <button class="tip-btn active" onclick="setTip(0)"
+          style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--gold-primary); background:var(--gold-primary); color:#000; font-weight:bold; cursor:pointer;">No
+          Tip</button>
+        <button class="tip-btn" onclick="setTip(10)"
+          style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹10</button>
+        <button class="tip-btn" onclick="setTip(20)"
+          style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹20</button>
+        <button class="tip-btn" onclick="setTip(50)"
+          style="flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--text-primary); cursor:pointer;">₹50</button>
       </div>
     </div>
 
     <button class="btn-primary-large" style="width:100%; margin:8px 0 0;" onclick="placeOrder()">Place Order</button>
   </div>
 
-  <a href="https://www.clouddine.store/" target="_blank" style="margin: 32px 0 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85; text-decoration: none;">
-      <img src="logo.png" style="height: 48px; width: auto; object-fit: contain; margin-bottom: 8px;" alt="Cloud Dine Logo">
+  <a href="https://www.clouddine.store/" target="_blank"
+    style="margin: 32px 0 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0.85; text-decoration: none;">
+    <img src="logo.png" style="height: 48px; width: auto; object-fit: contain; margin-bottom: 8px;"
+      alt="Cloud Dine Logo">
     <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
-      Created by <br/>
-      <span style="color: var(--text-primary); font-weight: 700; font-size: 13px;">Cloud</span> <span style="color: var(--gold-primary); font-weight: 700; font-size: 13px;">Dine</span>
+      Created by <br />
+      <span style="color: var(--text-primary); font-weight: 700; font-size: 13px;">Cloud</span> <span
+        style="color: var(--gold-primary); font-weight: 700; font-size: 13px;">Dine</span>
     </div>
   </a>
 
   <!-- Success Popup -->
   <div id="orderSuccessPopup" class="popup-overlay">
-    <div class="popup-box" style="padding: 32px 24px; width: 85%; max-width: 320px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
+    <div class="popup-box"
+      style="padding: 32px 24px; width: 85%; max-width: 320px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
       <div style="display: flex; justify-content: center; margin-bottom: 16px;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(34, 197, 94, 0.15); display: flex; align-items: center; justify-content: center;">
-          <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: var(--green);"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <div
+          style="width: 56px; height: 56px; border-radius: 50%; background: rgba(34, 197, 94, 0.15); display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: var(--green);">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
         </div>
       </div>
-      <h2 style="font-family:'Playfair Display', serif; font-size: 24px; color:var(--gold-primary); margin-bottom: 8px;">Order Placed!</h2>
-      <p style="color:var(--text-secondary); font-size: 13px; line-height: 1.5; margin-bottom: 24px;">Your order <span id="placedOrderNo" style="color:white; font-weight:bold;"></span> has been successfully sent to the kitchen.</p>
-      <button onclick="window.location.href='order-status.html'" style="background: linear-gradient(135deg, var(--gold-primary), #d4983e); border: none; padding: 14px; width: 100%; border-radius: 30px; font-weight: bold; color: #000; font-size: 14px; cursor: pointer; box-shadow: 0 8px 16px rgba(235, 178, 91, 0.2);">Track Order</button>
+      <h2
+        style="font-family:'Playfair Display', serif; font-size: 24px; color:var(--gold-primary); margin-bottom: 8px;">
+        Order Placed!</h2>
+      <p style="color:var(--text-secondary); font-size: 13px; line-height: 1.5; margin-bottom: 24px;">Your order <span
+          id="placedOrderNo" style="color:white; font-weight:bold;"></span> has been successfully sent to the kitchen.
+      </p>
+      <button onclick="window.location.href='order-status.html'"
+        style="background: linear-gradient(135deg, var(--gold-primary), #d4983e); border: none; padding: 14px; width: 100%; border-radius: 30px; font-weight: bold; color: #000; font-size: 14px; cursor: pointer; box-shadow: 0 8px 16px rgba(235, 178, 91, 0.2);">Track
+        Order</button>
     </div>
   </div>
 
   <!-- Passcode Prompt Modal -->
   <div class="popup-overlay" id="passcodePromptOverlay" style="align-items:center; justify-content:center;">
-    <div class="popup-box" style="text-align:center; border-radius:24px; padding:32px 24px; width:85%; max-width:320px; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(235,178,91,0.2);">
-      
+    <div class="popup-box"
+      style="text-align:center; border-radius:24px; padding:32px 24px; width:85%; max-width:320px; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(235,178,91,0.2);">
+
       <!-- Lock Icon Circle -->
-      <div style="background: rgba(235,178,91,0.12); width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:2px solid rgba(235,178,91,0.3);">
+      <div
+        style="background: rgba(235,178,91,0.12); width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:2px solid rgba(235,178,91,0.3);">
         <i data-lucide="lock" style="width:34px; height:34px; color:#EBB25B; stroke-width:2;"></i>
       </div>
-      
-      <h2 style="font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">Table Passcode Required</h2>
-      <p style="color:var(--text-secondary); font-size:13px; margin-bottom:22px; line-height:1.6;">Please ask your waiter for the 4-digit table passcode to confirm your order.</p>
-      
-      <input type="number" id="orderPasscodeInput" placeholder="****"
-        style="width:100%; padding:16px; text-align:center; font-size:24px; letter-spacing:12px; font-weight:700;
+
+      <h2
+        style="font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">
+        Table Passcode Required</h2>
+      <p style="color:var(--text-secondary); font-size:13px; margin-bottom:22px; line-height:1.6;">Please ask your
+        waiter for the 4-digit table passcode to confirm your order.</p>
+
+      <input type="number" id="orderPasscodeInput" placeholder="****" style="width:100%; padding:16px; text-align:center; font-size:24px; letter-spacing:12px; font-weight:700;
                border-radius:14px; border:2px solid rgba(235,178,91,0.4); background:rgba(235,178,91,0.06);
                color:var(--text-primary); margin-bottom:22px; outline:none;
-               font-family:'Inter',sans-serif;"
-        maxlength="4" oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">
-      
+               font-family:'Inter',sans-serif;" maxlength="4"
+        oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">
+
       <div style="display:flex; gap:12px;">
-        <button onclick="document.getElementById('passcodePromptOverlay').style.display='none'"
-          style="flex:1; padding:14px; border-radius:12px; border:1px solid rgba(235,178,91,0.3);
+        <button onclick="document.getElementById('passcodePromptOverlay').style.display='none'" style="flex:1; padding:14px; border-radius:12px; border:1px solid rgba(235,178,91,0.3);
                  background:transparent; color:var(--text-secondary); font-size:15px;
                  font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Cancel</button>
-        <button onclick="submitOrderWithPasscode()"
-          style="flex:1; padding:14px; border-radius:12px; border:none;
+        <button onclick="submitOrderWithPasscode()" style="flex:1; padding:14px; border-radius:12px; border:none;
                  background:linear-gradient(135deg,#EBB25B,#D4983E); color:#000;
                  font-size:15px; font-weight:700; cursor:pointer;
                  font-family:'Inter',sans-serif;
@@ -111,4 +151,5 @@
     lucide.createIcons();
   </script>
 </body>
+
 </html>

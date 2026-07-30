@@ -65,7 +65,7 @@ async function connectDB(retries = 5, delay = 3000) {
   for (let i = 1; i <= retries; i++) {
     try {
       await prisma.$connect();
-      console.log('✅ CockroachDB connected via Prisma');
+      console.log('✅ Neon PostgreSQL connected via Prisma');
       return;
     } catch (err) {
       console.error(`❌ DB connection attempt ${i}/${retries} failed:`, err.message || err);
@@ -73,7 +73,7 @@ async function connectDB(retries = 5, delay = 3000) {
         console.log(`Retrying in ${delay / 1000} seconds...`);
         await new Promise(res => setTimeout(res, delay));
       } else {
-        console.error('❌ Could not connect to CockroachDB after multiple retries.');
+        console.error('❌ Could not connect to Neon PostgreSQL after multiple retries.');
       }
     }
   }
