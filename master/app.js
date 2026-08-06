@@ -54,16 +54,27 @@ function toggleMobileSidebar(forceClose = false) {
 }
 
 function showView(viewId) {
-  document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
-  document.getElementById('view-' + viewId).classList.remove('hidden');
+  const targetView = document.getElementById('view-' + viewId);
+  if (!targetView) return;
+
+  document.querySelectorAll('.view').forEach(el => {
+    if (el.id === 'view-' + viewId) {
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
   
   // Safely set the active nav link
   document.querySelectorAll('.nav-link').forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`)) {
+    const isActive = link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`);
+    if (isActive) {
       link.classList.add('active');
+    } else {
+      link.classList.remove('active');
     }
   });
+
   const titles = {
     'dashboard': 'Dashboard',
     'restaurants': 'Restaurants',
@@ -76,20 +87,23 @@ function showView(viewId) {
     'support': 'Support Center',
     'settings': 'Platform Settings'
   };
-  document.getElementById('currentViewTitle').innerText = titles[viewId] || viewId;
+  const titleEl = document.getElementById('currentViewTitle');
+  if (titleEl) titleEl.innerText = titles[viewId] || viewId;
 
   // Close mobile sidebar on navigation
   toggleMobileSidebar(true);
 
-  setTimeout(() => {
-    if (viewId === 'dashboard') loadDashboard();
-    if (viewId === 'restaurants') loadRestaurants();
-    if (viewId === 'complaints') loadComplaints();
-    if (viewId === 'subscriptions') loadSubscriptions();
-    if (viewId === 'analytics') loadPlatformAnalytics();
-    if (viewId === 'announcements') renderAnnouncements();
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }, 50);
+  // Execute view loader immediately (no artificial delay)
+  if (viewId === 'dashboard') loadDashboard();
+  if (viewId === 'restaurants') loadRestaurants();
+  if (viewId === 'complaints') loadComplaints();
+  if (viewId === 'subscriptions') loadSubscriptions();
+  if (viewId === 'analytics') loadPlatformAnalytics();
+  if (viewId === 'announcements') renderAnnouncements();
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons({ root: targetView });
+  }
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {

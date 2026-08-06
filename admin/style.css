@@ -205,8 +205,20 @@ body {
   box-shadow: var(--card-shadow-hover);
 }
 
-.transition {
-  transition: all 0.2s ease;
+.view {
+  animation: viewFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+@keyframes viewFadeIn {
+  from {
+    opacity: 0.85;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hidden {

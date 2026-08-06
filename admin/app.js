@@ -49,60 +49,17 @@ function showLoader() {
   }
   loader.style.display = 'flex';
 }
-function hideLoader() {
-  loaderCount--;
+function hideLoader(force = false) {
+  if (force) {
+    loaderCount = 0;
+  } else {
+    loaderCount--;
+  }
   if (loaderCount <= 0) {
     loaderCount = 0;
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
   }
-}
-
-const token = localStorage.getItem('adminToken');
-const restaurantId = localStorage.getItem('adminRestaurantId');
-
-// Prevent ReferenceErrors and show a beautiful visual loader
-function showLoader() {
-  let loader = document.getElementById('globalLoader');
-  if (!loader) {
-    loader = document.createElement('div');
-    loader.id = 'globalLoader';
-    loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-dark, #121212);display:flex;align-items:center;justify-content:center;z-index:9999;';
-    loader.innerHTML = `
-      <style>
-        .loader-container { display: flex; justify-content: center; align-items: center; }
-        .loader-icon { width: 100px; height: 100px; }
-        .loader-icon svg { width: 100%; height: 100%; }
-        .steam { animation: steamRise 1.5s ease-out infinite; }
-        .steam-1 { animation-delay: 0s; }
-        .steam-2 { animation-delay: 0.5s; }
-        .steam-3 { animation-delay: 1.0s; }
-        @keyframes steamRise {
-          0% { opacity: 0; transform: translateY(10px) scaleY(0.8); }
-          50% { opacity: 1; transform: translateY(0px) scaleY(1); }
-          100% { opacity: 0; transform: translateY(-10px) scaleY(1.1); }
-        }
-      </style>
-      <div class="loader-container">
-        <div class="loader-icon">
-          <svg viewBox="0 0 100 100" fill="rgba(226, 97, 54, 1)">
-            <path d="M15 75h70v5H15z" />
-            <path d="M25 70 C 25 40, 75 40, 75 70 Z" />
-            <circle cx="50" cy="40" r="4" />
-            <path class="steam steam-1" d="M 35 35 Q 30 30 35 25 T 35 15" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
-            <path class="steam steam-2" d="M 50 30 Q 45 25 50 20 T 50 10" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
-            <path class="steam steam-3" d="M 65 35 Q 60 30 65 25 T 65 15" fill="none" stroke="rgba(226, 97, 54, 1)" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(loader);
-  }
-  loader.style.display = 'flex';
-}
-function hideLoader() {
-  const loader = document.getElementById('globalLoader');
-  if (loader) loader.style.display = 'none';
 }
 
 if (!token && !window.location.pathname.includes('index.html')) {
@@ -259,15 +216,23 @@ function toggleMobileSidebar(forceClose = false) {
 
 
 function showView(viewId) {
-  document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
-  document.getElementById('view-' + viewId).classList.remove('hidden');
+  const targetView = document.getElementById('view-' + viewId);
+  if (!targetView) return;
 
-  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(el => {
+    if (el.id === 'view-' + viewId) {
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
 
-  // Safely set the active nav link
   document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`)) {
+    const isActive = link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${viewId}'`);
+    if (isActive) {
       link.classList.add('active');
+    } else {
+      link.classList.remove('active');
     }
   });
 
@@ -284,26 +249,30 @@ function showView(viewId) {
     'inventory': 'Inventory Management',
     'settings': 'Settings'
   };
-  document.getElementById('currentViewTitle').innerText = titles[viewId];
+  const titleEl = document.getElementById('currentViewTitle');
+  if (titleEl && titles[viewId]) {
+    titleEl.innerText = titles[viewId];
+  }
 
   // Close mobile sidebar on navigation
   toggleMobileSidebar(true);
 
-  // Use setTimeout to allow the browser to paint the new UI state before running heavy JS/DOM operations
-  setTimeout(() => {
-    if (viewId === 'dashboard') loadDashboard();
-    if (viewId === 'orders') loadOrders();
-    if (viewId === 'tables') loadTablesView();
-    if (viewId === 'menu') loadMenu();
-    if (viewId === 'categories') loadCategories();
-    if (viewId === 'qr') loadQRCodes();
-    if (viewId === 'waiter') loadWaiterCalls();
-    if (viewId === 'waiters') loadWaiters();
-    if (viewId === 'revenue') loadRevenue();
-    if (viewId === 'inventory') initInventoryView();
-    if (viewId === 'settings') loadSettings();
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }, 50);
+  // Execute view loader immediately (no artificial delay)
+  if (viewId === 'dashboard') loadDashboard();
+  if (viewId === 'orders') loadOrders();
+  if (viewId === 'tables') loadTablesView();
+  if (viewId === 'menu') loadMenu();
+  if (viewId === 'categories') loadCategories();
+  if (viewId === 'qr') loadQRCodes();
+  if (viewId === 'waiter') loadWaiterCalls();
+  if (viewId === 'waiters') loadWaiters();
+  if (viewId === 'revenue') loadRevenue();
+  if (viewId === 'inventory') initInventoryView();
+  if (viewId === 'settings') loadSettings();
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons({ root: targetView });
+  }
 }
 
 async function fetchAPI(endpoint, method = 'GET', body = null) {
@@ -371,17 +340,12 @@ function getTableName(num) {
 }
 
 async function loadSettings() {
-  if (restaurantSettings) renderSettings(restaurantSettings, false);
-  else showLoader();
+  if (restaurantSettings) renderSettings(restaurantSettings);
   try {
     const data = await fetchAPI('/api/admin/settings');
-    if (!restaurantSettings || JSON.stringify(restaurantSettings) !== JSON.stringify(data)) {
-      restaurantSettings = data;
-      renderSettings(data, false);
-    }
-  } catch (e) { console.error(e); } finally {
-    hideLoader();
-  }
+    restaurantSettings = data;
+    renderSettings(data);
+  } catch (e) { console.error(e); }
 }
 
 function renderSettings(settings) {
@@ -633,7 +597,6 @@ function toggleTableSettings() {
 // DASHBOARD
 async function loadDashboard() {
   if (AppState.dashboard) renderDashboard(AppState.dashboard.orders, AppState.dashboard.calls, AppState.dashboard.tablesData);
-  else showLoader();
   try {
     checkInventoryAlerts();
     const promises = [
@@ -648,14 +611,9 @@ async function loadDashboard() {
     const calls = results[1];
     const tablesData = results[2];
 
-    const dataStr = JSON.stringify({ orders, calls, tablesData });
-    if (!AppState.dashboard || JSON.stringify(AppState.dashboard) !== dataStr) {
-      AppState.dashboard = { orders, calls, tablesData };
-      renderDashboard(orders, calls, tablesData);
-    }
-  } catch (e) { console.error(e); } finally {
-    hideLoader();
-  }
+    AppState.dashboard = { orders, calls, tablesData };
+    renderDashboard(orders, calls, tablesData);
+  } catch (e) { console.error(e); }
 }
 
 function renderDashboard(orders, calls, tablesData) {
@@ -782,17 +740,12 @@ function renderDashboard(orders, calls, tablesData) {
 // ORDERS
 async function loadOrders() {
   if (AppState.orders) renderOrders(AppState.orders);
-  else showLoader();
   try {
     const orders = await fetchAPI('/api/admin/orders');
     await getGlobalTables();
-    if (!AppState.orders || JSON.stringify(AppState.orders) !== JSON.stringify(orders)) {
-      AppState.orders = orders;
-      renderOrders(orders);
-    }
-  } catch (e) { console.error(e); } finally {
-    hideLoader();
-  }
+    AppState.orders = orders;
+    renderOrders(orders);
+  } catch (e) { console.error(e); }
 }
 
 function renderOrders(orders) {
@@ -890,7 +843,7 @@ function renderOrders(orders) {
       `;
   });
   grid.innerHTML = gridHtml;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: grid });
 }
 
 function updateOrderStatus(id, status, btn) {
@@ -914,17 +867,12 @@ function updateOrderStatus(id, status, btn) {
 // WAITER CALLS
 async function loadWaiterCalls() {
   if (AppState.waiterCalls) renderWaiterCalls(AppState.waiterCalls);
-  else showLoader();
   try {
     const calls = await fetchAPI('/api/admin/waiter-calls');
     await getGlobalTables();
-    if (!AppState.waiterCalls || JSON.stringify(AppState.waiterCalls) !== JSON.stringify(calls)) {
-      AppState.waiterCalls = calls;
-      renderWaiterCalls(calls);
-    }
-  } catch (e) { console.error(e); } finally {
-    hideLoader();
-  }
+    AppState.waiterCalls = calls;
+    renderWaiterCalls(calls);
+  } catch (e) { console.error(e); }
 }
 
 function renderWaiterCalls(calls) {
@@ -946,7 +894,6 @@ function renderWaiterCalls(calls) {
       `;
   });
   tbody.innerHTML = tbodyHtml;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 async function attendWaiterCall(id) {
@@ -958,20 +905,15 @@ async function attendWaiterCall(id) {
 let currentMenuData = [];
 async function loadMenu() {
   if (AppState.menu) renderMenu(AppState.menu);
-  else showLoader();
   try {
     const [menuRes, catRes] = await Promise.all([
       fetchAPI('/api/admin/menu'),
       fetchAPI('/api/admin/categories').catch(e => { console.error(e); return []; })
     ]);
     const data = { currentMenuData: menuRes, catSettings: catRes };
-    if (!AppState.menu || JSON.stringify(AppState.menu) !== JSON.stringify(data)) {
-      AppState.menu = data;
-      renderMenu(data);
-    }
-  } catch (e) { console.error(e); } finally {
-    hideLoader();
-  }
+    AppState.menu = data;
+    renderMenu(data);
+  } catch (e) { console.error(e); }
 }
 
 function renderMenu({ currentMenuData: menuRes, catSettings }) {
@@ -1254,20 +1196,15 @@ async function deleteMenuItem(id) {
 // CATEGORIES
 async function loadCategories() {
   if (AppState.categories) renderCategories(AppState.categories);
-  else showLoader();
   try {
     const [catSettings, menuData] = await Promise.all([
       fetchAPI('/api/admin/categories'),
       fetchAPI('/api/admin/menu')
     ]);
     const data = { catSettings, menuData };
-    if (!AppState.categories || JSON.stringify(AppState.categories) !== JSON.stringify(data)) {
-      AppState.categories = data;
-      renderCategories(data);
-    }
-  } catch (e) { console.error(e); } finally {
-    hideLoader();
-  }
+    AppState.categories = data;
+    renderCategories(data);
+  } catch (e) { console.error(e); }
 }
 
 function renderCategories({ catSettings, menuData }) {
@@ -1367,7 +1304,6 @@ function renderCategories({ catSettings, menuData }) {
 // TABLES Overview & Categories
 async function loadTablesView() {
   if (AppState.tables) renderTablesViewUI(AppState.tables);
-  else showLoader();
   try {
     const [settings, categories, tables] = await Promise.all([
       fetchAPI('/api/admin/settings'),
@@ -1379,14 +1315,10 @@ async function loadTablesView() {
     _globalTablesData = tables;
     
     const data = { settings, categories, tables };
-    if (!AppState.tables || JSON.stringify(AppState.tables) !== JSON.stringify(data)) {
-      AppState.tables = data;
-      renderTablesViewUI(data);
-    }
+    AppState.tables = data;
+    renderTablesViewUI(data);
   } catch (e) {
     console.error('Failed to load tables view', e);
-  } finally {
-    hideLoader();
   }
 }
 
@@ -1769,16 +1701,11 @@ function switchRevenueTab(tab) {
 
 async function loadRevenue() {
   if (AppState.revenue) renderRevenue(AppState.revenue);
-  else showLoader();
   try {
     const data = await fetchAPI('/api/admin/revenue');
-    if (!AppState.revenue || JSON.stringify(AppState.revenue) !== JSON.stringify(data)) {
-      AppState.revenue = data;
-      renderRevenue(data);
-    }
-  } catch (e) { console.error('Failed to load revenue', e); } finally {
-    hideLoader();
-  }
+    AppState.revenue = data;
+    renderRevenue(data);
+  } catch (e) { console.error('Failed to load revenue', e); }
 }
 
 function renderRevenue(data) {
@@ -1836,7 +1763,6 @@ function renderRevenue(data) {
 // ANALYTICS TAB
 async function loadAnalytics() {
   try {
-    showLoader();
     const periodSelect = document.getElementById('analyticsPeriod');
     const dateInput = document.getElementById('analyticsDate');
 

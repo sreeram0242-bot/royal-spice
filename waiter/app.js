@@ -42,9 +42,13 @@ function showTab(name) {
   const navBtn = document.getElementById('nav-' + name);
   if (navBtn) navBtn.classList.add('active');
 
-  if (name === 'tables') loadTables();
-  if (name === 'calls') loadCalls();
-  if (name === 'liveorders') loadLiveOrders();
+  if (name === 'tables') loadTables(window._allTablesData ? false : true);
+  if (name === 'calls') loadCalls(window._allCallsData ? false : true);
+  if (name === 'liveorders') loadLiveOrders(window._allLiveOrdersData ? false : true);
+
+  if (typeof lucide !== 'undefined' && tabContent) {
+    lucide.createIcons({ root: tabContent });
+  }
 }
 
 // ── LOAD SETTINGS ──

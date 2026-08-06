@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cloud-dine-admin-v1';
+const CACHE_NAME = 'cloud-dine-admin-v2';
 const ASSETS = [
   './index.html',
   './dashboard.html',
@@ -34,23 +34,22 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch Events (Network First, fallback to cache for admin panel to ensure live data)
+// Fetch Events: Stale-While-Revalidate for static assets (instant load, background refresh)
 self.addEventListener('fetch', event => {
-  // Only cache GET requests
   if (event.request.method !== 'GET') return;
-  // Don't cache API calls
   if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Update cache dynamically
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, resClone);
-        });
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then(cachedResponse => {
+      const fetchPromise = fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          const resClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
+        }
+        return networkResponse;
+      }).catch(err => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
