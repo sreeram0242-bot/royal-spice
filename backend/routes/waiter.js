@@ -4,6 +4,9 @@ const { authWaiter } = require('../middleware/auth');
 const prisma = require('../db');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+const QRCode = require('qrcode');
 
 // GET /api/waiter/settings — restaurant info for waiter
 router.get('/settings', authWaiter, async (req, res) => {
@@ -336,6 +339,139 @@ router.get('/live-orders', authWaiter, async (req, res) => {
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/waiter/table/:num/create-razorpay-order — Create official Razorpay Order & Dynamic UPI QR
+router.post('/table/:num/create-razorpay-order', authWaiter, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurantId = req.user.restaurantId;
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { name: true, razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true, gstPercent: true, paymentQrCode: true }
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+
+    const orders = await prisma.order.findMany({
+      where: { restaurantId, tableNumber, status: { not: 'completed' } },
+      include: { items: true }
+    });
+
+    if (orders.length === 0) {
+      return res.status(400).json({ message: 'No active orders found for this table' });
+    }
+
+    let subtotal = 0;
+    let totalTip = 0;
+    orders.forEach(o => {
+      totalTip += (o.tip || 0);
+      subtotal += (o.subtotal || 0);
+    });
+
+    const gstPercent = restaurant.gstPercent || 0;
+    const gstAmount = Math.round(subtotal * (gstPercent / 100));
+    const grandTotal = Math.round(subtotal + gstAmount + totalTip);
+    const amountInPaise = grandTotal * 100;
+
+    let razorpayOrderId = null;
+
+    if (restaurant.razorpayKeyId && restaurant.razorpayKeySecret) {
+      const razorpay = new Razorpay({
+        key_id: restaurant.razorpayKeyId,
+        key_secret: restaurant.razorpayKeySecret
+      });
+
+      const rzpOrder = await razorpay.orders.create({
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt: `tbl_${tableNumber}_${Date.now()}`
+      });
+      razorpayOrderId = rzpOrder.id;
+    }
+
+    // Dynamic UPI QR Code
+    const upiId = restaurant.razorpayKeyId ? `${restaurant.razorpayKeyId}@razorpay` : 'merchant@upi';
+    const upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(restaurant.name)}&am=${grandTotal}&tr=TBL${tableNumber}_${Date.now()}&tn=Table_${tableNumber}_Bill`;
+    const generatedQr = await QRCode.toDataURL(upiString);
+
+    res.json({
+      success: true,
+      grandTotal,
+      amountInPaise,
+      currency: 'INR',
+      razorpayOrderId,
+      keyId: restaurant.razorpayKeyId,
+      enableTestPayment: restaurant.enableTestPayment,
+      upiQrCodeUrl: restaurant.paymentQrCode || generatedQr,
+      restaurantName: restaurant.name
+    });
+  } catch (err) {
+    console.error('Razorpay order creation error:', err);
+    res.status(500).json({ message: err.message || 'Failed to create payment order' });
+  }
+});
+
+// POST /api/waiter/table/:num/verify-razorpay-payment — Cryptographically verify payment & auto-close session
+router.post('/table/:num/verify-razorpay-payment', authWaiter, async (req, res) => {
+  try {
+    const tableNumber = parseInt(req.params.num);
+    const restaurantId = req.user.restaurantId;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { razorpayKeySecret: true }
+    });
+
+    if (restaurant && restaurant.razorpayKeySecret && razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+      const body = razorpay_order_id + '|' + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', restaurant.razorpayKeySecret)
+        .update(body.toString())
+        .digest('hex');
+
+      if (expectedSignature !== razorpay_signature) {
+        return res.status(400).json({ message: 'Invalid payment signature! Verification failed.' });
+      }
+    }
+
+    const latestOrder = await prisma.order.findFirst({
+      where: { restaurantId, tableNumber, status: { not: 'completed' } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (!latestOrder) {
+      return res.status(404).json({ message: 'No active session for this table' });
+    }
+
+    const payMethod = razorpay_payment_id ? `Razorpay Verified (${razorpay_payment_id})` : 'Online Payment Gateway';
+
+    await prisma.order.updateMany({
+      where: { sessionId: latestOrder.sessionId },
+      data: {
+        status: 'completed',
+        paymentMethod: payMethod
+      }
+    });
+
+    await prisma.tablePasscode.deleteMany({
+      where: { restaurantId, tableNumber }
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(restaurantId).emit('session_closed', { tableNumber, sessionId: latestOrder.sessionId });
+    }
+
+    res.json({ success: true, message: '✅ Payment Verified & Session Closed Successfully!' });
+  } catch (err) {
+    console.error('Payment verification error:', err);
+    res.status(500).json({ message: 'Server error during payment verification' });
   }
 });
 

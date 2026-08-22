@@ -388,25 +388,25 @@ async function closeSession(tableNumber) {
     if (gtwContainer) gtwContainer.style.display = 'flex';
     if (stdMethods) stdMethods.style.display = 'none';
 
-    let totalVal = 0;
-    if (window._allTablesData) {
-      const tableData = window._allTablesData.find(t => t.tableNumber == tableNumber);
-      if (tableData) totalVal = tableData.total || 0;
-    }
+    // Fetch official Razorpay order & Dynamic UPI QR from backend
+    try {
+      const orderRes = await api(`/api/waiter/table/${tableNumber}/create-razorpay-order`, 'POST');
+      if (orderRes && orderRes.ok) {
+        const orderData = await orderRes.json();
+        window._activeRazorpayOrder = orderData;
+        
+        if (totalDisplay) totalDisplay.innerText = `₹${(orderData.grandTotal || 0).toFixed(2)}`;
 
-    const totalDisplay = document.getElementById('waiterBillTotalDisplay');
-    if (totalDisplay) totalDisplay.innerText = `₹${totalVal.toFixed(2)}`;
-
-    const qrImg = document.getElementById('waiterQrCodeImage');
-    const qrFallback = document.getElementById('waiterQrFallbackText');
-    if (restaurantSettings && restaurantSettings.paymentQrCode && qrImg && qrFallback) {
-      qrImg.src = restaurantSettings.paymentQrCode;
-      qrImg.style.display = 'block';
-      qrFallback.style.display = 'none';
-    } else if (qrImg && qrFallback) {
-      qrImg.style.display = 'none';
-      qrFallback.innerText = '💳 Payment Gateway Active';
-      qrFallback.style.display = 'block';
+        const qrImg = document.getElementById('waiterQrCodeImage');
+        const qrFallback = document.getElementById('waiterQrFallbackText');
+        if (orderData.upiQrCodeUrl && qrImg && qrFallback) {
+          qrImg.src = orderData.upiQrCodeUrl;
+          qrImg.style.display = 'block';
+          qrFallback.style.display = 'none';
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching Razorpay order info:', e);
     }
 
     const payGtwBtn = document.getElementById('waiterPayGatewayBtn');
@@ -444,13 +444,8 @@ async function payViaWaiterGateway() {
   if (!tableToClose) return;
   const tableNumber = tableToClose;
 
-  let totalVal = 0;
-  if (window._allTablesData) {
-    const tableData = window._allTablesData.find(t => t.tableNumber == tableNumber);
-    if (tableData) totalVal = tableData.total || 0;
-  }
-
-  const rzpKey = restaurantSettings ? restaurantSettings.razorpayKeyId : '';
+  const rzpOrderData = window._activeRazorpayOrder || {};
+  const rzpKey = rzpOrderData.keyId || (restaurantSettings ? restaurantSettings.razorpayKeyId : '');
 
   if (rzpKey && typeof Razorpay !== 'undefined') {
     closeConfirmModal();
@@ -458,20 +453,26 @@ async function payViaWaiterGateway() {
 
     const options = {
       key: rzpKey,
-      amount: Math.round(totalVal * 100),
-      currency: "INR",
-      name: (restaurantSettings && restaurantSettings.name) || "Cloud Dine",
+      amount: rzpOrderData.amountInPaise || Math.round((rzpOrderData.grandTotal || 0) * 100),
+      currency: rzpOrderData.currency || "INR",
+      order_id: rzpOrderData.razorpayOrderId || undefined,
+      name: rzpOrderData.restaurantName || (restaurantSettings && restaurantSettings.name) || "Cloud Dine",
       description: `Table ${tableNumber} Bill Settlement`,
       handler: async function (response) {
         try {
-          const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { 
-            paymentMethod: `Razorpay Gateway (${response.razorpay_payment_id})` 
+          const res = await api(`/api/waiter/table/${tableNumber}/verify-razorpay-payment`, 'POST', { 
+            razorpay_order_id: response.razorpay_order_id || rzpOrderData.razorpayOrderId,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
           });
+          
           if (res && res.ok) {
-            alert(`✅ Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+            const data = await res.json();
+            alert(data.message || `✅ Payment Verified & Table Closed! (ID: ${response.razorpay_payment_id})`);
             loadTables();
           } else {
-            alert('Payment completed, but error updating table session');
+            const errData = await res.json();
+            alert(errData.message || 'Payment completed, but signature verification failed');
           }
         } catch (e) {
           alert('Payment received, error closing table');
@@ -495,7 +496,7 @@ async function payViaWaiterGateway() {
   closeTableModal();
 
   try {
-    const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { paymentMethod: 'Online Payment Gateway (Paid)' });
+    const res = await api(`/api/waiter/table/${tableNumber}/verify-razorpay-payment`, 'POST', {});
     if (!res) return;
     const data = await res.json();
     if (!res.ok) {
