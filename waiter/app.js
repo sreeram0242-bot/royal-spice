@@ -6,6 +6,7 @@ if (!token && !window.location.pathname.includes('index.html')) {
 
 const waiterName = localStorage.getItem('waiterName') || 'Waiter';
 const restaurantId = localStorage.getItem('waiterRestaurantId');
+let restaurantSettings = null;
 
 // Set topbar
 if (document.getElementById('waiterName')) {
@@ -57,6 +58,7 @@ async function loadSettings() {
     const res = await api('/api/waiter/settings');
     if (!res || !res.ok) return;
     const data = await res.json();
+    restaurantSettings = data;
     document.getElementById('restaurantNameTop').textContent = data.name;
     window._gstPercent = data.gstPercent;
     window._totalTables = data.totalTables;
