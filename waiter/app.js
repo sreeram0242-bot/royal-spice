@@ -362,70 +362,65 @@ let tableToClose = null;
 async function closeSession(tableNumber) {
   closeTableModal();
   tableToClose = tableNumber;
-  document.getElementById('confirmTableNum').innerText = getTableNameWaiter(tableNumber);
+
+  if (document.getElementById('confirmTableNum')) {
+    document.getElementById('confirmTableNum').innerText = getTableNameWaiter(tableNumber);
+  }
   
-  if (!restaurantSettings) {
-    await loadSettings();
-  }
-
-  const isEnforced = restaurantSettings && restaurantSettings.enforceWaiterPaymentGateway;
-  const stdMethods = document.getElementById('waiterStandardMethods');
-  const gtwContainer = document.getElementById('waiterGatewayContainer');
-  const confirmBtnEl = document.getElementById('confirmCloseBtn');
-
-  if (isEnforced) {
-    if (stdMethods) stdMethods.style.display = 'none';
-    if (gtwContainer) gtwContainer.style.display = 'flex';
-    
-    // Find bill total for table
-    let totalVal = 0;
-    if (window._globalTablesDataWaiter) {
-      const tableData = window._globalTablesDataWaiter.find(t => t.tableNumber === tableNumber);
-      if (tableData) totalVal = tableData.total || 0;
-    }
-
-    if (!totalVal) {
-      try {
-        const bRes = await api(`/api/waiter/table/${tableNumber}/bill`);
-        if (bRes && bRes.ok) {
-          const bData = await bRes.json();
-          totalVal = bData.grandTotal || 0;
-        }
-      } catch (e) {}
-    }
-
-    const totalDisplay = document.getElementById('waiterBillTotalDisplay');
-    if (totalDisplay) totalDisplay.innerText = `₹${totalVal.toFixed(2)}`;
-
-    // Set QR code if available
-    const qrImg = document.getElementById('waiterQrCodeImage');
-    const qrFallback = document.getElementById('waiterQrFallbackText');
-    if (restaurantSettings && restaurantSettings.paymentQrCode && qrImg && qrFallback) {
-      qrImg.src = restaurantSettings.paymentQrCode;
-      qrImg.style.display = 'block';
-      qrFallback.style.display = 'none';
-    } else if (qrImg && qrFallback) {
-      qrImg.style.display = 'none';
-      qrFallback.innerText = '💳 Payment Gateway Active';
-      qrFallback.style.display = 'block';
-    }
-
-    const payGtwBtn = document.getElementById('waiterPayGatewayBtn');
-    if (payGtwBtn) {
-      payGtwBtn.style.display = (restaurantSettings && (restaurantSettings.enableTestPayment !== false || restaurantSettings.razorpayKeyId)) ? 'inline-block' : 'none';
-    }
-
-    if (confirmBtnEl) confirmBtnEl.innerText = '⚡ Confirm Payment Received';
-  } else {
-    if (stdMethods) stdMethods.style.display = 'flex';
-    if (gtwContainer) gtwContainer.style.display = 'none';
-    if (confirmBtnEl) confirmBtnEl.innerText = 'Close Table';
-  }
-
   const modal = document.getElementById('confirmCloseModal');
   if (modal) {
     modal.style.display = 'flex';
     modal.classList.add('open');
+  }
+
+  try {
+    if (!restaurantSettings) {
+      await loadSettings();
+    }
+
+    const isEnforced = restaurantSettings && restaurantSettings.enforceWaiterPaymentGateway;
+    const stdMethods = document.getElementById('waiterStandardMethods');
+    const gtwContainer = document.getElementById('waiterGatewayContainer');
+    const confirmBtnEl = document.getElementById('confirmCloseBtn');
+
+    if (isEnforced) {
+      if (stdMethods) stdMethods.style.display = 'none';
+      if (gtwContainer) gtwContainer.style.display = 'flex';
+      
+      let totalVal = 0;
+      if (window._allTablesData) {
+        const tableData = window._allTablesData.find(t => t.tableNumber == tableNumber);
+        if (tableData) totalVal = tableData.total || 0;
+      }
+
+      const totalDisplay = document.getElementById('waiterBillTotalDisplay');
+      if (totalDisplay) totalDisplay.innerText = `₹${totalVal.toFixed(2)}`;
+
+      const qrImg = document.getElementById('waiterQrCodeImage');
+      const qrFallback = document.getElementById('waiterQrFallbackText');
+      if (restaurantSettings && restaurantSettings.paymentQrCode && qrImg && qrFallback) {
+        qrImg.src = restaurantSettings.paymentQrCode;
+        qrImg.style.display = 'block';
+        qrFallback.style.display = 'none';
+      } else if (qrImg && qrFallback) {
+        qrImg.style.display = 'none';
+        qrFallback.innerText = '💳 Payment Gateway Active';
+        qrFallback.style.display = 'block';
+      }
+
+      const payGtwBtn = document.getElementById('waiterPayGatewayBtn');
+      if (payGtwBtn) {
+        payGtwBtn.style.display = (restaurantSettings && (restaurantSettings.enableTestPayment !== false || restaurantSettings.razorpayKeyId)) ? 'inline-block' : 'none';
+      }
+
+      if (confirmBtnEl) confirmBtnEl.innerText = '⚡ Confirm Payment Received';
+    } else {
+      if (stdMethods) stdMethods.style.display = 'flex';
+      if (gtwContainer) gtwContainer.style.display = 'none';
+      if (confirmBtnEl) confirmBtnEl.innerText = 'Close Table';
+    }
+  } catch (err) {
+    console.error('Error populating confirm modal:', err);
   }
 }
 
