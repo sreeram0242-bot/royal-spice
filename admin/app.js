@@ -1562,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Ensure UI updates if Tables view is open
         if (!document.getElementById('view-tables').classList.contains('hidden')) {
-          renderFullTableGrid();
+          loadTablesView();
         }
       } catch (err) {
         console.error(err);
