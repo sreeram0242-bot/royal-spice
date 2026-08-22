@@ -23,7 +23,7 @@ async function api(path, method = 'GET', body = null) {
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(path, opts);
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     localStorage.clear();
     window.location.href = 'index.html';
     return;
@@ -437,10 +437,16 @@ if (confirmBtn) {
 
     try {
       const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { paymentMethod });
+      if (!res) return;
       const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || 'Error closing session');
+        return;
+      }
       alert(data.message || 'Session closed!');
       loadTables();
     } catch (e) {
+      console.error(e);
       alert('Error closing session');
     }
   });
