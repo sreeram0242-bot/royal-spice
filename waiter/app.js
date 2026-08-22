@@ -360,6 +360,7 @@ function markPaymentDone() {
 let tableToClose = null;
 
 async function closeSession(tableNumber) {
+  closeTableModal();
   tableToClose = tableNumber;
   document.getElementById('confirmTableNum').innerText = getTableNameWaiter(tableNumber);
   
