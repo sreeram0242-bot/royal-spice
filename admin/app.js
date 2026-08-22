@@ -5,6 +5,21 @@ window.onunhandledrejection = function (event) {
   alert("Unhandled Promise: " + (event.reason && event.reason.message ? event.reason.message : event.reason));
 };
 const BASE_URL = '';
+const token = localStorage.getItem('adminToken');
+const restaurantId = localStorage.getItem('adminRestaurantId');
+
+const AppState = {
+  dashboard: null,
+  orders: null,
+  waiterCalls: null,
+  menu: null,
+  categories: null,
+  qrCodes: null,
+  waiters: null,
+  revenue: null,
+  tables: null,
+  settings: null
+};
 
 let loaderCount = 0;
 function showLoader() {
@@ -308,18 +323,6 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
   }
 }
 
-const AppState = {
-  dashboard: null,
-  orders: null,
-  waiterCalls: null,
-  menu: null,
-  categories: null,
-  qrCodes: null,
-  waiters: null,
-  revenue: null,
-  tables: null,
-  settings: null
-};
 
 let restaurantSettings = null;
 let _kotPrinters = [];
