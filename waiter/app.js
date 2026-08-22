@@ -422,11 +422,19 @@ async function closeSession(tableNumber) {
     if (confirmBtnEl) confirmBtnEl.innerText = 'Close Table';
   }
 
-  document.getElementById('confirmCloseModal').classList.add('open');
+  const modal = document.getElementById('confirmCloseModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+  }
 }
 
 function closeConfirmModal() {
-  document.getElementById('confirmCloseModal').classList.remove('open');
+  const modal = document.getElementById('confirmCloseModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+  }
   tableToClose = null;
 }
 
