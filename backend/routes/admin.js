@@ -11,7 +11,10 @@ router.get('/settings', [authAdmin, checkSubscription], async (req, res) => {
       select: {
         id: true, name: true, logo: true, address: true, gstPercent: true,
         totalTables: true, plan: true, trialDays: true, trialStartDate: true,
-        subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true, isActive: true, createdAt: true
+        subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true,
+        orderConfirmationMode: true, paymentGatewayProvider: true,
+        razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true,
+        isActive: true, createdAt: true
       }
     });
     res.json(restaurant);
@@ -22,7 +25,10 @@ router.get('/settings', [authAdmin, checkSubscription], async (req, res) => {
 
 router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
   try {
-    const { name, address, gstPercent, totalTables, paymentQrCode } = req.body;
+    const { 
+      name, address, gstPercent, totalTables, paymentQrCode,
+      orderConfirmationMode, paymentGatewayProvider, razorpayKeyId, razorpayKeySecret, enableTestPayment
+    } = req.body;
     
     const dataToUpdate = {};
     if (name !== undefined) dataToUpdate.name = name;
@@ -31,13 +37,22 @@ router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
     if (totalTables !== undefined) dataToUpdate.totalTables = parseInt(totalTables);
     if (paymentQrCode !== undefined) dataToUpdate.paymentQrCode = paymentQrCode;
 
+    if (orderConfirmationMode !== undefined) dataToUpdate.orderConfirmationMode = orderConfirmationMode;
+    if (paymentGatewayProvider !== undefined) dataToUpdate.paymentGatewayProvider = paymentGatewayProvider;
+    if (razorpayKeyId !== undefined) dataToUpdate.razorpayKeyId = razorpayKeyId;
+    if (razorpayKeySecret !== undefined) dataToUpdate.razorpayKeySecret = razorpayKeySecret;
+    if (enableTestPayment !== undefined) dataToUpdate.enableTestPayment = Boolean(enableTestPayment);
+
     const restaurant = await prisma.restaurant.update({
       where: { id: req.user.restaurantId },
       data: dataToUpdate,
       select: {
         id: true, name: true, logo: true, address: true, gstPercent: true,
         totalTables: true, plan: true, trialDays: true, trialStartDate: true,
-        subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true, isActive: true, createdAt: true
+        subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true,
+        orderConfirmationMode: true, paymentGatewayProvider: true,
+        razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true,
+        isActive: true, createdAt: true
       }
     });
     res.json(restaurant);

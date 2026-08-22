@@ -376,6 +376,20 @@ function renderSettings(settings) {
       document.getElementById('setQrPreviewText').style.display = 'block';
     }
 
+  // Load Order Confirmation Mode & Payment Gateway fields
+  const modeSelect = document.getElementById('setOrderConfirmMode');
+  if (modeSelect) {
+    modeSelect.value = settings.orderConfirmationMode || 'WAITER_PASSCODE';
+  }
+  const rzpKey = document.getElementById('setRazorpayKeyId');
+  if (rzpKey) rzpKey.value = settings.razorpayKeyId || '';
+  const rzpSecret = document.getElementById('setRazorpayKeySecret');
+  if (rzpSecret) rzpSecret.value = settings.razorpayKeySecret || '';
+  const testPay = document.getElementById('setEnableTestPayment');
+  if (testPay) testPay.checked = settings.enableTestPayment !== false;
+
+  togglePaymentGatewayFields();
+
   // Load KOT Printers
   loadKotPrinters();
 }
@@ -562,17 +576,33 @@ async function handleAutoPrintToggle(el) {
   }
 }
 
+function togglePaymentGatewayFields() {
+  const mode = document.getElementById('setOrderConfirmMode')?.value;
+  const container = document.getElementById('paymentGatewayFields');
+  if (container) {
+    container.style.display = (mode === 'PAYMENT_GATEWAY') ? 'flex' : 'none';
+  }
+}
+
 async function saveSettings() {
   const name = document.getElementById('setRestName').value;
   const address = document.getElementById('setRestAddress').value;
   const gstPercent = document.getElementById('setRestGst').value;
   const paymentQrCode = document.getElementById('setQrImageBase64').value || null;
 
+  const orderConfirmationMode = document.getElementById('setOrderConfirmMode')?.value || 'WAITER_PASSCODE';
+  const razorpayKeyId = document.getElementById('setRazorpayKeyId')?.value || '';
+  const razorpayKeySecret = document.getElementById('setRazorpayKeySecret')?.value || '';
+  const enableTestPayment = document.getElementById('setEnableTestPayment')?.checked ?? true;
+
   // Save Auto Print toggle
   localStorage.setItem('autoPrint', document.getElementById('setAutoPrint').checked);
 
-  await fetchAPI('/api/admin/settings', 'PUT', { name, address, gstPercent, paymentQrCode });
-  alert('Settings saved');
+  await fetchAPI('/api/admin/settings', 'PUT', { 
+    name, address, gstPercent, paymentQrCode,
+    orderConfirmationMode, razorpayKeyId, razorpayKeySecret, enableTestPayment 
+  });
+  alert('Settings saved successfully!');
   loadSettings();
 }
 

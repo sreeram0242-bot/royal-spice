@@ -24,6 +24,11 @@ model Restaurant {
   subscriptionAmount Float?        @default(0)
   paymentStatus      String        @default("trial")
   paymentQrCode      String?
+  orderConfirmationMode String     @default("WAITER_PASSCODE") // WAITER_PASSCODE, PAYMENT_GATEWAY, UPI_QR, DIRECT_ORDER
+  paymentGatewayProvider String?    @default("razorpay")       // razorpay, custom
+  razorpayKeyId      String?
+  razorpayKeySecret  String?
+  enableTestPayment  Boolean       @default(true)
   isActive           Boolean       @default(true)
   createdAt          DateTime      @default(now())
 

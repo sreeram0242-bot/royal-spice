@@ -56,6 +56,10 @@ async function loadRestaurantInfo() {
     const res = await fetch(`${BASE_URL}/api/customer/restaurant/${restaurantId}?tableNumber=${tableNumber || ''}`);
     const data = await res.json();
     localStorage.setItem('gstPercent', data.gstPercent || 0);
+    localStorage.setItem('orderConfirmationMode', data.orderConfirmationMode || 'WAITER_PASSCODE');
+    localStorage.setItem('paymentQrCode', data.paymentQrCode || '');
+    localStorage.setItem('razorpayKeyId', data.razorpayKeyId || '');
+    localStorage.setItem('enableTestPayment', data.enableTestPayment !== false);
     
     if (data.tableName) {
       localStorage.setItem('tableName', data.tableName);
@@ -430,20 +434,42 @@ function setTip(amt) {
 async function placeOrder() {
   if (cart.length === 0) return;
   
+  const mode = localStorage.getItem('orderConfirmationMode') || 'WAITER_PASSCODE';
   const savedPasscode = localStorage.getItem('tablePasscode');
   const savedSessionId = localStorage.getItem('sessionId');
   
-  if (savedPasscode && savedSessionId) {
-    await submitOrder(savedPasscode);
-    return;
+  if (mode === 'WAITER_PASSCODE') {
+    if (savedPasscode && savedSessionId) {
+      await submitOrder(savedPasscode);
+      return;
+    }
+    const overlay = document.getElementById('passcodePromptOverlay');
+    const input = document.getElementById('orderPasscodeInput');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      input.value = '';
+      setTimeout(() => input.focus(), 100);
+    }
+  } else if (mode === 'PAYMENT_GATEWAY') {
+    const modal = document.getElementById('paymentGatewayModal');
+    if (modal) modal.style.display = 'flex';
+    else await submitOrder(null, { paymentMethod: 'online', paymentReference: 'PAY_' + Date.now() });
+  } else if (mode === 'UPI_QR') {
+    const modal = document.getElementById('upiQrModal');
+    const qrImg = document.getElementById('customerUpiQrImage');
+    const noQrTxt = document.getElementById('noUpiQrText');
+    const qrData = localStorage.getItem('paymentQrCode');
+
+    if (qrData && qrImg && noQrTxt) {
+      qrImg.src = qrData;
+      qrImg.style.display = 'block';
+      noQrTxt.style.display = 'none';
+    }
+    if (modal) modal.style.display = 'flex';
+    else await submitOrder(null, { paymentMethod: 'upi', paymentReference: 'UPI_' + Date.now() });
+  } else if (mode === 'DIRECT_ORDER') {
+    await submitOrder(null, { paymentMethod: 'direct' });
   }
-  
-  // Show PIN popup if no session/passcode exists
-  const overlay = document.getElementById('passcodePromptOverlay');
-  const input = document.getElementById('orderPasscodeInput');
-  overlay.style.display = 'flex';
-  input.value = '';
-  setTimeout(() => input.focus(), 100);
 }
 
 async function submitOrderWithPasscode() {
@@ -456,7 +482,20 @@ async function submitOrderWithPasscode() {
   await submitOrder(passcode);
 }
 
-async function submitOrder(passcode) {
+async function payWithTestGateway() {
+  const modal = document.getElementById('paymentGatewayModal');
+  if (modal) modal.style.display = 'none';
+  await submitOrder(null, { paymentMethod: 'online_test', paymentReference: 'TEST_TXN_' + Date.now() });
+}
+
+async function submitUpiOrder() {
+  const modal = document.getElementById('upiQrModal');
+  const ref = document.getElementById('upiRefInput')?.value.trim() || 'UPI_SCAN';
+  if (modal) modal.style.display = 'none';
+  await submitOrder(null, { paymentMethod: 'upi', paymentReference: ref });
+}
+
+async function submitOrder(passcode = null, extraData = {}) {
   const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const gstPercent = parseFloat(localStorage.getItem('gstPercent')) || 0;
   const gst = Math.round(subTotal * (gstPercent / 100));
@@ -475,7 +514,9 @@ async function submitOrder(passcode) {
     tip: selectedTip,
     total,
     sessionId,
-    passcode
+    passcode,
+    paymentMethod: extraData.paymentMethod || null,
+    paymentReference: extraData.paymentReference || null
   };
 
   try {
@@ -502,7 +543,9 @@ async function submitOrder(passcode) {
       return;
     }
 
-    localStorage.setItem('tablePasscode', passcode);
+    if (passcode) {
+      localStorage.setItem('tablePasscode', passcode);
+    }
     localStorage.setItem('sessionId', data.order.sessionId);
 
     cart = [];

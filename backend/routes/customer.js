@@ -9,7 +9,18 @@ router.get('/restaurant/:id', async (req, res) => {
   try {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: req.params.id },
-      select: { name: true, logo: true, gstPercent: true, isActive: true }
+      select: { 
+        id: true,
+        name: true, 
+        logo: true, 
+        gstPercent: true, 
+        isActive: true,
+        paymentQrCode: true,
+        orderConfirmationMode: true,
+        paymentGatewayProvider: true,
+        razorpayKeyId: true,
+        enableTestPayment: true
+      }
     });
     
     if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
@@ -64,23 +75,44 @@ router.get('/categories/:restaurantId', async (req, res) => {
 // Place an order
 router.post('/order', checkSubscription, async (req, res) => {
   try {
-    const { restaurantId, tableNumber, items, subtotal, gst, tip = 0, total, sessionId, passcode } = req.body;
+    const { restaurantId, tableNumber, items, subtotal, gst, tip = 0, total, sessionId, passcode, paymentMethod, paymentReference } = req.body;
     
-    // Validate Table Passcode
-    const validPasscode = await prisma.tablePasscode.findFirst({
-      where: { restaurantId, tableNumber: parseInt(tableNumber), passcode }
+    // Fetch Restaurant Config
+    const restaurantConfig = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { orderConfirmationMode: true, enableTestPayment: true }
     });
-    
-    if (!validPasscode) {
-      return res.status(401).json({ message: 'Invalid or missing 4-digit passcode. Please ask the waiter.' });
-    }
-    const waiterName = validPasscode.waiterName || 'Waiter';
 
-    // Generate simple order number
+    if (!restaurantConfig) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+
+    const mode = restaurantConfig.orderConfirmationMode || 'WAITER_PASSCODE';
+    let assignedWaiterName = 'Self-Order';
+
+    // Mode-specific validation
+    if (mode === 'WAITER_PASSCODE') {
+      const validPasscode = await prisma.tablePasscode.findFirst({
+        where: { restaurantId, tableNumber: parseInt(tableNumber), passcode }
+      });
+      
+      if (!validPasscode) {
+        return res.status(401).json({ message: 'Invalid or missing 4-digit passcode. Please ask the waiter.' });
+      }
+      assignedWaiterName = validPasscode.waiterName || 'Waiter';
+    } else if (mode === 'PAYMENT_GATEWAY') {
+      assignedWaiterName = `Online Payment (${paymentMethod || 'Paid'})`;
+    } else if (mode === 'UPI_QR') {
+      assignedWaiterName = `UPI QR (${paymentReference ? 'Ref: ' + paymentReference : 'Submitted'})`;
+    } else if (mode === 'DIRECT_ORDER') {
+      assignedWaiterName = 'Direct Order';
+    }
+
+    // Generate order number
     const count = await prisma.order.count({ where: { restaurantId } });
     const orderNumber = 1000 + count + 1;
 
-    // Enforce single-session per table: always check for an active order first
+    // Enforce single-session per table: check active order first
     let currentSessionId = sessionId;
     let currentSessionNumber = null;
     
@@ -94,7 +126,6 @@ router.post('/order', checkSubscription, async (req, res) => {
       currentSessionNumber = activeOrder.sessionNumber;
     } else {
       if (!currentSessionId) currentSessionId = uuidv4();
-      // Increment and assign new session number
       const restaurant = await prisma.restaurant.update({
         where: { id: restaurantId },
         data: { sessionCounter: { increment: 1 } }
@@ -114,7 +145,8 @@ router.post('/order', checkSubscription, async (req, res) => {
         status: 'new',
         sessionId: currentSessionId,
         sessionNumber: currentSessionNumber,
-        waiterName: waiterName,
+        waiterName: assignedWaiterName,
+        paymentMethod: paymentMethod || (mode === 'PAYMENT_GATEWAY' ? 'online' : mode === 'UPI_QR' ? 'upi' : null),
         items: {
           create: items.map(item => ({
             menuItemId: item.menuItemId,
@@ -130,10 +162,13 @@ router.post('/order', checkSubscription, async (req, res) => {
 
     // Emit via Socket.IO to admin
     const io = req.app.get('io');
-    io.to(restaurantId).emit('new_order', order);
+    if (io) {
+      io.to(restaurantId).emit('new_order', order);
+    }
 
     res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
+    console.error('Order Placement Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
@@ -151,9 +186,10 @@ router.post('/call-waiter', async (req, res) => {
       }
     });
 
-    // Emit via Socket.IO to admin
     const io = req.app.get('io');
-    io.to(restaurantId).emit('waiter_call', call);
+    if (io) {
+      io.to(restaurantId).emit('waiter_call', call);
+    }
 
     res.status(201).json({ message: 'Waiter has been notified' });
   } catch (err) {
