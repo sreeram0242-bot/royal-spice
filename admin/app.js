@@ -294,6 +294,7 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
   try {
     const options = {
       method,
+      cache: 'no-store',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -1558,6 +1559,11 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchAPI(`/api/admin/table/${tableToClose}/close-session`, 'POST', { paymentMethod: method });
         closeConfirmModal();
         closeTableModal();
+        
+        AppState.dashboard = null;
+        AppState.tables = null;
+        AppState.orders = null;
+        
         loadDashboard(); // Refresh UI
 
         // Ensure UI updates if Tables view is open
