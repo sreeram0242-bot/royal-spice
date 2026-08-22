@@ -579,10 +579,9 @@ async function handleAutoPrintToggle(el) {
 }
 
 function togglePaymentGatewayFields() {
-  const mode = document.getElementById('setOrderConfirmMode')?.value;
   const container = document.getElementById('paymentGatewayFields');
   if (container) {
-    container.style.display = (mode === 'PAYMENT_GATEWAY') ? 'flex' : 'none';
+    container.style.display = 'flex';
   }
 }
 
