@@ -492,10 +492,60 @@ async function submitOrderWithPasscode() {
   await submitOrder(passcode);
 }
 
-async function payWithTestGateway() {
+async function payOnlineGateway() {
   const modal = document.getElementById('paymentGatewayModal');
   if (modal) modal.style.display = 'none';
-  await submitOrder(null, { paymentMethod: 'online_test', paymentReference: 'TEST_TXN_' + Date.now() });
+
+  if (cart.length === 0) return;
+  const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const gstPercent = parseFloat(localStorage.getItem('gstPercent')) || 0;
+  const gst = Math.round(subTotal * (gstPercent / 100));
+  const grandTotal = subTotal + gst + selectedTip;
+  
+  const rzpKey = localStorage.getItem('razorpayKeyId');
+
+  if (rzpKey && typeof Razorpay !== 'undefined') {
+    showLoader();
+    try {
+      const orderRes = await fetch(`${BASE_URL}/api/customer/create-razorpay-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantId, grandTotal })
+      });
+      const orderData = await orderRes.json();
+      hideLoader();
+
+      if (orderRes.ok && orderData.success) {
+        const options = {
+          key: rzpKey,
+          amount: orderData.amountInPaise,
+          currency: orderData.currency || 'INR',
+          order_id: orderData.razorpayOrderId || undefined,
+          name: orderData.restaurantName || "Cloud Dine",
+          description: "Order Payment",
+          handler: async function (response) {
+            await submitOrder(null, {
+              paymentMethod: 'online',
+              razorpay_order_id: response.razorpay_order_id || orderData.razorpayOrderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
+          },
+          prefill: { name: "Table Guest", contact: "9999999999" },
+          theme: { color: "#22C55E" }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+        return;
+      }
+    } catch (e) {
+      hideLoader();
+      console.error('Error creating Razorpay order:', e);
+    }
+  }
+
+  // Fallback test gateway
+  await submitOrder(null, { paymentMethod: 'online', paymentReference: 'TEST_TXN_' + Date.now() });
 }
 
 async function submitUpiOrder() {

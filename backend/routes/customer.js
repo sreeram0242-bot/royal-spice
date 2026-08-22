@@ -3,6 +3,8 @@ const router = express.Router();
 const { checkSubscription } = require('../middleware/auth');
 const prisma = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
 // Get restaurant details for customer portal
 router.get('/restaurant/:id', async (req, res) => {
@@ -101,7 +103,22 @@ router.post('/order', checkSubscription, async (req, res) => {
       }
       assignedWaiterName = validPasscode.waiterName || 'Waiter';
     } else if (mode === 'PAYMENT_GATEWAY') {
-      assignedWaiterName = `Online Payment (${paymentMethod || 'Paid'})`;
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+      const restaurant = await prisma.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { razorpayKeySecret: true }
+      });
+      if (restaurant && restaurant.razorpayKeySecret && razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+        const body = razorpay_order_id + '|' + razorpay_payment_id;
+        const expectedSignature = crypto
+          .createHmac('sha256', restaurant.razorpayKeySecret)
+          .update(body.toString())
+          .digest('hex');
+        if (expectedSignature !== razorpay_signature) {
+          return res.status(400).json({ message: 'Invalid payment signature! Verification failed.' });
+        }
+      }
+      assignedWaiterName = `Online Payment (${razorpay_payment_id || 'Paid'})`;
     } else if (mode === 'UPI_QR') {
       assignedWaiterName = `UPI QR (${paymentReference ? 'Ref: ' + paymentReference : 'Submitted'})`;
     } else if (mode === 'DIRECT_ORDER') {
@@ -208,6 +225,48 @@ router.get('/orders/:sessionId', async (req, res) => {
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/customer/create-razorpay-order
+router.post('/create-razorpay-order', async (req, res) => {
+  try {
+    const { restaurantId, grandTotal } = req.body;
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { name: true, razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true }
+    });
+
+    if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
+
+    let razorpayOrderId = null;
+    let amountInPaise = Math.round(grandTotal * 100);
+
+    if (restaurant.razorpayKeyId && restaurant.razorpayKeySecret) {
+      const razorpay = new Razorpay({
+        key_id: restaurant.razorpayKeyId,
+        key_secret: restaurant.razorpayKeySecret
+      });
+
+      const rzpOrder = await razorpay.orders.create({
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt: `cust_${Date.now()}`
+      });
+      razorpayOrderId = rzpOrder.id;
+    }
+
+    res.json({
+      success: true,
+      razorpayOrderId,
+      amountInPaise,
+      currency: 'INR',
+      keyId: restaurant.razorpayKeyId,
+      restaurantName: restaurant.name
+    });
+  } catch (err) {
+    console.error('Customer Razorpay order creation error:', err);
+    res.status(500).json({ message: 'Failed to create payment order' });
   }
 });
 
