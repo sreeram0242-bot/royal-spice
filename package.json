@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node backend/server.js",
+    "start": "npm run db:push && node seed_rkmess.js && node backend/server.js",
     "dev": "concurrently \"npm run start\" \"cloudflared tunnel --url http://localhost:5000\"",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",

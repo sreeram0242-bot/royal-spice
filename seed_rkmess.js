@@ -6,6 +6,15 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding RK Mess...');
 
+  const existingRestaurant = await prisma.restaurant.findUnique({
+    where: { adminUsername: 'admin' }
+  });
+  
+  if (existingRestaurant) {
+    console.log('✅ Seeding already completed. Skipping.');
+    return;
+  }
+
   // Create admin password hash
   const adminHash = await bcrypt.hash('admin123', 10);
   const sreeHash = await bcrypt.hash('sree', 10);
