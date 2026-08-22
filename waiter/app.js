@@ -359,10 +359,14 @@ function markPaymentDone() {
 // ── CLOSE SESSION ──
 let tableToClose = null;
 
-function closeSession(tableNumber) {
+async function closeSession(tableNumber) {
   tableToClose = tableNumber;
   document.getElementById('confirmTableNum').innerText = getTableNameWaiter(tableNumber);
   
+  if (!restaurantSettings) {
+    await loadSettings();
+  }
+
   const isEnforced = restaurantSettings && restaurantSettings.enforceWaiterPaymentGateway;
   const stdMethods = document.getElementById('waiterStandardMethods');
   const gtwContainer = document.getElementById('waiterGatewayContainer');
@@ -373,8 +377,22 @@ function closeSession(tableNumber) {
     if (gtwContainer) gtwContainer.style.display = 'flex';
     
     // Find bill total for table
-    const tableData = _globalTablesDataWaiter.find(t => t.tableNumber === tableNumber);
-    const totalVal = tableData ? (tableData.total || 0) : 0;
+    let totalVal = 0;
+    if (window._globalTablesDataWaiter) {
+      const tableData = window._globalTablesDataWaiter.find(t => t.tableNumber === tableNumber);
+      if (tableData) totalVal = tableData.total || 0;
+    }
+
+    if (!totalVal) {
+      try {
+        const bRes = await api(`/api/waiter/table/${tableNumber}/bill`);
+        if (bRes && bRes.ok) {
+          const bData = await bRes.json();
+          totalVal = bData.grandTotal || 0;
+        }
+      } catch (e) {}
+    }
+
     const totalDisplay = document.getElementById('waiterBillTotalDisplay');
     if (totalDisplay) totalDisplay.innerText = `₹${totalVal.toFixed(2)}`;
 
@@ -385,6 +403,10 @@ function closeSession(tableNumber) {
       qrImg.src = restaurantSettings.paymentQrCode;
       qrImg.style.display = 'block';
       qrFallback.style.display = 'none';
+    } else if (qrImg && qrFallback) {
+      qrImg.style.display = 'none';
+      qrFallback.innerText = '💳 Payment Gateway Active';
+      qrFallback.style.display = 'block';
     }
 
     if (confirmBtnEl) confirmBtnEl.innerText = '⚡ Confirm Payment Received';
