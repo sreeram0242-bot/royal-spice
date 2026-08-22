@@ -56,8 +56,11 @@
   </header>
 
   <!-- Table Indicator -->
-  <div class="table-pill-wrapper">
+  <div class="table-pill-wrapper" style="flex-direction:column; gap:6px; align-items:center;">
     <div class="table-pill" id="tableBadge">TABLE --</div>
+    <div id="tablePinBanner" style="display:none; font-size:12px; font-weight:700; color:var(--gold-primary); background:rgba(235,178,91,0.1); border:1px solid rgba(235,178,91,0.3); padding:4px 12px; border-radius:12px;">
+      🔑 Table PIN: <span id="tablePinDisplay">--</span> <span style="font-weight:normal; opacity:0.8; font-size:11px;">(Share with table friends)</span>
+    </div>
   </div>
 
   <!-- Search Bar -->

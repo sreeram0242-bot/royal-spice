@@ -163,7 +163,7 @@
       <h3 style="margin-bottom:8px; font-size:18px;">Close Table <span id="confirmTableNum"></span>?</h3>
       <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;">Select the payment method before closing.</p>
       
-      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 24px; text-align:left;">
+      <div id="waiterStandardMethods" style="display:flex; flex-direction:column; gap:8px; margin-bottom: 24px; text-align:left;">
         <label style="display:flex; align-items:center; gap:8px; padding:14px; background:var(--bg); border:1px solid var(--border); border-radius:12px; cursor:pointer;">
           <input type="radio" name="paymentMethod" value="cash" checked style="accent-color:var(--blue); width:18px; height:18px;" onchange="document.getElementById('splitInputs').style.display='none'">
           <span style="font-size:14px; font-weight:500;">Full Cash</span>
@@ -194,6 +194,22 @@
             <span style="font-size:13px; color:var(--text-muted);">Card</span>
             <input type="number" id="splitCard" style="width:80px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text); font-size:14px;" placeholder="₹0">
           </div>
+        </div>
+      </div>
+
+      <!-- Waiter Payment Gateway & QR Display -->
+      <div id="waiterGatewayContainer" style="display:none; flex-direction:column; gap:12px; margin-bottom:20px; text-align:center; padding:16px; background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.3); border-radius:16px;">
+        <div style="font-size:12px; color:var(--text-muted);">Bill Total Amount</div>
+        <div id="waiterBillTotalDisplay" style="font-size:24px; font-weight:700; color:var(--green);">₹0.00</div>
+
+        <div style="width:160px; height:160px; margin:8px auto; border:2px dashed var(--green); border-radius:12px; padding:8px; background:#fff; display:flex; align-items:center; justify-content:center;">
+          <img id="waiterQrCodeImage" src="" style="width:100%; height:100%; object-fit:contain; display:none;">
+          <span id="waiterQrFallbackText" style="color:#000; font-size:12px; font-weight:600;">Scan QR to Pay</span>
+        </div>
+
+        <div style="font-size:12px; color:var(--green); font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); animation: pulse 1.5s infinite;"></span>
+          Present phone screen for customer to scan & pay
         </div>
       </div>
 

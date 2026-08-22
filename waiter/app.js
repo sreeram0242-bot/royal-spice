@@ -362,6 +362,38 @@ let tableToClose = null;
 function closeSession(tableNumber) {
   tableToClose = tableNumber;
   document.getElementById('confirmTableNum').innerText = getTableNameWaiter(tableNumber);
+  
+  const isEnforced = restaurantSettings && restaurantSettings.enforceWaiterPaymentGateway;
+  const stdMethods = document.getElementById('waiterStandardMethods');
+  const gtwContainer = document.getElementById('waiterGatewayContainer');
+  const confirmBtnEl = document.getElementById('confirmCloseBtn');
+
+  if (isEnforced) {
+    if (stdMethods) stdMethods.style.display = 'none';
+    if (gtwContainer) gtwContainer.style.display = 'flex';
+    
+    // Find bill total for table
+    const tableData = _globalTablesDataWaiter.find(t => t.tableNumber === tableNumber);
+    const totalVal = tableData ? (tableData.total || 0) : 0;
+    const totalDisplay = document.getElementById('waiterBillTotalDisplay');
+    if (totalDisplay) totalDisplay.innerText = `₹${totalVal.toFixed(2)}`;
+
+    // Set QR code if available
+    const qrImg = document.getElementById('waiterQrCodeImage');
+    const qrFallback = document.getElementById('waiterQrFallbackText');
+    if (restaurantSettings && restaurantSettings.paymentQrCode && qrImg && qrFallback) {
+      qrImg.src = restaurantSettings.paymentQrCode;
+      qrImg.style.display = 'block';
+      qrFallback.style.display = 'none';
+    }
+
+    if (confirmBtnEl) confirmBtnEl.innerText = '⚡ Confirm Payment Received';
+  } else {
+    if (stdMethods) stdMethods.style.display = 'flex';
+    if (gtwContainer) gtwContainer.style.display = 'none';
+    if (confirmBtnEl) confirmBtnEl.innerText = 'Close Table';
+  }
+
   document.getElementById('confirmCloseModal').classList.add('open');
 }
 
@@ -375,23 +407,29 @@ if (confirmBtn) {
   confirmBtn.addEventListener('click', async () => {
     if (!tableToClose) return;
     const tableNumber = tableToClose;
-    let paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const isEnforced = restaurantSettings && restaurantSettings.enforceWaiterPaymentGateway;
+    
+    let paymentMethod = 'UPI (QR Scanned)';
+    if (!isEnforced) {
+      const selectedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+      paymentMethod = selectedRadio ? selectedRadio.value : 'cash';
 
-    if (paymentMethod === 'split') {
-      const cash = parseFloat(document.getElementById('splitCash').value) || 0;
-      const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
-      const card = parseFloat(document.getElementById('splitCard').value) || 0;
+      if (paymentMethod === 'split') {
+        const cash = parseFloat(document.getElementById('splitCash').value) || 0;
+        const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
+        const card = parseFloat(document.getElementById('splitCard').value) || 0;
 
-      let parts = [];
-      if (cash > 0) parts.push(`Cash(₹${cash})`);
-      if (upi > 0) parts.push(`UPI(₹${upi})`);
-      if (card > 0) parts.push(`Card(₹${card})`);
+        let parts = [];
+        if (cash > 0) parts.push(`Cash(₹${cash})`);
+        if (upi > 0) parts.push(`UPI(₹${upi})`);
+        if (card > 0) parts.push(`Card(₹${card})`);
 
-      if (parts.length === 0) {
-        alert("Please enter at least one split amount!");
-        return;
+        if (parts.length === 0) {
+          alert("Please enter at least one split amount!");
+          return;
+        }
+        paymentMethod = `Split: ${parts.join(', ')}`;
       }
-      paymentMethod = `Split: ${parts.join(', ')}`;
     }
 
     closeConfirmModal();

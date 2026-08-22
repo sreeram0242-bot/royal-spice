@@ -10,7 +10,18 @@ router.get('/settings', authWaiter, async (req, res) => {
   try {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: req.user.restaurantId },
-      select: { name: true, logo: true, address: true, gstPercent: true, totalTables: true, paymentQrCode: true }
+      select: { 
+        name: true, 
+        logo: true, 
+        address: true, 
+        gstPercent: true, 
+        totalTables: true, 
+        paymentQrCode: true,
+        orderConfirmationMode: true,
+        enforceWaiterPaymentGateway: true,
+        razorpayKeyId: true,
+        enableTestPayment: true
+      }
     });
     res.json(restaurant);
   } catch (err) {
@@ -240,6 +251,18 @@ router.post('/table/:num/close-session', authWaiter, async (req, res) => {
     const restaurantId = req.user.restaurantId;
 
     const { paymentMethod } = req.body;
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { enforceWaiterPaymentGateway: true }
+    });
+
+    if (restaurant && restaurant.enforceWaiterPaymentGateway) {
+      const lowerMethod = (paymentMethod || '').toLowerCase();
+      if (lowerMethod.includes('cash') || lowerMethod.includes('split')) {
+        return res.status(403).json({ message: 'Waiters are required to settle tables via Payment Gateway / QR Code scan.' });
+      }
+    }
 
     // Find latest active session
     const latestOrder = await prisma.order.findFirst({

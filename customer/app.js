@@ -71,6 +71,16 @@ async function loadRestaurantInfo() {
     if (document.getElementById('tableBadge')) {
       document.getElementById('tableBadge').innerText = (data.tableName || `TABLE ${tableNumber}`).toUpperCase();
     }
+
+    const savedPin = localStorage.getItem('tablePasscode');
+    const pinBanner = document.getElementById('tablePinBanner');
+    const pinDisplay = document.getElementById('tablePinDisplay');
+    if (savedPin && pinBanner && pinDisplay) {
+      pinDisplay.innerText = savedPin;
+      pinBanner.style.display = 'inline-block';
+    } else if (pinBanner) {
+      pinBanner.style.display = 'none';
+    }
   } catch (err) {
     console.error(err);
   }

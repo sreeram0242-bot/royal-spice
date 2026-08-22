@@ -387,6 +387,8 @@ function renderSettings(settings) {
   if (rzpSecret) rzpSecret.value = settings.razorpayKeySecret || '';
   const testPay = document.getElementById('setEnableTestPayment');
   if (testPay) testPay.checked = settings.enableTestPayment !== false;
+  const enfWaiter = document.getElementById('setEnforceWaiterGateway');
+  if (enfWaiter) enfWaiter.checked = settings.enforceWaiterPaymentGateway === true;
 
   togglePaymentGatewayFields();
 
@@ -594,13 +596,14 @@ async function saveSettings() {
   const razorpayKeyId = document.getElementById('setRazorpayKeyId')?.value || '';
   const razorpayKeySecret = document.getElementById('setRazorpayKeySecret')?.value || '';
   const enableTestPayment = document.getElementById('setEnableTestPayment')?.checked ?? true;
+  const enforceWaiterPaymentGateway = document.getElementById('setEnforceWaiterGateway')?.checked ?? false;
 
   // Save Auto Print toggle
   localStorage.setItem('autoPrint', document.getElementById('setAutoPrint').checked);
 
   await fetchAPI('/api/admin/settings', 'PUT', { 
     name, address, gstPercent, paymentQrCode,
-    orderConfirmationMode, razorpayKeyId, razorpayKeySecret, enableTestPayment 
+    orderConfirmationMode, razorpayKeyId, razorpayKeySecret, enableTestPayment, enforceWaiterPaymentGateway
   });
   alert('Settings saved successfully!');
   loadSettings();

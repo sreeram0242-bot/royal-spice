@@ -29,6 +29,7 @@ model Restaurant {
   razorpayKeyId      String?
   razorpayKeySecret  String?
   enableTestPayment  Boolean       @default(true)
+  enforceWaiterPaymentGateway Boolean @default(false)
   isActive           Boolean       @default(true)
   createdAt          DateTime      @default(now())
 

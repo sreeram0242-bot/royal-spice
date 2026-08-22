@@ -14,6 +14,7 @@ router.get('/settings', [authAdmin, checkSubscription], async (req, res) => {
         subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true,
         orderConfirmationMode: true, paymentGatewayProvider: true,
         razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true,
+        enforceWaiterPaymentGateway: true,
         isActive: true, createdAt: true
       }
     });
@@ -27,7 +28,8 @@ router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
   try {
     const { 
       name, address, gstPercent, totalTables, paymentQrCode,
-      orderConfirmationMode, paymentGatewayProvider, razorpayKeyId, razorpayKeySecret, enableTestPayment
+      orderConfirmationMode, paymentGatewayProvider, razorpayKeyId, razorpayKeySecret, enableTestPayment,
+      enforceWaiterPaymentGateway
     } = req.body;
     
     const dataToUpdate = {};
@@ -42,6 +44,7 @@ router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
     if (razorpayKeyId !== undefined) dataToUpdate.razorpayKeyId = razorpayKeyId;
     if (razorpayKeySecret !== undefined) dataToUpdate.razorpayKeySecret = razorpayKeySecret;
     if (enableTestPayment !== undefined) dataToUpdate.enableTestPayment = Boolean(enableTestPayment);
+    if (enforceWaiterPaymentGateway !== undefined) dataToUpdate.enforceWaiterPaymentGateway = Boolean(enforceWaiterPaymentGateway);
 
     const restaurant = await prisma.restaurant.update({
       where: { id: req.user.restaurantId },
@@ -52,6 +55,7 @@ router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
         subscriptionExpiry: true, paymentStatus: true, paymentQrCode: true,
         orderConfirmationMode: true, paymentGatewayProvider: true,
         razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true,
+        enforceWaiterPaymentGateway: true,
         isActive: true, createdAt: true
       }
     });
