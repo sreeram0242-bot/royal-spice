@@ -409,6 +409,11 @@ async function closeSession(tableNumber) {
       qrFallback.style.display = 'block';
     }
 
+    const payGtwBtn = document.getElementById('waiterPayGatewayBtn');
+    if (payGtwBtn) {
+      payGtwBtn.style.display = (restaurantSettings && (restaurantSettings.enableTestPayment !== false || restaurantSettings.razorpayKeyId)) ? 'inline-block' : 'none';
+    }
+
     if (confirmBtnEl) confirmBtnEl.innerText = '⚡ Confirm Payment Received';
   } else {
     if (stdMethods) stdMethods.style.display = 'flex';
@@ -422,6 +427,27 @@ async function closeSession(tableNumber) {
 function closeConfirmModal() {
   document.getElementById('confirmCloseModal').classList.remove('open');
   tableToClose = null;
+}
+
+async function payViaWaiterGateway() {
+  if (!tableToClose) return;
+  const tableNumber = tableToClose;
+  closeConfirmModal();
+  closeTableModal();
+
+  try {
+    const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { paymentMethod: 'Online Payment Gateway (Paid)' });
+    if (!res) return;
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.message || 'Error closing session');
+      return;
+    }
+    alert(data.message || 'Payment Received & Table Session Closed!');
+    loadTables();
+  } catch (e) {
+    alert('Error closing session');
+  }
 }
 
 const confirmBtn = document.getElementById('confirmCloseBtn');
