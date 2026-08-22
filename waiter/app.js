@@ -443,6 +443,54 @@ function closeConfirmModal() {
 async function payViaWaiterGateway() {
   if (!tableToClose) return;
   const tableNumber = tableToClose;
+
+  let totalVal = 0;
+  if (window._allTablesData) {
+    const tableData = window._allTablesData.find(t => t.tableNumber == tableNumber);
+    if (tableData) totalVal = tableData.total || 0;
+  }
+
+  const rzpKey = restaurantSettings ? restaurantSettings.razorpayKeyId : '';
+
+  if (rzpKey && typeof Razorpay !== 'undefined') {
+    closeConfirmModal();
+    closeTableModal();
+
+    const options = {
+      key: rzpKey,
+      amount: Math.round(totalVal * 100),
+      currency: "INR",
+      name: (restaurantSettings && restaurantSettings.name) || "Cloud Dine",
+      description: `Table ${tableNumber} Bill Settlement`,
+      handler: async function (response) {
+        try {
+          const res = await api(`/api/waiter/table/${tableNumber}/close-session`, 'POST', { 
+            paymentMethod: `Razorpay Gateway (${response.razorpay_payment_id})` 
+          });
+          if (res && res.ok) {
+            alert(`✅ Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+            loadTables();
+          } else {
+            alert('Payment completed, but error updating table session');
+          }
+        } catch (e) {
+          alert('Payment received, error closing table');
+        }
+      },
+      prefill: {
+        name: "Table Guest",
+        contact: "9999999999"
+      },
+      theme: {
+        color: "#22C55E"
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+    return;
+  }
+
   closeConfirmModal();
   closeTableModal();
 
