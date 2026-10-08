@@ -624,7 +624,8 @@ async function payOnlineGateway() {
       },
       prefill: {
         name: `Table ${tableNumber || 'Guest'}`,
-        contact: '9999999999'
+        contact: '9999999999',
+        email: 'guest@clouddine.com'
       },
       theme: { color: '#22C55E' },
       modal: {
