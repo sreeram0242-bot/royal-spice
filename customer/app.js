@@ -76,6 +76,16 @@ async function loadRestaurantInfo() {
     localStorage.setItem('razorpayKeyId', data.razorpayKeyId || '');
     localStorage.setItem('enableTestPayment', data.enableTestPayment !== false);
     
+    if (data.name) {
+      localStorage.setItem('restaurantName', data.name);
+    }
+    if (data.logo) {
+      localStorage.setItem('restaurantLogo', data.logo);
+    }
+    if (document.getElementById('modalHotelTitle')) {
+      document.getElementById('modalHotelTitle').innerText = data.name || 'RK Mess';
+    }
+
     if (data.tableName) {
       localStorage.setItem('tableName', data.tableName);
     }
@@ -475,8 +485,10 @@ function updateCartPlaceOrderButton() {
 
   if (mode === 'PAYMENT_GATEWAY') {
     btn.innerHTML = `💳 Pay ₹${grandTotal} & Place Order`;
-    btn.style.background = 'linear-gradient(135deg, #22C55E, #16A34A)';
+    btn.style.background = 'linear-gradient(135deg, #0A192F, #1E3A8A)';
     btn.style.color = '#FFFFFF';
+    btn.style.border = '1px solid rgba(59, 130, 246, 0.35)';
+    btn.style.boxShadow = '0 4px 18px rgba(10, 25, 47, 0.45)';
   } else if (mode === 'WAITER_PASSCODE') {
     btn.innerHTML = '🔑 Place Order with PIN';
     btn.style.background = 'linear-gradient(135deg, var(--gold-primary), #d4983e)';
@@ -606,13 +618,17 @@ async function payOnlineGateway() {
 
   // 4. Launch Razorpay modal
   try {
+    const hotelName = orderData.restaurantName || localStorage.getItem('restaurantName') || 'RK Mess';
+    const logoUrl = orderData.restaurantLogo || localStorage.getItem('restaurantLogo') || `${window.location.origin}/customer/logo.png`;
+
     const options = {
       key: orderData.keyId,
       amount: orderData.amountInPaise,
       currency: orderData.currency || 'INR',
       order_id: orderData.razorpayOrderId || undefined,
-      name: orderData.restaurantName || (document.getElementById('restaurantName')?.innerText || 'Cloud Dine'),
-      description: `Payment for Table ${tableNumber || 'Guest'}`,
+      name: hotelName,
+      description: `${hotelName} • Table ${tableNumber || 'Guest'} Order Payment`,
+      image: logoUrl,
       handler: async function (response) {
         showLoader();
         await submitOrder(null, {
@@ -627,7 +643,7 @@ async function payOnlineGateway() {
         contact: '9999999999',
         email: 'guest@clouddine.com'
       },
-      theme: { color: '#22C55E' },
+      theme: { color: '#0F2744' }, // Premium Dark Blue
       modal: {
         ondismiss: function () {
           hideLoader();

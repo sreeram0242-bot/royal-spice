@@ -261,7 +261,7 @@ router.post('/create-razorpay-order', async (req, res) => {
     const { restaurantId, grandTotal } = req.body;
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
-      select: { name: true, razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true }
+      select: { name: true, logo: true, razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true }
     });
 
     if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found' });
@@ -304,7 +304,8 @@ router.post('/create-razorpay-order', async (req, res) => {
       amountInPaise,
       currency: 'INR',
       keyId: keyId,
-      restaurantName: restaurant.name
+      restaurantName: restaurant.name,
+      restaurantLogo: restaurant.logo
     });
   } catch (err) {
     console.error('Customer Razorpay order creation error:', err);

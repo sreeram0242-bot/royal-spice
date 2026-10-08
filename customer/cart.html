@@ -150,15 +150,19 @@
 
   <!-- Online Payment Gateway Modal -->
   <div class="popup-overlay" id="paymentGatewayModal" style="align-items:center; justify-content:center;">
-    <div class="popup-box" style="text-align:center; border-radius:24px; padding:32px 24px; width:85%; max-width:340px; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(235,178,91,0.2);">
-      <div style="background: rgba(34, 197, 94, 0.12); width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:2px solid rgba(34, 197, 94, 0.3);">
-        <i data-lucide="credit-card" style="width:34px; height:34px; color:#22C55E; stroke-width:2;"></i>
+    <div class="popup-box" style="text-align:center; border-radius:24px; padding:32px 24px; width:85%; max-width:340px; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(59,130,246,0.25); background:var(--bg-card, #141824);">
+      <div style="margin-bottom:14px;">
+        <img src="/customer/logo.png" alt="Cloud Dine" style="height:44px; object-fit:contain; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));">
       </div>
-      <h2 style="font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:10px; color:var(--text-primary);">Complete Payment</h2>
-      <p style="color:var(--text-secondary); font-size:13px; margin-bottom:22px; line-height:1.6;">Pay online to automatically send your order to the kitchen.</p>
+      <div style="background: rgba(15, 39, 68, 0.6); width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; border:2px solid rgba(59, 130, 246, 0.4);">
+        <i data-lucide="credit-card" style="width:30px; height:30px; color:#3B82F6; stroke-width:2;"></i>
+      </div>
+      <h2 id="modalHotelTitle" style="font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:4px; color:var(--text-primary);">RK Mess</h2>
+      <div style="font-size:11px; color:var(--gold-primary); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px;">Powered by Cloud Dine</div>
+      <p style="color:var(--text-secondary); font-size:13px; margin-bottom:22px; line-height:1.6;">Complete your payment online to automatically send your order to the kitchen.</p>
 
       <div id="paymentModalOptions" style="display:flex; flex-direction:column; gap:12px;">
-        <button onclick="payOnlineGateway()" style="padding:14px; border-radius:12px; border:none; background:linear-gradient(135deg,#22C55E,#16A34A); color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; box-shadow:0 4px 16px rgba(34,197,94,0.35);">💳 Pay Online via Razorpay Gateway</button>
+        <button onclick="payOnlineGateway()" style="padding:14px; border-radius:12px; border:1px solid rgba(59,130,246,0.3); background:linear-gradient(135deg,#0A192F,#1E3A8A); color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; box-shadow:0 4px 16px rgba(15,39,68,0.5);">💳 Pay Online via Razorpay</button>
         <button onclick="document.getElementById('paymentGatewayModal').style.display='none'" style="padding:12px; border-radius:12px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:14px; cursor:pointer;">Cancel</button>
       </div>
     </div>
