@@ -1,6 +1,13 @@
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED PROMISE REJECTION:', reason);
+});
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
