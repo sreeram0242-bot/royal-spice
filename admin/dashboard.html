@@ -788,28 +788,37 @@
             <!-- Order Confirmation & Payment Gateway Configuration -->
             <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
               <label style="display: block; margin-bottom: 8px; font-weight: 600;">Order Confirmation Mode</label>
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Choose how customer orders are authorized and confirmed at your venue.</div>
-              <select id="setOrderConfirmMode" class="login-input" onchange="togglePaymentGatewayFields()">
-                <option value="WAITER_PASSCODE">🔑 Waiter Passcode (Full-Service Hotel)</option>
-                <option value="PAYMENT_GATEWAY">💳 Online Payment Gateway (Cafe / Self-Service)</option>
-                <option value="UPI_QR">📱 UPI QR Code Scan (Customer scans QR)</option>
-                <option value="DIRECT_ORDER">⚡ Direct Order (Instant placement, no passcode)</option>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Choose how customer orders are authorized and confirmed at your venue:</div>
+              <select id="setOrderConfirmMode" class="login-input" onchange="togglePaymentGatewayFields()" style="font-weight: 600;">
+                <option value="WAITER_PASSCODE">🔑 Option 1: Waiter Confirmation (Waiter approves order with PIN)</option>
+                <option value="DIRECT_ORDER">⚡ Option 2: Direct Order (Instant confirmation, no PIN required)</option>
+                <option value="PAYMENT_GATEWAY">💳 Option 3: Order Confirm After Payment Only (Razorpay Payment Gateway)</option>
+                <option value="UPI_QR">📱 Option 4: Static UPI QR Scan (Customer scans QR to pay)</option>
               </select>
 
-              <div id="paymentGatewayFields" style="display: flex; margin-top: 16px; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color);">
-                <div style="font-weight: 600; font-size: 13px; color: var(--gold-primary);">Payment Gateway Credentials</div>
-                <div>
-                  <label style="font-size: 12px;">Razorpay Key ID</label>
-                  <input type="text" id="setRazorpayKeyId" class="login-input" placeholder="rzp_live_...">
+              <div id="paymentGatewayFields" style="display: flex; margin-top: 16px; flex-direction: column; gap: 14px; padding: 16px; background: rgba(235,178,91,0.03); border-radius: 8px; border: 1px dashed var(--gold-primary);">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="font-weight: 700; font-size: 13px; color: var(--gold-primary);">Razorpay Payment Gateway Configuration</div>
+                  <span id="gatewayStatusBadge" style="font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(234,179,8,0.15); color: #EAB308; font-weight: 600;">Credentials Needed</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+                  When "Order Confirm After Payment Only" is active, customers scanning your QR menu will be prompted to complete payment via Razorpay before their order is confirmed and sent to the kitchen.
                 </div>
                 <div>
-                  <label style="font-size: 12px;">Razorpay Key Secret</label>
-                  <input type="password" id="setRazorpayKeySecret" class="login-input" placeholder="••••••••••••">
+                  <label style="font-size: 12px; font-weight: 600;">Razorpay Key ID</label>
+                  <input type="text" id="setRazorpayKeyId" class="login-input" placeholder="rzp_test_... or rzp_live_..." oninput="updateGatewayBadge()" style="margin-top: 4px;">
                 </div>
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                <div>
+                  <label style="font-size: 12px; font-weight: 600;">Razorpay Key Secret</label>
+                  <div style="position: relative; margin-top: 4px;">
+                    <input type="password" id="setRazorpayKeySecret" class="login-input" placeholder="Enter Razorpay Secret Key" style="padding-right: 44px; margin-bottom: 0;" oninput="updateGatewayBadge()">
+                    <button type="button" onclick="toggleSecretVisibility()" id="btnToggleSecret" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--gold-primary); cursor: pointer; font-size: 14px; padding: 4px;">👁️</button>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 6px;">
                   <div>
                     <div style="font-size: 12px; font-weight: 600;">Enable Test / Simulation Payment</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">Allows instant testing without live bank credentials</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Allows test simulation if live bank credentials are not yet verified</div>
                   </div>
                   <label class="toggle-switch">
                     <input type="checkbox" id="setEnableTestPayment">
@@ -817,7 +826,7 @@
                   </label>
                 </div>
 
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 6px;">
                   <div>
                     <div style="font-size: 12px; font-weight: 600; color: #EBB25B;">Enforce Gateway / QR for Waiters</div>
                     <div style="font-size: 11px; color: var(--text-muted);">Waiters can ONLY settle tables via QR scan (Manual cash hidden for waiters)</div>

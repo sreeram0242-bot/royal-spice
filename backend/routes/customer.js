@@ -106,19 +106,22 @@ router.post('/order', checkSubscription, async (req, res) => {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
       const restaurant = await prisma.restaurant.findUnique({
         where: { id: restaurantId },
-        select: { razorpayKeySecret: true }
+        select: { razorpayKeySecret: true, enableTestPayment: true }
       });
-      if (restaurant && restaurant.razorpayKeySecret && razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+      const keySecret = (restaurant && restaurant.razorpayKeySecret) ? restaurant.razorpayKeySecret.trim() : '';
+      if (keySecret && razorpay_order_id && razorpay_payment_id && razorpay_signature) {
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
-          .createHmac('sha256', restaurant.razorpayKeySecret)
+          .createHmac('sha256', keySecret)
           .update(body.toString())
           .digest('hex');
         if (expectedSignature !== razorpay_signature) {
           return res.status(400).json({ message: 'Invalid payment signature! Verification failed.' });
         }
+      } else if (!razorpay_payment_id && !paymentReference) {
+        return res.status(400).json({ message: 'Payment verification failed. No valid transaction received.' });
       }
-      assignedWaiterName = `Online Payment (${razorpay_payment_id || 'Paid'})`;
+      assignedWaiterName = `Online Payment (${razorpay_payment_id || paymentReference || 'Paid'})`;
     } else if (mode === 'UPI_QR') {
       assignedWaiterName = `UPI QR (${paymentReference ? 'Ref: ' + paymentReference : 'Submitted'})`;
     } else if (mode === 'DIRECT_ORDER') {
@@ -237,23 +240,38 @@ router.post('/create-razorpay-order', async (req, res) => {
       select: { name: true, razorpayKeyId: true, razorpayKeySecret: true, enableTestPayment: true }
     });
 
-    if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
+    if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found' });
+
+    const keyId = (restaurant.razorpayKeyId || '').trim();
+    const keySecret = (restaurant.razorpayKeySecret || '').trim();
+
+    if (!keyId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Razorpay Key ID is not configured by the restaurant. Please add credentials in Admin Settings.' 
+      });
+    }
 
     let razorpayOrderId = null;
-    let amountInPaise = Math.round(grandTotal * 100);
+    let amountInPaise = Math.round(Number(grandTotal) * 100);
 
-    if (restaurant.razorpayKeyId && restaurant.razorpayKeySecret) {
-      const razorpay = new Razorpay({
-        key_id: restaurant.razorpayKeyId,
-        key_secret: restaurant.razorpayKeySecret
-      });
+    if (keyId && keySecret) {
+      try {
+        const razorpay = new Razorpay({
+          key_id: keyId,
+          key_secret: keySecret
+        });
 
-      const rzpOrder = await razorpay.orders.create({
-        amount: amountInPaise,
-        currency: 'INR',
-        receipt: `cust_${Date.now()}`
-      });
-      razorpayOrderId = rzpOrder.id;
+        const rzpOrder = await razorpay.orders.create({
+          amount: amountInPaise,
+          currency: 'INR',
+          receipt: `cust_${Date.now()}`
+        });
+        razorpayOrderId = rzpOrder.id;
+      } catch (sdkErr) {
+        console.warn('Razorpay SDK order creation notice:', sdkErr.message || sdkErr);
+        // Do not fail completely: Standard client-side checkout can still open with amount and keyId
+      }
     }
 
     res.json({
@@ -261,12 +279,12 @@ router.post('/create-razorpay-order', async (req, res) => {
       razorpayOrderId,
       amountInPaise,
       currency: 'INR',
-      keyId: restaurant.razorpayKeyId,
+      keyId: keyId,
       restaurantName: restaurant.name
     });
   } catch (err) {
     console.error('Customer Razorpay order creation error:', err);
-    res.status(500).json({ message: 'Failed to create payment order' });
+    res.status(500).json({ success: false, message: 'Failed to create payment order: ' + (err.message || 'Server error') });
   }
 });
 

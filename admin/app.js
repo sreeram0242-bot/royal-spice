@@ -580,8 +580,51 @@ async function handleAutoPrintToggle(el) {
 
 function togglePaymentGatewayFields() {
   const container = document.getElementById('paymentGatewayFields');
+  const mode = document.getElementById('setOrderConfirmMode')?.value;
   if (container) {
     container.style.display = 'flex';
+    if (mode === 'PAYMENT_GATEWAY') {
+      container.style.borderColor = 'var(--gold-primary)';
+      container.style.boxShadow = '0 0 15px rgba(235, 178, 91, 0.15)';
+    } else {
+      container.style.borderColor = 'var(--border-color)';
+      container.style.boxShadow = 'none';
+    }
+  }
+  updateGatewayBadge();
+}
+
+function updateGatewayBadge() {
+  const badge = document.getElementById('gatewayStatusBadge');
+  if (!badge) return;
+  const keyId = (document.getElementById('setRazorpayKeyId')?.value || '').trim();
+  const secret = (document.getElementById('setRazorpayKeySecret')?.value || '').trim();
+  if (keyId && secret) {
+    badge.innerText = '✅ Credentials Configured';
+    badge.style.color = '#22C55E';
+    badge.style.background = 'rgba(34, 197, 94, 0.15)';
+  } else if (keyId || secret) {
+    badge.innerText = '⚠️ Incomplete (Key & Secret needed)';
+    badge.style.color = '#EAB308';
+    badge.style.background = 'rgba(234, 179, 8, 0.15)';
+  } else {
+    badge.innerText = '⚠️ Credentials Needed';
+    badge.style.color = '#EF4444';
+    badge.style.background = 'rgba(239, 68, 68, 0.15)';
+  }
+}
+
+function toggleSecretVisibility() {
+  const input = document.getElementById('setRazorpayKeySecret');
+  const btn = document.getElementById('btnToggleSecret');
+  if (input) {
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (btn) btn.innerText = '🔒';
+    } else {
+      input.type = 'password';
+      if (btn) btn.innerText = '👁️';
+    }
   }
 }
 
@@ -592,10 +635,16 @@ async function saveSettings() {
   const paymentQrCode = document.getElementById('setQrImageBase64').value || null;
 
   const orderConfirmationMode = document.getElementById('setOrderConfirmMode')?.value || 'WAITER_PASSCODE';
-  const razorpayKeyId = document.getElementById('setRazorpayKeyId')?.value || '';
-  const razorpayKeySecret = document.getElementById('setRazorpayKeySecret')?.value || '';
+  const razorpayKeyId = (document.getElementById('setRazorpayKeyId')?.value || '').trim();
+  const razorpayKeySecret = (document.getElementById('setRazorpayKeySecret')?.value || '').trim();
   const enableTestPayment = document.getElementById('setEnableTestPayment')?.checked ?? true;
   const enforceWaiterPaymentGateway = document.getElementById('setEnforceWaiterGateway')?.checked ?? false;
+
+  if (orderConfirmationMode === 'PAYMENT_GATEWAY' && (!razorpayKeyId || !razorpayKeySecret)) {
+    if (!confirm('⚠️ You have selected "Order Confirm After Payment Only", but Razorpay Key ID or Secret is missing.\n\nWithout valid Razorpay credentials, customer online payments will not be able to process.\n\nDo you still want to proceed and save?')) {
+      return;
+    }
+  }
 
   // Save Auto Print toggle
   localStorage.setItem('autoPrint', document.getElementById('setAutoPrint').checked);
@@ -990,7 +1039,9 @@ function renderMenu({ currentMenuData: menuRes, catSettings }) {
 
     let defaultImg = `/customer/images/cat_all.png`;
     if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
+    else if (cat.toLowerCase().includes('rice') || cat.toLowerCase().includes('biryani')) defaultImg = '/customer/images/cat_rice.png';
     else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = '/customer/images/cat_meals.png';
+    else if (cat.toLowerCase().includes('snack')) defaultImg = '/customer/images/cat_snacks.png';
     else if (cat.toLowerCase().includes('starter')) defaultImg = '/customer/images/cat_starters.png';
     else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = '/customer/images/cat_breads.png';
     else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('gravi') || cat.toLowerCase().includes('curry')) defaultImg = '/customer/images/cat_gravies.png';
@@ -1274,7 +1325,9 @@ function renderCategories({ catSettings, menuData }) {
     const img = document.createElement('img');
     let defaultImg = `/customer/images/cat_all.png`;
     if (cat.toLowerCase().includes('breakfast')) defaultImg = '/customer/images/cat_breakfast.png';
+    else if (cat.toLowerCase().includes('rice') || cat.toLowerCase().includes('biryani')) defaultImg = '/customer/images/cat_rice.png';
     else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = '/customer/images/cat_meals.png';
+    else if (cat.toLowerCase().includes('snack')) defaultImg = '/customer/images/cat_snacks.png';
     else if (cat.toLowerCase().includes('starter')) defaultImg = '/customer/images/cat_starters.png';
     else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = '/customer/images/cat_breads.png';
     else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('gravi') || cat.toLowerCase().includes('curry')) defaultImg = '/customer/images/cat_gravies.png';
@@ -1282,7 +1335,7 @@ function renderCategories({ catSettings, menuData }) {
     else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = '/customer/images/cat_desserts.png';
 
     img.src = setting?.image || defaultImg;
-    img.onerror = function () { this.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'; };
+    img.onerror = function () { this.src = '/customer/images/cat_all.png'; };
     img.loading = 'lazy';
     img.style.width = '100%';
     img.style.height = '100%';

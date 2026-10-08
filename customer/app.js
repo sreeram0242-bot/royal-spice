@@ -1,5 +1,20 @@
 const BASE_URL = ''; // Change in prod
 
+// Support scanning QR codes directly opening menu or cart
+const urlParams = new URLSearchParams(window.location.search);
+const rParam = urlParams.get('r');
+const tParam = urlParams.get('t');
+if (rParam) {
+  if (localStorage.getItem('restaurantId') !== rParam) {
+    localStorage.removeItem('cart');
+    localStorage.removeItem('sessionId');
+  }
+  localStorage.setItem('restaurantId', rParam);
+}
+if (tParam) {
+  localStorage.setItem('tableNumber', tParam);
+}
+
 let restaurantId = localStorage.getItem('restaurantId');
 let tableNumber = localStorage.getItem('tableNumber');
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -151,15 +166,18 @@ function renderCategories() {
 
     const setting = categorySettings.find(s => s.categoryName === cat);
 
-    let defaultImg = `https://via.placeholder.com/100?text=${encodeURIComponent(cat)}`;
-    if (cat.toLowerCase() === 'all') defaultImg = 'images/cat_all.png';
-    else if (cat.toLowerCase().includes('breakfast')) defaultImg = 'images/cat_breakfast.png';
-    else if (cat.toLowerCase().includes('meal') || cat.toLowerCase().includes('lunch')) defaultImg = 'images/cat_meals.png';
-    else if (cat.toLowerCase().includes('starter')) defaultImg = 'images/cat_starters.png';
-    else if (cat.toLowerCase().includes('bread') || cat.toLowerCase().includes('roti')) defaultImg = 'images/cat_breads.png';
-    else if (cat.toLowerCase().includes('gravy') || cat.toLowerCase().includes('gravi') || cat.toLowerCase().includes('curry')) defaultImg = 'images/cat_gravies.png';
-    else if (cat.toLowerCase().includes('bev') || cat.toLowerCase().includes('drink')) defaultImg = 'images/cat_beverages.png';
-    else if (cat.toLowerCase().includes('dessert') || cat.toLowerCase().includes('sweet')) defaultImg = 'images/cat_desserts.png';
+    let defaultImg = 'images/cat_all.png';
+    const c = cat.toLowerCase();
+    if (c === 'all') defaultImg = 'images/cat_all.png';
+    else if (c.includes('breakfast') || c.includes('tiffin')) defaultImg = 'images/cat_breakfast.png';
+    else if (c.includes('rice') || c.includes('biryani')) defaultImg = 'images/cat_rice.png';
+    else if (c.includes('meal') || c.includes('lunch') || c.includes('thali')) defaultImg = 'images/cat_meals.png';
+    else if (c.includes('snack')) defaultImg = 'images/cat_snacks.png';
+    else if (c.includes('starter')) defaultImg = 'images/cat_starters.png';
+    else if (c.includes('bread') || c.includes('roti') || c.includes('naan') || c.includes('parotta')) defaultImg = 'images/cat_breads.png';
+    else if (c.includes('gravy') || c.includes('gravi') || c.includes('curry')) defaultImg = 'images/cat_gravies.png';
+    else if (c.includes('bev') || c.includes('drink') || c.includes('chai') || c.includes('tea') || c.includes('coffee')) defaultImg = 'images/cat_beverages.png';
+    else if (c.includes('dessert') || c.includes('sweet') || c.includes('ice cream')) defaultImg = 'images/cat_desserts.png';
 
     let imageSrc = setting?.image || defaultImg;
 
@@ -342,6 +360,10 @@ if (window.location.pathname.includes('menu.html')) {
     const activeOrdersBtn = document.getElementById('floatingOrdersBtn');
     if (activeOrdersBtn) activeOrdersBtn.style.display = 'flex';
   }
+} else if (window.location.pathname.includes('cart.html')) {
+  loadRestaurantInfo().then(() => {
+    updateCartPlaceOrderButton();
+  });
 }
 
 // Cart Logic
@@ -411,6 +433,7 @@ function renderCart() {
   document.getElementById('summaryTotal').innerText = '₹' + grandTotal.toFixed(2);
 
   summary.style.display = 'block';
+  updateCartPlaceOrderButton();
 }
 
 function updateNote(itemId, note) {
@@ -441,10 +464,44 @@ function setTip(amt) {
   renderCart();
 }
 
+function updateCartPlaceOrderButton() {
+  const btn = document.getElementById('btnPlaceOrder') || document.querySelector('.btn-primary-large');
+  if (!btn || !window.location.pathname.includes('cart.html')) return;
+  const mode = localStorage.getItem('orderConfirmationMode') || 'WAITER_PASSCODE';
+  const subTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const gstPercent = parseFloat(localStorage.getItem('gstPercent')) || 0;
+  const gst = Math.round(subTotal * (gstPercent / 100));
+  const grandTotal = subTotal + gst + selectedTip;
+
+  if (mode === 'PAYMENT_GATEWAY') {
+    btn.innerHTML = `💳 Pay ₹${grandTotal} & Place Order`;
+    btn.style.background = 'linear-gradient(135deg, #22C55E, #16A34A)';
+    btn.style.color = '#FFFFFF';
+  } else if (mode === 'WAITER_PASSCODE') {
+    btn.innerHTML = '🔑 Place Order with PIN';
+    btn.style.background = 'linear-gradient(135deg, var(--gold-primary), #d4983e)';
+    btn.style.color = '#000000';
+  } else if (mode === 'DIRECT_ORDER') {
+    btn.innerHTML = '⚡ Place Order (Instant)';
+    btn.style.background = 'linear-gradient(135deg, var(--gold-primary), #d4983e)';
+    btn.style.color = '#000000';
+  } else if (mode === 'UPI_QR') {
+    btn.innerHTML = `📱 Pay ₹${grandTotal} via UPI QR`;
+    btn.style.background = 'linear-gradient(135deg, var(--gold-primary), #d4983e)';
+    btn.style.color = '#000000';
+  }
+}
+
 async function placeOrder() {
   if (cart.length === 0) return;
   
-  const mode = localStorage.getItem('orderConfirmationMode') || 'WAITER_PASSCODE';
+  // Ensure we have fresh restaurant settings
+  let mode = localStorage.getItem('orderConfirmationMode') || 'WAITER_PASSCODE';
+  if (!localStorage.getItem('razorpayKeyId') && mode === 'PAYMENT_GATEWAY') {
+    await loadRestaurantInfo();
+    mode = localStorage.getItem('orderConfirmationMode') || 'WAITER_PASSCODE';
+  }
+
   const savedPasscode = localStorage.getItem('tablePasscode');
   const savedSessionId = localStorage.getItem('sessionId');
   
@@ -461,9 +518,7 @@ async function placeOrder() {
       setTimeout(() => input.focus(), 100);
     }
   } else if (mode === 'PAYMENT_GATEWAY') {
-    const modal = document.getElementById('paymentGatewayModal');
-    if (modal) modal.style.display = 'flex';
-    else await submitOrder(null, { paymentMethod: 'online', paymentReference: 'PAY_' + Date.now() });
+    await payOnlineGateway();
   } else if (mode === 'UPI_QR') {
     const modal = document.getElementById('upiQrModal');
     const qrImg = document.getElementById('customerUpiQrImage');
@@ -501,51 +556,95 @@ async function payOnlineGateway() {
   const gstPercent = parseFloat(localStorage.getItem('gstPercent')) || 0;
   const gst = Math.round(subTotal * (gstPercent / 100));
   const grandTotal = subTotal + gst + selectedTip;
-  
-  const rzpKey = localStorage.getItem('razorpayKeyId');
 
-  if (rzpKey && typeof Razorpay !== 'undefined') {
-    showLoader();
+  showLoader();
+
+  // 1. Ensure Razorpay Checkout script is loaded
+  if (typeof Razorpay === 'undefined') {
     try {
-      const orderRes = await fetch(`${BASE_URL}/api/customer/create-razorpay-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantId, grandTotal })
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
       });
-      const orderData = await orderRes.json();
+    } catch (err) {
       hideLoader();
-
-      if (orderRes.ok && orderData.success) {
-        const options = {
-          key: rzpKey,
-          amount: orderData.amountInPaise,
-          currency: orderData.currency || 'INR',
-          order_id: orderData.razorpayOrderId || undefined,
-          name: orderData.restaurantName || "Cloud Dine",
-          description: "Order Payment",
-          handler: async function (response) {
-            await submitOrder(null, {
-              paymentMethod: 'online',
-              razorpay_order_id: response.razorpay_order_id || orderData.razorpayOrderId,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            });
-          },
-          prefill: { name: "Table Guest", contact: "9999999999" },
-          theme: { color: "#22C55E" }
-        };
-        const rzp = new Razorpay(options);
-        rzp.open();
-        return;
-      }
-    } catch (e) {
-      hideLoader();
-      console.error('Error creating Razorpay order:', e);
+      alert('Unable to load Razorpay payment gateway script. Please check your internet connection.');
+      return;
     }
   }
 
-  // Fallback test gateway
-  await submitOrder(null, { paymentMethod: 'online', paymentReference: 'TEST_TXN_' + Date.now() });
+  // 2. Request official order details and key from backend
+  let orderData = null;
+  try {
+    const orderRes = await fetch(`${BASE_URL}/api/customer/create-razorpay-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ restaurantId, grandTotal })
+    });
+    orderData = await orderRes.json();
+  } catch (e) {
+    console.error('Error contacting create-razorpay-order API:', e);
+  }
+
+  hideLoader();
+
+  // 3. Check if key is available
+  if (!orderData || !orderData.keyId) {
+    const enableTest = localStorage.getItem('enableTestPayment') === 'true';
+    if (enableTest) {
+      if (confirm('Razorpay API keys are not configured yet.\n\nSimulation test mode is enabled. Proceed with simulated payment?')) {
+        await submitOrder(null, { paymentMethod: 'online', paymentReference: 'TEST_TXN_' + Date.now() });
+      }
+    } else {
+      alert('Razorpay Payment Gateway credentials have not been configured by the admin yet. Please inform the restaurant staff.');
+    }
+    return;
+  }
+
+  // 4. Launch Razorpay modal
+  try {
+    const options = {
+      key: orderData.keyId,
+      amount: orderData.amountInPaise,
+      currency: orderData.currency || 'INR',
+      order_id: orderData.razorpayOrderId || undefined,
+      name: orderData.restaurantName || (document.getElementById('restaurantName')?.innerText || 'Cloud Dine'),
+      description: `Payment for Table ${tableNumber || 'Guest'}`,
+      handler: async function (response) {
+        showLoader();
+        await submitOrder(null, {
+          paymentMethod: 'online',
+          razorpay_order_id: response.razorpay_order_id || orderData.razorpayOrderId,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature
+        });
+      },
+      prefill: {
+        name: `Table ${tableNumber || 'Guest'}`,
+        contact: '9999999999'
+      },
+      theme: { color: '#22C55E' },
+      modal: {
+        ondismiss: function () {
+          hideLoader();
+          alert('Payment was cancelled. Your order has not been placed.');
+        }
+      }
+    };
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function (resp) {
+      hideLoader();
+      alert('Payment failed: ' + (resp.error ? resp.error.description : 'Transaction could not be completed'));
+    });
+    rzp.open();
+  } catch (err) {
+    hideLoader();
+    console.error('Error opening Razorpay checkout:', err);
+    alert('Failed to launch Razorpay gateway: ' + err.message);
+  }
 }
 
 async function submitUpiOrder() {

@@ -41,8 +41,8 @@ router.put('/settings', [authAdmin, checkSubscription], async (req, res) => {
 
     if (orderConfirmationMode !== undefined) dataToUpdate.orderConfirmationMode = orderConfirmationMode;
     if (paymentGatewayProvider !== undefined) dataToUpdate.paymentGatewayProvider = paymentGatewayProvider;
-    if (razorpayKeyId !== undefined) dataToUpdate.razorpayKeyId = razorpayKeyId;
-    if (razorpayKeySecret !== undefined) dataToUpdate.razorpayKeySecret = razorpayKeySecret;
+    if (razorpayKeyId !== undefined) dataToUpdate.razorpayKeyId = (typeof razorpayKeyId === 'string' ? razorpayKeyId.trim() : razorpayKeyId) || null;
+    if (razorpayKeySecret !== undefined) dataToUpdate.razorpayKeySecret = (typeof razorpayKeySecret === 'string' ? razorpayKeySecret.trim() : razorpayKeySecret) || null;
     if (enableTestPayment !== undefined) dataToUpdate.enableTestPayment = Boolean(enableTestPayment);
     if (enforceWaiterPaymentGateway !== undefined) dataToUpdate.enforceWaiterPaymentGateway = Boolean(enforceWaiterPaymentGateway);
 

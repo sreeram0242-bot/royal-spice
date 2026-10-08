@@ -33,6 +33,7 @@ async function main() {
       isActive: true,
       gstPercent: 5,
       totalTables: 20,
+      orderConfirmationMode: 'WAITER_PASSCODE'
     }
   });
 
@@ -62,6 +63,28 @@ async function main() {
   console.log(`✅ Waiter created: ${waiter1.name} (username: sree)`);
   console.log(`✅ Waiter created: ${waiter2.name} (username: gokul)`);
 
+  // Category Settings
+  const categorySettings = [
+    { categoryName: 'Breakfast', image: '/customer/images/cat_breakfast.png' },
+    { categoryName: 'Rice', image: '/customer/images/cat_rice.png' },
+    { categoryName: 'Curries', image: '/customer/images/cat_gravies.png' },
+    { categoryName: 'Breads', image: '/customer/images/cat_breads.png' },
+    { categoryName: 'Snacks', image: '/customer/images/cat_snacks.png' },
+    { categoryName: 'Beverages', image: '/customer/images/cat_beverages.png' },
+    { categoryName: 'Desserts', image: '/customer/images/cat_desserts.png' }
+  ];
+
+  for (const cat of categorySettings) {
+    await prisma.categorySetting.create({
+      data: {
+        restaurantId: restaurant.id,
+        categoryName: cat.categoryName,
+        image: cat.image
+      }
+    });
+  }
+  console.log(`✅ Created ${categorySettings.length} category settings`);
+
   // Menu Items
   const menuItems = [
     // ---- BREAKFAST ----
@@ -72,7 +95,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?w=400'
+      image: '/customer/images/items/idli.png'
     },
     {
       name: 'Masala Dosa',
@@ -81,7 +104,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400'
+      image: '/customer/images/items/dosa.png'
     },
     {
       name: 'Plain Dosa',
@@ -90,7 +113,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400'
+      image: '/customer/images/items/dosa.png'
     },
     {
       name: 'Pongal',
@@ -99,7 +122,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=400'
+      image: '/customer/images/items/pongal.png'
     },
     {
       name: 'Medu Vada',
@@ -108,7 +131,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400'
+      image: '/customer/images/items/vada.png'
     },
     {
       name: 'Upma',
@@ -117,7 +140,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400'
+      image: '/customer/images/items/upma.png'
     },
     {
       name: 'Poori (2 pcs)',
@@ -126,7 +149,7 @@ async function main() {
       category: 'Breakfast',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400'
+      image: '/customer/images/items/poori.png'
     },
 
     // ---- RICE ----
@@ -137,260 +160,260 @@ async function main() {
       category: 'Rice',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400'
+      image: '/customer/images/items/meals.png'
     },
     {
       name: 'Veg Biryani',
-      description: 'Fragrant basmati rice cooked with mixed vegetables and whole spices',
-      price: 130,
+      description: 'Fragrant basmati rice cooked with mixed vegetables, herbs and whole spices',
+      price: 90,
       category: 'Rice',
       isVeg: true,
-      isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400'
+      isBestSeller: false,
+      image: '/customer/images/items/mbiryani.png'
     },
     {
       name: 'Chicken Biryani',
-      description: 'Aromatic basmati rice layered with tender chicken, saffron and fried onions',
-      price: 180,
+      description: 'Classic spiced biryani made with tender chicken pieces, basmati rice and aromatics',
+      price: 140,
       category: 'Rice',
       isVeg: false,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400'
+      image: '/customer/images/items/cbiryani.png'
     },
     {
       name: 'Egg Fried Rice',
-      description: 'Wok-tossed rice with scrambled egg, spring onions and soy sauce',
-      price: 100,
+      description: 'Stir-fried rice tossed with eggs, spring onions and savory sauces',
+      price: 80,
       category: 'Rice',
       isVeg: false,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400'
+      image: '/customer/images/items/eggfriedrice.png'
     },
     {
       name: 'Curd Rice',
-      description: 'Cooked rice mixed with yogurt, tempered with mustard seeds and curry leaves',
-      price: 60,
+      description: 'Cooling seasoned yogurt rice with mustard seeds, curry leaves and green chilies',
+      price: 50,
       category: 'Rice',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?w=400'
+      image: '/customer/images/items/curdrice.png'
     },
     {
       name: 'Lemon Rice',
-      description: 'Tangy rice tempered with mustard, peanuts, turmeric and lemon juice',
-      price: 70,
+      description: 'Tangy lemon-flavored rice tempered with mustard, peanuts and curry leaves',
+      price: 50,
       category: 'Rice',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400'
+      image: '/customer/images/items/lemonrice.png'
     },
 
     // ---- CURRIES ----
     {
       name: 'Dal Tadka',
-      description: 'Yellow lentils tempered with ghee, cumin, garlic and dried red chilies',
-      price: 90,
+      description: 'Yellow lentils tempered with ghee, cumin, garlic and dry red chilies',
+      price: 60,
       category: 'Curries',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400'
+      image: '/customer/images/items/daltadka.png'
     },
     {
       name: 'Paneer Butter Masala',
-      description: 'Creamy tomato based gravy with soft paneer cubes and aromatic spices',
-      price: 150,
+      description: 'Soft cottage cheese cubes simmered in a rich tomato and butter gravy',
+      price: 90,
       category: 'Curries',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400'
+      image: '/customer/images/items/paneer.png'
     },
     {
       name: 'Egg Curry',
-      description: 'Hard-boiled eggs simmered in a spicy onion-tomato gravy',
-      price: 100,
+      description: 'Boiled eggs cooked in a flavorful spiced onion and tomato gravy',
+      price: 70,
       category: 'Curries',
       isVeg: false,
-      isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1546548970-71785318a17b?w=400'
+      isBestSeller: false,
+      image: '/customer/images/items/eggcurry.png'
     },
     {
       name: 'Chicken Curry',
-      description: 'Tender chicken pieces cooked in a rich, spiced onion-tomato gravy',
-      price: 160,
+      description: 'Home-style chicken curry cooked with traditional South Indian spices',
+      price: 110,
       category: 'Curries',
       isVeg: false,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400'
+      image: '/customer/images/items/chickencurry.png'
     },
     {
       name: 'Mixed Veg Curry',
-      description: 'Seasonal vegetables cooked in a flavorful spiced gravy',
-      price: 100,
+      description: 'Garden fresh vegetables cooked in a mildly spiced onion-tomato gravy',
+      price: 65,
       category: 'Curries',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400'
+      image: '/customer/images/items/vegcurry.png'
     },
 
     // ---- BREADS ----
     {
       name: 'Chapati (2 pcs)',
-      description: 'Soft whole wheat flatbread made fresh on the tawa',
-      price: 20,
+      description: 'Soft, whole wheat flatbreads cooked on a griddle',
+      price: 30,
       category: 'Breads',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400'
+      image: '/customer/images/items/chapati.png'
     },
     {
       name: 'Butter Naan',
-      description: 'Soft leavened flatbread baked in tandoor and brushed with butter',
-      price: 50,
+      description: 'Tandoor-baked leavened flatbread brushed generously with butter',
+      price: 35,
       category: 'Breads',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1606502973842-f64bc2784849?w=400'
+      image: '/customer/images/items/naan.png'
     },
     {
       name: 'Parotta (2 pcs)',
-      description: 'Flaky layered South Indian flatbread, crispy outside and soft inside',
+      description: 'Flaky, layered South Indian flatbread made with refined flour and oil',
       price: 40,
       category: 'Breads',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400'
+      image: '/customer/images/items/parotta.png'
     },
 
     // ---- SNACKS ----
     {
       name: 'Samosa (2 pcs)',
-      description: 'Crispy triangular pastry stuffed with spiced potato and peas filling',
+      description: 'Crisp pastry triangles stuffed with spiced potatoes and peas',
       price: 30,
       category: 'Snacks',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400'
+      image: '/customer/images/items/samosa.png'
     },
     {
       name: 'Onion Bajji',
-      description: 'Crispy deep fried onion fritters coated in spiced chickpea batter',
-      price: 40,
+      description: 'Crispy gram-flour battered onion fritters served hot with mint chutney',
+      price: 35,
       category: 'Snacks',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400'
+      image: '/customer/images/items/bajji.png'
     },
     {
       name: 'Masala Egg (2 pcs)',
-      description: 'Boiled eggs coated in a spicy masala and shallow fried to perfection',
-      price: 50,
+      description: 'Hard boiled eggs pan-fried with spicy pepper, onion and tomato masala',
+      price: 40,
       category: 'Snacks',
       isVeg: false,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1506354666786-959d6d497f1a?w=400'
+      image: '/customer/images/items/masalaegg.png'
     },
     {
       name: 'French Fries',
-      description: 'Golden crispy potato fries served with ketchup',
-      price: 60,
+      description: 'Deep-fried salted potato fingers served with tomato ketchup',
+      price: 50,
       category: 'Snacks',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400'
+      image: '/customer/images/items/fries.png'
     },
 
     // ---- BEVERAGES ----
     {
       name: 'Filter Coffee',
-      description: 'Strong South Indian filter coffee with frothy milk served in traditional tumbler',
+      description: 'Authentic South Indian chicory-blend coffee brewed with hot frothy milk',
+      price: 25,
+      category: 'Beverages',
+      isVeg: true,
+      isBestSeller: true,
+      image: '/customer/images/items/coffee.png'
+    },
+    {
+      name: 'Masala Chai',
+      description: 'Strong milk tea infused with crushed ginger, cardamom and cloves',
       price: 20,
       category: 'Beverages',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400'
-    },
-    {
-      name: 'Masala Chai',
-      description: 'Aromatic Indian tea brewed with ginger, cardamom, and spices',
-      price: 15,
-      category: 'Beverages',
-      isVeg: true,
-      isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1572119865084-43c285814d63?w=400'
+      image: '/customer/images/items/chai.png'
     },
     {
       name: 'Mango Lassi',
-      description: 'Thick and sweet chilled yogurt drink blended with fresh mango pulp',
-      price: 60,
-      category: 'Beverages',
-      isVeg: true,
-      isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400'
-    },
-    {
-      name: 'Sweet Lassi',
-      description: 'Chilled and refreshing yogurt drink sweetened with sugar',
+      description: 'Thick, creamy yogurt drink blended with sweet Alphonso mango pulp',
       price: 50,
       category: 'Beverages',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400'
+      image: '/customer/images/items/mangolassi.png'
     },
     {
-      name: 'Fresh Lime Soda',
-      description: 'Refreshing lime juice with soda water, served sweet or salted',
+      name: 'Sweet Lassi',
+      description: 'Traditional Punjabi sweet beaten yogurt drink topped with malai',
       price: 40,
       category: 'Beverages',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400'
+      image: '/customer/images/items/sweetlassi.png'
+    },
+    {
+      name: 'Fresh Lime Soda',
+      description: 'Refreshing fizzy soda with fresh lime juice, mint and choice of sweet or salt',
+      price: 35,
+      category: 'Beverages',
+      isVeg: true,
+      isBestSeller: false,
+      image: '/customer/images/items/limesoda.png'
     },
     {
       name: 'Buttermilk',
-      description: 'Chilled salted buttermilk with curry leaves and ginger — a South Indian classic',
-      price: 20,
+      description: 'Light, spiced churned yogurt drink with ginger, green chilies and coriander',
+      price: 25,
       category: 'Beverages',
       isVeg: true,
-      isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'
+      isBestSeller: false,
+      image: '/customer/images/items/buttermilk.png'
     },
 
     // ---- DESSERTS ----
     {
       name: 'Gulab Jamun (2 pcs)',
-      description: 'Soft milk-solid balls soaked in rose-flavored sugar syrup',
-      price: 50,
+      description: 'Soft fried milk-solid dumplings soaked in rose and cardamom sugar syrup',
+      price: 35,
       category: 'Desserts',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1593504049359-74330189a345?w=400'
+      image: '/customer/images/items/jamun.png'
     },
     {
       name: 'Kheer',
-      description: 'Creamy rice pudding slow-cooked in milk with cardamom, saffron and dry fruits',
-      price: 60,
+      description: 'Slow-cooked fragrant rice pudding flavored with saffron, cardamom and nuts',
+      price: 45,
       category: 'Desserts',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400'
+      image: '/customer/images/items/kheer.png'
     },
     {
       name: 'Halwa',
-      description: 'Rich semolina pudding cooked in ghee with sugar and garnished with cashews',
-      price: 50,
+      description: 'Rich semolina and ghee halwa garnished with roasted cashews and raisins',
+      price: 40,
       category: 'Desserts',
       isVeg: true,
       isBestSeller: false,
-      image: 'https://images.unsplash.com/photo-1571167421672-9f7eaa2f1e4d?w=400'
+      image: '/customer/images/items/halwa.png'
     },
     {
       name: 'Ice Cream (2 scoops)',
-      description: 'Creamy vanilla and chocolate ice cream served with chocolate sauce',
-      price: 70,
+      description: 'Choice of vanilla, chocolate or butterscotch ice cream scoops',
+      price: 50,
       category: 'Desserts',
       isVeg: true,
       isBestSeller: true,
-      image: 'https://images.unsplash.com/photo-1560008581-09826d1de69e?w=400'
+      image: '/customer/images/items/icecream.png'
     },
   ];
 
