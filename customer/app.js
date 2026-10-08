@@ -675,7 +675,8 @@ async function submitOrder(passcode = null, extraData = {}) {
     sessionId,
     passcode,
     paymentMethod: extraData.paymentMethod || null,
-    paymentReference: extraData.paymentReference || null
+    paymentReference: extraData.paymentReference || null,
+    ...extraData
   };
 
   try {

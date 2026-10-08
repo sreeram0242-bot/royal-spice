@@ -109,7 +109,10 @@ router.post('/order', checkSubscription, async (req, res) => {
         select: { razorpayKeySecret: true, enableTestPayment: true }
       });
       const keySecret = (restaurant && restaurant.razorpayKeySecret) ? restaurant.razorpayKeySecret.trim() : '';
-      if (keySecret && razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+      if (keySecret) {
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+          return res.status(400).json({ message: 'Payment verification failed. Missing payment signature or transaction ID.' });
+        }
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
           .createHmac('sha256', keySecret)
@@ -118,8 +121,13 @@ router.post('/order', checkSubscription, async (req, res) => {
         if (expectedSignature !== razorpay_signature) {
           return res.status(400).json({ message: 'Invalid payment signature! Verification failed.' });
         }
-      } else if (!razorpay_payment_id && !paymentReference) {
-        return res.status(400).json({ message: 'Payment verification failed. No valid transaction received.' });
+      } else {
+        if (!restaurant?.enableTestPayment) {
+          return res.status(400).json({ message: 'Payment gateway is not configured for this restaurant.' });
+        }
+        if (!razorpay_payment_id && !paymentReference) {
+          return res.status(400).json({ message: 'Payment verification failed. No valid transaction received.' });
+        }
       }
       assignedWaiterName = `Online Payment (${razorpay_payment_id || paymentReference || 'Paid'})`;
     } else if (mode === 'UPI_QR') {
@@ -153,28 +161,44 @@ router.post('/order', checkSubscription, async (req, res) => {
       currentSessionNumber = restaurant.sessionCounter;
     }
 
+    // Resolve menuItemId for all items safely
+    const resolvedItems = await Promise.all(items.map(async item => {
+      let mId = item.menuItemId;
+      if (!mId) {
+        const found = await prisma.menuItem.findFirst({
+          where: { restaurantId, name: item.name }
+        });
+        mId = found?.id;
+      }
+      if (!mId) {
+        const anyItem = await prisma.menuItem.findFirst({ where: { restaurantId } });
+        mId = anyItem?.id;
+      }
+      return {
+        menuItemId: mId,
+        name: item.name,
+        price: Number(item.price),
+        qty: Number(item.qty || item.quantity || 1),
+        specialNote: item.specialNote || null
+      };
+    }));
+
     const order = await prisma.order.create({
       data: {
         restaurantId,
-        tableNumber,
+        tableNumber: parseInt(tableNumber),
         orderNumber,
-        subtotal,
-        gst,
-        tip,
-        total,
+        subtotal: parseFloat(subtotal),
+        gst: parseFloat(gst),
+        tip: parseFloat(tip || 0),
+        total: parseFloat(total),
         status: 'new',
         sessionId: currentSessionId,
         sessionNumber: currentSessionNumber,
         waiterName: assignedWaiterName,
         paymentMethod: paymentMethod || (mode === 'PAYMENT_GATEWAY' ? 'online' : mode === 'UPI_QR' ? 'upi' : null),
         items: {
-          create: items.map(item => ({
-            menuItemId: item.menuItemId,
-            name: item.name,
-            price: item.price,
-            qty: item.qty,
-            specialNote: item.specialNote || null
-          }))
+          create: resolvedItems
         }
       },
       include: { items: true }
